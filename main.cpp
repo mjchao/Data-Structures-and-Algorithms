@@ -7,8 +7,8 @@
 //
 
 #include <iostream>
-#include "ArrayList.h"
 #include "ArrayListTests.h"
+#include "LinkedListTests.h"
 #include "UnitTest.h"
 
 using std::cout;
@@ -18,5 +18,8 @@ int main(int argc, const char * argv[]) {
     // insert code here...
     ArrayListTests test;
     test.test();
+    
+    LinkedListTests test2;
+    test2.test();
     return 0;
 }

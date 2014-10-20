@@ -47,14 +47,11 @@ protected:
     
     void testTrue( bool expression , string descriptionIfFailed );
     
-    void reportTestStatistics();
+    void reportTestStatistics( string className );
     
 public:
     UnitTest();
     ~UnitTest();
     
-    virtual void test() {
-        reportTestStatistics();
-    }
 };
 #endif /* defined(__Data_Structures__UnitTest__) */

@@ -13,6 +13,9 @@
 #include <string>
     using std::string;
 
+#include <vector>
+    using std::vector;
+
 using std::runtime_error;
 using std::to_string;
 
@@ -42,8 +45,9 @@ void ArrayListTests::test() {
     testArrayListResize();
     testArrayListSet();
     //testArrayListMemoryUsage();
+    testArrayListReferences();
     systemTest();
-    UnitTest::test();
+    reportTestStatistics( "ArrayList" );
 }
 
 void ArrayListTests::testArrayListAppend() {
@@ -806,11 +810,11 @@ void ArrayListTests::testArrayListResize() {
     found = test.m_arraySize;
     evaluateTest( expected , found , resizeErrorMessage );
     
-    for ( int i=0 ; i<10 ; i++ ) {
+    for ( int i=0 ; i<9 ; i++ ) {
         test.append( i );
     }
     
-    expected = 10;
+    expected = 9;
     found = test.size();
     evaluateTest( expected , found , sizeErrorMessage );
     
@@ -819,18 +823,18 @@ void ArrayListTests::testArrayListResize() {
     evaluateTest( expected , found , resizeErrorMessage );
     
     //test adding additional elements to the list
-    //now list should have 11 elements and capacity 22
-    test.append( 11 );
-    expected = 11;
+    //now list should have 10 elements and capacity 20
+    test.append( 10 );
+    expected = 10;
     found = test.size();
     evaluateTest( expected , found , sizeErrorMessage );
     
-    expected = 22;
+    expected = 20;
     found = test.m_arraySize;
     evaluateTest( expected , found , resizeErrorMessage );
     
     //test removing elements from the list to less than half capacity
-    for ( int i=0 ; i<6 ; i++ ) {
+    for ( int i=0 ; i<5 ; i++ ) {
         test.removeAt( 0 );
     }
     
@@ -863,6 +867,32 @@ void ArrayListTests::testArrayListMemoryUsage() {
     cout << "Was memory usage constant? (y/n)" << endl;
     char result = tolower( getchar() );
     evaluateTest( 'y' , result , "Memory usage by ArrayList is too great.");
+}
+
+void ArrayListTests::testArrayListReferences() {
+    cout << "Testing references" << endl;
+
+    int expected;
+    int found;
+    string errorMessage = "ArrayList does not pass by reference correctly!";
+    
+    ArrayList<vector<int>> test;
+    vector<int> v1;
+    v1.push_back( 1 );
+    v1.push_back( 2 );
+    v1.push_back( 3 );
+    test.append( v1 );
+    
+    vector<int> v2;
+    v2.push_back( 5 );
+    v2.push_back( 6 );
+    v2.push_back( 7 );
+    test.append( v2 );
+    
+    v1.at( 0 ) = 1000;
+    expected = 1000;
+    found = test.get( 0 ).at( 0 );
+    evaluateTest( expected , found , errorMessage );
 }
 
 void ArrayListTests::systemTest() {

@@ -47,7 +47,7 @@ void UnitTest::incrementTotalTests() {
     m_numTests++;
 }
 
-void UnitTest::reportTestStatistics() {
-    cout << "Unit tests finished. Passed " <<
+void UnitTest::reportTestStatistics( string className ) {
+    cout << className << " unit tests finished. Passed " <<
         m_numSucceeded << " of " << m_numTests << " tests." << endl;
 }

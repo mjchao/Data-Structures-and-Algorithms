@@ -30,6 +30,7 @@ public:
         void testArrayListRemove();
         void testArrayListResize();
         void testArrayListMemoryUsage();
+        void testArrayListReferences();
         void systemTest();
 };
 #endif /* defined(__Data_Structures__ListTests__) */

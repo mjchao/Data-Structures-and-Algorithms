@@ -17,14 +17,19 @@ using std::string;
 #include <algorithm>
 using std::min;
 
-#include "List.h"
+#include "AbstractList.h"
 #include "Message.h"
 #include "ArrayListTests.h"
 
 using std::to_string;
 
+/**
+ * An array-based list, where elements are stored in an array
+ *
+ * @param E                     the type of element stored in this list
+ */
 template< typename E >
-class ArrayList : public List< E > {
+class ArrayList : public AbstractList< E > {
 
     friend class ArrayListTests;
     
@@ -144,7 +149,7 @@ public:
      * @param value             the value for which to look
      * @return                  if the value was found in the list
      */
-    bool contains( E value ) const {
+    bool contains( const E& value ) const {
         for ( int i=0 ; i<m_numElements ; i++ ) {
             if ( m_values[ i ] == value ) {
                 return true;
@@ -160,7 +165,7 @@ public:
      * @return                  the element at the given index in the list
      * @throws error            if the index given is out of bounds
      */
-    E get( int index ) const {
+    E& get( int index ) const {
         
         //make sure not we are not asked to go out of bounds
         if ( isOutOfBounds( index ) ) {
@@ -176,7 +181,7 @@ public:
      * @param value             the value for which to look in the list
      * @return                  the first index at which the given value occurs
      */
-    int indexOf( E value ) const {
+    int indexOf( const E& value ) const {
         for ( int i=0 ; i<m_numElements ; i++ ) {
             if ( m_values[ i ] == value ) {
                 return i;
@@ -191,7 +196,7 @@ public:
      *
      * @param value             the element to add to the end of the list
      */
-    void insert( E value ) {
+    void insert( const E& value ) {
         append( value );
     }
     
@@ -203,7 +208,7 @@ public:
      * @param value             the value to insert
      * @throws error            if the index is out of bounds
      */
-    void insert( int index , E value ) {
+    void insert( int index , const E& value ) {
         
         //make sure we aren't asked to insert the value out of bounds
         //we allow insertion at the index following the last element
@@ -217,7 +222,7 @@ public:
         //resize the elements array if we are over capacity
         //we resize it so that after the insert operation, we have exactly
         //twice as many empty slots as elements
-        if ( m_numElements == m_arraySize ) {
+        if ( m_numElements+1 >= m_arraySize ) {
             useResizedArray( (m_numElements+1)*2 );
         }
         
@@ -240,7 +245,7 @@ public:
      * @param value             the new value to be set
      * @throws error            if the index is out of bounds
      */
-    void set( int index , E value ) {
+    void set( int index , const E& value ) {
         if ( isOutOfBounds( index ) ) {
             throw std::runtime_error(
                 Message() << generateAccessOutOfBoundsMessage(
@@ -256,7 +261,7 @@ public:
      *
      * @param value             the element to add
      */
-    void append( E value ) {
+    void append( const E& value ) {
         insert( m_numElements , value );
     }
     
@@ -265,7 +270,7 @@ public:
      * down by 1 index value
      *
      * @param index             the index of the element to be removed
-     * @return                  the element that was removed
+     * @return                  the value of the element that was removed
      */
     E removeAt( int index ) {
         
@@ -284,7 +289,7 @@ public:
         }
         
         //clear the last spot in the list, because we lost 1 element
-        m_values[ m_numElements ] = 0;
+        //m_values[ m_numElements ] = 0;
         
         //update the number of elements
         m_numElements--;
@@ -306,7 +311,7 @@ public:
      * @param value             the element to be removed
      * @return                  if the element was removed or not
      */
-    bool remove( E value ) {
+    bool remove( const E& value ) {
         for ( int idx=0 ; idx<m_numElements ; idx++ ) {
             if ( m_values[ idx ] == value ) {
                 removeAt( idx );
