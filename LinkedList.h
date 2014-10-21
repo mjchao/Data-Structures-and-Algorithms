@@ -52,23 +52,122 @@ private:
      */
     int m_numElements;
     
+    /**
+     * @return                  a pointer to the link at the given index
+     *                          of the linked list
+     */
+    Link* getLinkPtr( int index ) const {
+        Link* currElement = m_head;
+        int currIdx = 0;
+        while( currIdx < index ) {
+            currElement = (*currElement).next;
+            currIdx++;
+        }
+        return currElement;
+    }
+    
+    /**
+     * Removes the given link from the list
+     *
+     * @param link              the link to remove
+     */
+    void removeLink( Link* link ) {
+        Link* prevPtr = (*link).prev;
+        Link* nextPtr = (*link).next;
+        
+        //remove the next and previous pointers to the element to be removed:
+        //first, check that the previous element exists.
+        if ( prevPtr == 0 ) {
+            
+            //if there is no previous element, then we removed the head
+            //so update the head to point to the next element
+            m_head = nextPtr;
+        }
+        else {
+            (*prevPtr).next = nextPtr;
+        }
+        
+        //second, check that the next element exists.
+        if ( nextPtr == 0 ) {
+            
+            //if there is no next element, then we removed the tail
+            //so update the tail to point to the previous element
+            m_tail = prevPtr;
+        }
+        else {
+            (*nextPtr).prev = prevPtr;
+        }
+        
+        //delete the link
+        delete link;
+    }
+    
 public:
+    
+    /**
+     * Creates a default LinkedList with no elements.
+     */
     LinkedList() {
         m_head = 0;
         m_tail = 0;
         m_numElements = 0;
     }
     
+    /**
+     * Determines if the given element is contained by the list
+     * 
+     * @param value             the value for which to look
+     * @return                  if the given value is contained by the list
+     */
     bool contains( const E& value ) const {
-        //TODO
-        return true;
+        return indexOf( value ) != -1;
     }
     
+    /**
+     * Returns the index of the first occurence of the given element
+     *
+     * @param value             the value for which to look
+     * @return                  the index of the first occurence of the given
+     *                          value, or -1 if the value was not found
+     */
     int indexOf( const E& value ) const {
-        //TODO
-        return 0;
+        
+        //if the list is empty, then the value is clearly not in the list.
+        //this is a special case because there is no head of the linked list.
+        if ( m_numElements == 0 ) {
+            return -1;
+        }
+        
+        //if the list is non-empty, then the head of the list must exist
+        int currIdx = 0;
+        Link* currElement = m_head;
+        
+        //go through the list and if we see the specified value,
+        //return that value
+        while ( currElement != m_tail ) {
+            if ( (*currElement).value == value ) {
+                return currIdx;
+            }
+            currElement = (*currElement).next;
+            currIdx++;
+        }
+        
+        //check if the tail contains the value for which we are looking
+        if ( (*currElement).value == value ) {
+            return currIdx;
+        }
+        
+        //if the value was not found, then return -1
+        return -1;
     }
     
+    /**
+     * Inserts the given element at the specified index in the list. Subsequent
+     * elements are shifted down by 1 index value.
+     *
+     * @param index             the index at which to insert the element
+     * @param value             the value to insert
+     */
     void insert( int index , const E& value ) {
         
         //make sure we are not inserting out of bounds
@@ -131,18 +230,46 @@ public:
         m_numElements++;
     }
     
+    /**
+     * Inserts the given element at the front of the list. This has the same
+     * functionality as insert( 0 , value );
+     *
+     * @param value             the value to insert at the front of the list
+     */
     void insert( const E& value ) {
-        //TODO
+        insert( 0 , value );
     }
     
+    /**
+     * Sets the element at the given index to the specified value
+     *
+     * @param index             index of the element in the list to modify
+     * @param value             the new value to be set at the given index
+     *                          of the list
+     */
     void set( int index , const E& value ) {
-        //TODO
+        if ( index < 0 || index >= m_numElements ) {
+            throw std::runtime_error( generateAccessOutOfBoundsErrorMessage(
+                                                    index , m_numElements ) );
+        }
+        Link* elementToModifyPtr = getLinkPtr( index );
+        (*elementToModifyPtr).value = value;
     }
     
+    /**
+     * Appends the given element to the end of the list.
+     *
+     * @param value             the value to append to the end of the list
+     */
     void append( const E& value ) {
-        //TODO
+        insert( m_numElements , value );
     }
     
+    /**
+     * Returns the element at the specified index
+     *
+     * @param index             the index of an element in the list
+     */
     E& get( int index ) const {
         
         //make sure not accessing out of bounds
@@ -151,26 +278,90 @@ public:
                                                     index , m_numElements ) );
         }
         
-        int currIdx = 0;
-        Link* currElement = m_head;
-        while( currIdx < index ) {
-            currElement = (*currElement).next;
-            currIdx++;
+        Link* elementPtr = getLinkPtr( index );
+        return (*elementPtr).value;
+    }
+    
+    /**
+     * Removes the given value from the list if it exists.
+     *
+     * @param value             the value to remove from the list
+     * @return                  if the value was sucessfully removed
+     */
+    bool remove( const E& value ) {
+        /*int index = indexOf( value );
+        if ( index == -1 ) {
+            return false;
+        }
+        else {
+            removeAt( index );
+            return true;
+        }*/
+        Link* toRemove = 0;
+        
+        //check if the tail contains the value we wish to remove
+        //it's okay if it is not the first occurence, because
+        //we will find the actual first occurrence later
+        if ( m_tail != 0 ) {
+            if ( (*m_tail).value == value ) {
+                toRemove = m_tail;
+            }
         }
         
-        return (*currElement).value;
+        Link* currElement = m_head;
+        //go through the list from the start and look for the first
+        //occurence of the given value
+        while( currElement != m_tail ) {
+            if ( (*currElement).value == value ) {
+                toRemove = currElement;
+                break;
+            }
+            currElement = (*currElement).next;
+        }
+        
+        if ( toRemove == 0 ) {
+            return false;
+        }
+        
+        //if we found the element to be removed, then remove it
+        else {
+            removeLink( toRemove );
+            m_numElements--;
+            return true;
+        }
     }
     
-    bool remove( const E& value ) {
-        //TODO
-        return 0;
-    }
-    
+    /**
+     * Removes the value at the given index from the list.
+     *
+     * @param index             the index of the value to remove
+     * @return                  the element that was removed
+     */
     E removeAt( int index ) {
-        //TODO
-        return (*m_head).value;
+        if ( index < 0 || index >= m_numElements ) {
+            throw std::runtime_error( generateAccessOutOfBoundsErrorMessage(
+                                                    index , m_numElements ) );
+        }
+        
+        //find the element was would like to remove
+        Link* elementPtr = getLinkPtr( index );
+        
+        //store the value of the link to be removed
+        E rtn = (*elementPtr).value;
+        
+        //remove that link from the list
+        removeLink( elementPtr );
+        
+        //update the number of elements in the list
+        m_numElements--;
+        
+        //return the value we removed
+        return rtn;
     }
     
+    /**
+     * Clears the list so that it contains 0 elements.
+     */
     void clear() {
         
         //an empty list is a special case, because we cannot access the tail
@@ -201,10 +392,21 @@ public:
         m_numElements = 0;
     }
     
+    /**
+     * Determines the size of the list
+     *
+     * @return size             the size of the list
+     */
     int size() const {
         return m_numElements;
     }
     
+    /**
+     * Determines the textual representation of the list. The list is
+     * represented as "[<element 1>, <element 2>, <element 3>, ...]"
+     *
+     * @return                  the textual representation of the list
+     */
     string toString() const {
         if ( m_numElements == 0 ) {
             return "[]";

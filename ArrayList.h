@@ -30,7 +30,7 @@ using std::to_string;
  */
 template< typename E >
 class ArrayList : public AbstractList< E > {
-
+    
     friend class ArrayListTests;
     
 private:
@@ -87,7 +87,7 @@ private:
     bool isOutOfBounds( int index ) const {
         return ( index < 0 || index >= m_numElements );
     }
-   
+    
 public:
     
     /**
@@ -115,8 +115,8 @@ public:
     
     /**
      * Creates an ArrayList with the given initial size
-     * 
-     * @param initialSize           initial number of array slots for 
+     *
+     * @param initialSize           initial number of array slots for
      *                              storing elements of the list
      */
     ArrayList( int initialSize ) {
@@ -170,7 +170,7 @@ public:
         //make sure not we are not asked to go out of bounds
         if ( isOutOfBounds( index ) ) {
             throw runtime_error( Message() <<
-                        generateAccessOutOfBoundsMessage( index , m_numElements ) );
+                                generateAccessOutOfBoundsMessage( index , m_numElements ) );
         }
         return m_values[ index ];
     }
@@ -215,8 +215,8 @@ public:
         //of the array, as that is equivalent to appending to the end
         if ( index < 0 || index > m_numElements ) {
             throw std::runtime_error(
-                Message() << generateInsertOutOfBoundsMessage(
-                                                    index , m_numElements ) );
+                                     Message() << generateInsertOutOfBoundsMessage(
+                                                                                   index , m_numElements ) );
         }
         
         //resize the elements array if we are over capacity
@@ -248,8 +248,8 @@ public:
     void set( int index , const E& value ) {
         if ( isOutOfBounds( index ) ) {
             throw std::runtime_error(
-                Message() << generateAccessOutOfBoundsMessage(
-                                                    index , m_numElements ) );
+                                     Message() << generateAccessOutOfBoundsMessage(
+                                                                                   index , m_numElements ) );
         }
         
         m_values[ index ] = value;
@@ -277,8 +277,8 @@ public:
         //make sure we are not going out of bounds
         if ( isOutOfBounds( index ) ) {
             throw std::runtime_error(
-                Message() << generateAccessOutOfBoundsMessage(
-                                                    index , m_numElements ) );
+                                     Message() << generateAccessOutOfBoundsMessage(
+                                                                                   index , m_numElements ) );
         }
         
         E rtn = m_values[ index ];
@@ -305,7 +305,7 @@ public:
     }
     
     /**
-     * Tries to remove the given element from the list, and return if the 
+     * Tries to remove the given element from the list, and return if the
      * operation was successful or not
      *
      * @param value             the element to be removed
@@ -349,12 +349,12 @@ public:
     
     string generateAccessOutOfBoundsMessage( int index , int size ) const {
         return "Error: Out of bounds access at index " + to_string( index ) +
-                                    " in list with size " + to_string( size );
+        " in list with size " + to_string( size );
     }
     
     string generateInsertOutOfBoundsMessage( int index , int size ) const {
         return "Error: Out of bounds insertion at index " + to_string( index ) +
-                                    " in list with size " + to_string( size );
+        " in list with size " + to_string( size );
     }
 };
 

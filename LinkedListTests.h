@@ -21,7 +21,15 @@ public:
         void testToString();
         void testClear();
         void testInsert();
+        void testInsertFront();
+        void testAppend();
+        void testSet();
         void testGet();
+        void testContains();
+        void testIndexOf();
+        void testRemoveAt();
+        void testRemove();
+        void testSize();
         void testMemoryUsage();
 };
 

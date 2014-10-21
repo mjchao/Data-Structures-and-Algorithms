@@ -34,6 +34,8 @@ ArrayListTests::~ArrayListTests() {
 }
 
 void ArrayListTests::test() {
+    vector<int> t1;
+    vector<int> t2;
     testArrayListAppend();
     testArrayListInsert();
     testArrayListClear();
@@ -870,11 +872,9 @@ void ArrayListTests::testArrayListMemoryUsage() {
 }
 
 void ArrayListTests::testArrayListReferences() {
-    cout << "Testing references" << endl;
-
     int expected;
     int found;
-    string errorMessage = "ArrayList does not pass by reference correctly!";
+    string errorMessage = "ArrayList does not give references correctly!";
     
     ArrayList<vector<int>> test;
     vector<int> v1;
@@ -889,7 +889,7 @@ void ArrayListTests::testArrayListReferences() {
     v2.push_back( 7 );
     test.append( v2 );
     
-    v1.at( 0 ) = 1000;
+    test.get( 0 ).at( 0 ) = 1000;
     expected = 1000;
     found = test.get( 0 ).at( 0 );
     evaluateTest( expected , found , errorMessage );
