@@ -17,7 +17,7 @@ class AbstractQueue {
      * 
      * @param value             the value to insert into the queue
      */
-    virtual void offer( E& value ) = 0;
+    virtual void offer( const E& value ) = 0;
     
     /**
      * Gets, but does not remove, the value at the front of the queue

@@ -168,8 +168,14 @@ void LinkedListTests::testInsert() {
     found = test.toString();
     evaluateTest( expected , found , errorMessage );
     
+    //test inserting in first half and second half of list
     test.insert( 1 , 5 );
     expected = "[2, 5, 1000, 1]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    test.insert( 3 , 333 );
+    expected = "[2, 5, 1000, 333, 1]";
     found = test.toString();
     evaluateTest( expected , found , errorMessage );
     

@@ -57,13 +57,30 @@ private:
      *                          of the linked list
      */
     Link* getLinkPtr( int index ) const {
-        Link* currElement = m_head;
-        int currIdx = 0;
-        while( currIdx < index ) {
-            currElement = (*currElement).next;
-            currIdx++;
+        
+        //if the index is closer to the head of the list, start there and work
+        //forwards
+        if ( index < m_numElements/2 ) {
+            Link* currElement = m_head;
+            int currIdx = 0;
+            while( currIdx < index ) {
+                currElement = (*currElement).next;
+                currIdx++;
+            }
+            return currElement;
         }
-        return currElement;
+        
+        //if the index is closer to the end of the list, start there and work
+        //backwards
+        else {
+            Link* currElement = m_tail;
+            int currIdx = m_numElements - 1;
+            while( currIdx > index ) {
+                currElement = (*currElement).prev;
+                currIdx--;
+            }
+            return currElement;
+        }
     }
     
     /**
@@ -195,12 +212,7 @@ public:
             //go to the element just before the index at which we are inserting
             //this element will be the element just before the element we are
             //inserting
-            int currIdx = 0;
-            Link* prevElement = m_head;
-            while( currIdx < index-1 ) {
-                prevElement = (*prevElement).next;
-                currIdx++;
-            }
+            Link* prevElement = getLinkPtr( index-1 );
             
             //and the element right after that will be the element just after
             //the elemnt we are inserting
@@ -257,12 +269,32 @@ public:
     }
     
     /**
-     * Appends the given element to the end of the list.
+     * Appends the given element to the end of the list in O(1) time.
      *
      * @param value             the value to append to the end of the list
      */
     void append( const E& value ) {
-        insert( m_numElements , value );
+        
+        //if list has 0 or 1 element, we can just insert it to the front and the
+        //efficiency is approximately the same
+        if ( m_numElements == 0 ) {
+            insert( m_numElements , value );
+        }
+        
+        //if list is not empty, we might be more efficient just accessing
+        //the last element and inserting this new element there
+        else {
+            Link* currLastElement = m_tail;
+            Link* newElement = new Link;
+            (*newElement).value = value;
+            (*newElement).prev = currLastElement;
+            (*newElement).next = 0;
+            (*currLastElement).next = newElement;
+            
+            //don't forget to update the tail to point to the new last element
+            m_tail = newElement;
+            m_numElements++;
+        }
     }
     
     /**
@@ -289,14 +321,6 @@ public:
      * @return                  if the value was sucessfully removed
      */
     bool remove( const E& value ) {
-        /*int index = indexOf( value );
-        if ( index == -1 ) {
-            return false;
-        }
-        else {
-            removeAt( index );
-            return true;
-        }*/
         Link* toRemove = 0;
         
         //check if the tail contains the value we wish to remove
@@ -343,7 +367,7 @@ public:
                                                     index , m_numElements ) );
         }
         
-        //find the element was would like to remove
+        //find the element we would like to remove
         Link* elementPtr = getLinkPtr( index );
         
         //store the value of the link to be removed

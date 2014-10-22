@@ -24,6 +24,8 @@ using std::runtime_error;
  *
  * The front of the list represents the top of the stack, while the
  * back of the list represents the bottom.
+ *
+ * @param E                         the type of element in this queue
  */
 template< typename E >
 class LinkedStack : public LinkedList< E > , public AbstractStack< E > {
@@ -63,19 +65,8 @@ public:
         return LinkedList< E >::removeAt( 0 );
     }
     
-    /**
-     * Determines the textual representation of the stack
-     *
-     * @return                      the textual representation of the stack,
-     *                              similar to that of a list. the top element
-     *                              is first.
-     */
-    string toString() const {
-        return LinkedList< E >::toString();
-    }
-    
     string generateEmptyStackErrorMessage() const {
-        return "Error: cannot pop from stack with no elements.";
+        return "Error: cannot pop from or peek into stack with no elements.";
     }
 };
 

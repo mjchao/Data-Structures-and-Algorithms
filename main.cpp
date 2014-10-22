@@ -10,6 +10,7 @@
 #include "ArrayListTests.h"
 #include "LinkedListTests.h"
 #include "LinkedStackTests.h"
+#include "LinkedQueueTests.h"
 #include "UnitTest.h"
 
 using std::cout;
@@ -21,9 +22,13 @@ int main(int argc, const char * argv[]) {
     //test.test();
     
     LinkedListTests test2;
-    //test2.test();
+    test2.test();
     
     LinkedStackTests test3;
     test3.test();
+    
+    LinkedQueueTests test4;
+    test4.test();
+
     return 0;
 }
