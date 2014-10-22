@@ -9,6 +9,9 @@
 #ifndef Data_Structures_Set_h
 #define Data_Structures_Set_h
 
+#include <string>
+using std::string;
+
 /**
  * A mathematical set that contains some elements and provides functions for
  * operating to modify its contents.
