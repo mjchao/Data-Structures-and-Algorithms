@@ -38,12 +38,12 @@ private:
     };
     
     /**
-     * A reference to the first element in this LinkedList
+     * A pointer to the first element in this LinkedList
      */
     Link* m_head;
     
     /**
-     * A reference to the last element in this LinkedList
+     * A pointer to the last element in this LinkedList
      */
     Link* m_tail;
     
