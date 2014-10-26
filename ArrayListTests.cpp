@@ -48,6 +48,7 @@ void ArrayListTests::test() {
     testArrayListSet();
     //testArrayListMemoryUsage();
     testArrayListReferences();
+    testArrayListCopy();
     systemTest();
     reportTestStatistics( "ArrayList" );
 }
@@ -858,13 +859,46 @@ void ArrayListTests::testArrayListMemoryUsage() {
     cout << "Testing memory usage..." <<
                 "Please continue to observe memory usage." << endl;
     ArrayList<int> test;
-    for ( int i=0 ; i<300000 ; i++ ) {
+    for ( int i=0 ; i<1000000 ; i++ ) {
         test.append( 100 );
         test.append( 200 );
         test.append( 300 );
         test.append( 400 );
         test.append( 500 );
         test.clear();
+    }
+    for ( int i=0 ; i<1000000 ; i++ ) {
+        test.append( 100 );
+        test.append( 200 );
+        test.append( 300 );
+        test.append( 400 );
+        test.append( 500 );
+        test.remove( 500 );
+        test.remove( 400 );
+        test.remove( 300 );
+        test.remove( 200 );
+        test.remove( 100 );
+    }
+    for ( int i=0 ; i<1000000 ; i++ ) {
+        test.append( 100 );
+        test.append( 200 );
+        test.append( 300 );
+        test.append( 400 );
+        test.append( 500 );
+        test.removeAt( 4 );
+        test.removeAt( 0 );
+        test.removeAt( 2 );
+        test.removeAt( 1 );
+        test.removeAt( 0 );
+    }
+    for ( int i=0 ; i<1000000 ; i++ ) {
+        ArrayList<int>* test2 = new ArrayList<int>;
+        test2->append( 100 );
+        test2->append( 200 );
+        test2->append( 300 );
+        test2->append( 400 );
+        test2->append( 500 );
+        delete test2;
     }
     cout << "Was memory usage constant? (y/n)" << endl;
     char result = tolower( getchar() );
@@ -911,6 +945,21 @@ void ArrayListTests::systemTest() {
     expected = "[10, 9, 8, 7, 6, 5, 4, 3, 2, 1]";
     found = test.toString();
     evaluateTest( expected , found , errorMessage );
+}
+
+void ArrayListTests::testArrayListCopy() {
+    string errorMessage = "ArrayList copy() failed!";
+    ArrayList<int> test;
+    test.append( 0 );
+    test.append( 1 );
+    test.append( 2 );
+    
+    ArrayList<int> copy;
+    copy = test;
+    evaluateTest( test.get( 0 ) , copy.get( 0 ) , errorMessage );
+    evaluateTest( test.get( 1 ) , copy.get( 1 ) , errorMessage );
+    evaluateTest( test.get( 2 ) , copy.get( 2 ) , errorMessage );
+    evaluateTest( test.size() , copy.size() , errorMessage );
 }
 
 ArrayList<int> reverseList( ArrayList<int> l ) {

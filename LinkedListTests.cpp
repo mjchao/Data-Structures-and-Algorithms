@@ -8,6 +8,9 @@
 
 #include "LinkedListTests.h"
 #include "LinkedList.h"
+#include "ArrayList.h"
+#include <vector>
+    using std::vector;
 
 using std::tolower;
 using std::runtime_error;
@@ -29,7 +32,9 @@ void LinkedListTests::test() {
     testRemoveAt();
     testRemove();
     testSize();
+    testReferences();
     //testMemoryUsage();
+    testCopy();
     reportTestStatistics( "LinkedList" );
 }
 
@@ -39,17 +44,19 @@ void LinkedListTests::testToString() {
     string found;
     
     LinkedList< int > test;
-    LinkedList<int>::Link first;
-    first.value = 1000;
+    LinkedList<int>::Link* first = new LinkedList<int>::Link;
+    (*first).value = 1000;
+    (*first).prev = 0;
     
-    LinkedList<int>::Link second;
-    second.value = 500;
+    LinkedList<int>::Link* second = new LinkedList<int>::Link;
+    (*second).value = 500;
     
-    first.next = &second;
-    second.prev = &first;
+    (*first).next = second;
+    (*second).prev = first;
     
-    test.m_head = &first;
+    test.m_head = first;
     test.m_numElements = 2;
+    test.m_tail = second;
     
     //test that toString() does not alter elements
     expected = "[1000, 500]";
@@ -61,17 +68,19 @@ void LinkedListTests::testToString() {
     evaluateTest( expected , found , errorMessage );
     
     //test that toString() does not alter links
-    first.value = 2000;
-    second.value = 750;
+    (*first).value = 2000;
+    (*second).value = 750;
     expected = "[2000, 750]";
     found = test.toString();
     evaluateTest( expected , found , errorMessage );
     
     //test that we can still insert after toString() is called
-    LinkedList<int>::Link third;
-    third.value = 250;
-    second.next = &third;
-    third.prev = &second;
+    LinkedList<int>::Link* third = new LinkedList<int>::Link;
+    (*third).value = 250;
+    (*third).next = 0;
+    (*second).next = third;
+    (*third).prev = second;
+    test.m_tail = third;
     test.m_numElements = 3;
     expected = "[2000, 750, 250]";
     found = test.toString();
@@ -943,6 +952,24 @@ void LinkedListTests::testSize() {
     evaluateTest( expected , found , errorMessage );
 }
 
+void LinkedListTests::testReferences() {
+    
+    string expected;
+    string found;
+    string errorMessage = "LinkedList fails to handle references properly!";
+    
+    LinkedList<int> test;
+    
+    test.append( 0 );
+    test.append( 1 );
+    test.append( 2 );
+    test.get( 0 ) = 5;
+    
+    expected = "[5, 1, 2]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+}
+
 void LinkedListTests::testMemoryUsage() {
     char expected;
     char found;
@@ -972,8 +999,31 @@ void LinkedListTests::testMemoryUsage() {
         test.remove( 1 );
         test.remove( 0 );
     }
+    
+    //test deconstructor
+    for ( int i=0 ; i<10000000 ; i++ ) {
+        LinkedList<int>* test2 = new LinkedList<int>;
+        test2->append( 0 );
+        test2->append( 1 );
+        test2->append( 2 );
+        delete test2;
+    }
     cout << "Was memory usage constant? (Y/N)" << endl;
     found = tolower( getchar() );
     expected = 'y';
     evaluateTest( expected , found , errorMessage );
+}
+
+void LinkedListTests::testCopy() {
+    string errorMessage = "LinkedList assignment operator failed!";
+    LinkedList<int> test;
+    test.append( 0 );
+    test.append( 1 );
+    test.append( 2 );
+    
+    LinkedList<int> copy;
+    copy = test;
+    evaluateTest( test.get( 0 ) , copy.get( 0 ) , errorMessage );
+    evaluateTest( test.get( 0 ), copy.get( 0 ) , errorMessage );
+    evaluateTest( test.get( 0 ) , copy.get( 0 ) , errorMessage );
 }

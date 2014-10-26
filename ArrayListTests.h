@@ -31,6 +31,7 @@ public:
         void testArrayListResize();
         void testArrayListMemoryUsage();
         void testArrayListReferences();
+        void testArrayListCopy();
         void systemTest();
 };
 #endif /* defined(__Data_Structures__ListTests__) */

@@ -19,5 +19,6 @@ public:
         void testPush();
         void testPeek();
         void testPop();
+        void testCopy();
 };
 #endif /* defined(__Data_Structures__LinkedStackTests__) */

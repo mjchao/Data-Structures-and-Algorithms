@@ -13,6 +13,7 @@
 #include "AbstractList.h"
 #include "AbstractSet.h"
 #include "LinkedListTests.h"
+#include "ArrayList.h"
 
 using std::to_string;
 
@@ -128,6 +129,33 @@ public:
         m_head = 0;
         m_tail = 0;
         m_numElements = 0;
+    }
+    
+    ~LinkedList< E >() {
+        clear();
+    }
+    
+    LinkedList( const LinkedList& toCopy ) {
+        Link* currElement = toCopy.m_head;
+        while( currElement != toCopy.m_tail ) {
+            append( (*currElement).value );
+            currElement = (*currElement).next;
+        }
+        
+        //don't forget to add the tail
+        append( (*currElement).value );
+    }
+    
+    LinkedList& operator=( const LinkedList& toAssign ) {
+        Link* currElement = toAssign.m_head;
+        while( currElement != toAssign.m_tail ) {
+            append( (*currElement).value );
+            currElement = (*currElement).next;
+        }
+        
+        //don't forget to add the tail
+        append( (*currElement).value );
+        return *this;
     }
     
     /**

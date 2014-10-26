@@ -20,7 +20,7 @@ template< typename E >
 class AbstractList : public AbstractSet< E > {
     
 public:
-    
+
     /**
      * Gets the element at the specified ordering index.
      *

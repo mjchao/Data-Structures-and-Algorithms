@@ -30,6 +30,8 @@ public:
         void testRemoveAt();
         void testRemove();
         void testSize();
+        void testReferences();
+        void testCopy();
         void testMemoryUsage();
 };
 

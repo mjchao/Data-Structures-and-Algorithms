@@ -131,7 +131,6 @@ public:
     
     /**
      * Copies the contents of the given ArrayList into this ArrayList
-     *
      */
     ArrayList<E>& operator=( const ArrayList<E>& listToCopy ) {
         m_arraySize = listToCopy.m_arraySize;
@@ -332,6 +331,19 @@ public:
     
     int size() const {
         return this->m_numElements;
+    }
+    
+    /**
+     * Ensures that the ArrayList can contain the given number of elements
+     * without resizing
+     *
+     * @param capacity          a minimum number of elements the list must
+     *                          be able to contain without resizing
+     */
+    void ensureCapacity( int capacity ) {
+        if ( capacity > m_arraySize ) {
+            useResizedArray( capacity*2 );
+        }
     }
     
     string toString() const {

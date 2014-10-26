@@ -16,6 +16,7 @@ void LinkedStackTests::test() {
     testPush();
     testPeek();
     testPop();
+    testCopy();
     reportTestStatistics( "LinkedStack" );
 }
 
@@ -186,5 +187,24 @@ void LinkedStackTests::testPop() {
     expected = "[]";
     found = test.toString();
     evaluateTest( expected , found , exceptionErrorMessage );
+}
+
+void LinkedStackTests::testCopy() {
+    string errorMessage = "LinkedStack assignment operator failed!";
+    LinkedStack<int> test;
+    test.push( 0 );
+    test.push( 1 );
+    test.push( 2 );
     
+    LinkedStack<int> copy;
+    copy = test;
+    
+    evaluateTest( test.size() , copy.size() , errorMessage );
+    evaluateTest( copy.pop() , test.pop() , errorMessage );
+    
+    evaluateTest( test.size() , copy.size() , errorMessage );
+    evaluateTest( copy.pop() , test.pop() , errorMessage );
+    
+    evaluateTest( test.size() , copy.size() , errorMessage );
+    evaluateTest( copy.pop() , test.pop() , errorMessage );
 }

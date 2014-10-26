@@ -33,6 +33,16 @@ class LinkedStack : public LinkedList< E > , public AbstractStack< E > {
 public:
     
     /**
+     * Creates a default empty stack
+     */
+    LinkedStack() : LinkedList< E >() {
+        
+    }
+    
+    //there is no need to provide a copy constructor, destructor, or copy
+    //assignment operator because the LinkedList's are used
+    
+    /**
      * Pushes the given value to the top of the stack
      *
      * @param value                 the value to push
