@@ -802,51 +802,52 @@ void ArrayListTests::testArrayListResize() {
     string resizeErrorMessage = "ArrayList does not resize correctly!";
     string sizeErrorMessage = "Incorrect ArrayList size()!";
     
-    ArrayList<int> test( 10 );
+    ArrayList<int> test;
     
     //test size of list
     expected = 0;
     found = test.size();
     evaluateTest( expected , found , sizeErrorMessage );
     
-    expected = 10;
+    expected = 1;
     found = test.m_arraySize;
     evaluateTest( expected , found , resizeErrorMessage );
     
-    for ( int i=0 ; i<9 ; i++ ) {
+    for ( int i=0 ; i<15 ; i++ ) {
         test.append( i );
     }
     
-    expected = 9;
+    expected = 15;
     found = test.size();
     evaluateTest( expected , found , sizeErrorMessage );
     
-    expected = 10;
+    expected = 16;
     found = test.m_arraySize;
     evaluateTest( expected , found , resizeErrorMessage );
     
     //test adding additional elements to the list
-    //now list should have 10 elements and capacity 20
-    test.append( 10 );
-    expected = 10;
+    //now list should have 17 elements and capacity 32
+    test.append( 15 );
+    test.append( 16 );
+    expected = 17;
     found = test.size();
     evaluateTest( expected , found , sizeErrorMessage );
     
-    expected = 20;
+    expected = 32;
     found = test.m_arraySize;
     evaluateTest( expected , found , resizeErrorMessage );
     
     //test removing elements from the list to less than half capacity
-    for ( int i=0 ; i<5 ; i++ ) {
+    for ( int i=0 ; i<2 ; i++ ) {
         test.removeAt( 0 );
     }
     
     //now list should have 5 elements and capacity 10
-    expected = 5;
+    expected = 15;
     found = test.size();
     evaluateTest( expected , found , sizeErrorMessage );
     
-    expected = 10;
+    expected = 16;
     found = test.m_arraySize;
     evaluateTest( expected , found , resizeErrorMessage );
     

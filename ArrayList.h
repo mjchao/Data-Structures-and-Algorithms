@@ -9,8 +9,6 @@
 #ifndef __Data_Structures__ArrayList__
 #define __Data_Structures__ArrayList__
 
-using std::runtime_error;
-
 #include <string>
 using std::string;
 
@@ -22,6 +20,7 @@ using std::min;
 #include "ArrayListTests.h"
 
 using std::to_string;
+using std::runtime_error;
 
 /**
  * An array-based list, where elements are stored in an array
@@ -55,15 +54,20 @@ private:
      * Copies the contents of this array into a new array and replaces the old
      * array-based list with the new array. If the new array has smaller size
      * than the old array, then elements that do not fit into the new array
-     * are discarded.
+     * are discarded. If the new array size is less than 1, 1 is automatically
+     * used as the new array size
      *
      * @param newArraySize       the new size of the elements array
      */
     void useResizedArray( int newArraySize ) {
-        E* newArr = new E[ newArraySize ];
+        int arraySize = newArraySize;
+        if ( arraySize < 1 ) {
+            arraySize = 1;
+        }
+        E* newArr = new E[ arraySize ];
         
         //copy elements into the new array
-        int smallestSize = min( m_arraySize , newArraySize );
+        int smallestSize = min( m_arraySize , arraySize );
         for ( int i=0 ; i<smallestSize ; i++ ) {
             newArr[ i ] = m_values[ i ];
         }
@@ -73,7 +77,7 @@ private:
         
         //update the list to have the new array and the new size
         m_values = newArr;
-        m_arraySize = newArraySize;
+        m_arraySize = arraySize;
     }
     
     /**
@@ -88,15 +92,26 @@ private:
         return ( index < 0 || index >= m_numElements );
     }
     
+protected:
+    
+    /**
+     * Gets the maximum number of elements the current array can contain
+     *
+     * @return                      the current size of the array of this list
+     */
+    int getArraySize() const {
+        return m_arraySize;
+    }
+    
 public:
     
     /**
      * Creates a default ArrayList with no elements
      */
     ArrayList() {
-        m_arraySize = 0;
+        m_arraySize = 1;
         m_numElements = 0;
-        m_values = new E[ 0 ];
+        m_values = new E[ 1 ];
     }
     
     /**
@@ -114,15 +129,21 @@ public:
     }
     
     /**
-     * Creates an ArrayList with the given initial size
+     * Creates an ArrayList with the given initial size. If the given 
+     * initial size is less than 1, then 1 is automatically used
+     * as the initial size.
      *
      * @param initialSize           initial number of array slots for
      *                              storing elements of the list
      */
     ArrayList( int initialSize ) {
-        m_arraySize = initialSize;
+        int arraySize = initialSize;
+        if ( arraySize < 1 ) {
+            arraySize = 1;
+        }
+        m_arraySize = arraySize;
         m_numElements = 0;
-        m_values = new E[ initialSize ];
+        m_values = new E[ arraySize ];
     }
     
     ~ArrayList< E >() {
@@ -214,20 +235,20 @@ public:
         //of the array, as that is equivalent to appending to the end
         if ( index < 0 || index > m_numElements ) {
             throw std::runtime_error(
-                                     Message() << generateInsertOutOfBoundsMessage(
-                                                                                   index , m_numElements ) );
+                Message() << generateInsertOutOfBoundsMessage(
+                                            index , m_numElements ) );
         }
         
         //resize the elements array if we are over capacity
         //we resize it so that after the insert operation, we have exactly
         //twice as many empty slots as elements
-        if ( m_numElements+1 >= m_arraySize ) {
-            useResizedArray( (m_numElements+1)*2 );
+        if ( m_numElements+1 > m_arraySize ) {
+            useResizedArray( (m_numElements)*2 );
         }
         
         //shift all the elements including and after the given index
         //down by 1
-        for ( int i=m_numElements ; i>=index ; i-- ) {
+        for ( int i=m_numElements-1 ; i>=index ; i-- ) {
             m_values[ i+1 ] = m_values[ i ];
         }
         
@@ -297,7 +318,7 @@ public:
         //we resize the list so that it has exactly twice as many empty
         //slots as elements
         if ( m_numElements*2 < m_arraySize ) {
-            useResizedArray( m_numElements*2 );
+            useResizedArray( m_arraySize/2 );
         }
         
         return rtn;
@@ -342,7 +363,7 @@ public:
      */
     void ensureCapacity( int capacity ) {
         if ( capacity > m_arraySize ) {
-            useResizedArray( capacity*2 );
+            useResizedArray( capacity );
         }
     }
     
