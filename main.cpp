@@ -32,7 +32,7 @@ int main(int argc, const char * argv[]) {
     //test4.test();
     
     ArrayQueueTests test5;
-    //test5.test();
+    test5.test();
 
     return 0;
 }

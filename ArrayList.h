@@ -23,7 +23,17 @@ using std::to_string;
 using std::runtime_error;
 
 /**
- * An array-based list, where elements are stored in an array
+ * An array-based list, where elements are stored in an array. Accessing
+ * an element or changing the value of an element takes O(1) time, but
+ * inserting new elements could take O(n) time in the worse case scenario,
+ * where n is the total number of elements contained by the list.
+ *
+ * The list works by doubling the array size whenever its capacity is exceeded.
+ * If the array had capacity 8 and we added the 9th element, the array
+ * would resize to 16. The array capacity is halved whenever the number of
+ * elements decreases below half capacity. If the array had
+ * capacity 8 and we removed the 4th element (3 elements left), the array
+ * would resize to 4.
  *
  * @param E                     the type of element stored in this list
  */
