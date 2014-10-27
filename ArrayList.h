@@ -190,7 +190,7 @@ public:
         //make sure not we are not asked to go out of bounds
         if ( isOutOfBounds( index ) ) {
             throw runtime_error( Message() <<
-                                generateAccessOutOfBoundsMessage( index , m_numElements ) );
+                    generateAccessOutOfBoundsMessage( index , m_numElements ) );
         }
         return m_values[ index ];
     }
@@ -268,8 +268,8 @@ public:
     void set( int index , const E& value ) {
         if ( isOutOfBounds( index ) ) {
             throw std::runtime_error(
-                                     Message() << generateAccessOutOfBoundsMessage(
-                                                                                   index , m_numElements ) );
+                Message() << generateAccessOutOfBoundsMessage(
+                                            index , m_numElements ) );
         }
         
         m_values[ index ] = value;
@@ -297,8 +297,8 @@ public:
         //make sure we are not going out of bounds
         if ( isOutOfBounds( index ) ) {
             throw std::runtime_error(
-                                     Message() << generateAccessOutOfBoundsMessage(
-                                                                                   index , m_numElements ) );
+                    Message() << generateAccessOutOfBoundsMessage(
+                                            index , m_numElements ) );
         }
         
         E rtn = m_values[ index ];

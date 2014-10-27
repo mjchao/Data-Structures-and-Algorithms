@@ -851,6 +851,36 @@ void ArrayListTests::testArrayListResize() {
     found = test.m_arraySize;
     evaluateTest( expected , found , resizeErrorMessage );
     
+    //test arraylist with user-defined initial size
+    ArrayList< int > test2( 10 );
+    for ( int i=0 ; i<10 ; i++ ) {
+        test2.append( i );
+    }
+    
+    expected = 10;
+    found = test2.m_arraySize;
+    evaluateTest( expected , found , resizeErrorMessage );
+    
+    //now adding one more element should make list resize to 20
+    test2.append( 11 );
+    expected = 20;
+    found = test2.m_arraySize;
+    evaluateTest( expected , found , resizeErrorMessage );
+    
+    //now removing two element should make list resize to 10
+    test2.removeAt( 0 );
+    test2.removeAt( 0 );
+    expected = 10;
+    found = test2.m_arraySize;
+    evaluateTest( expected , found , resizeErrorMessage );
+    
+    //now removing all element should make list resize to 1
+    for ( int i=0 ; i<9 ; i++ ) {
+        test2.removeAt( 0 );
+    }
+    expected = 1;
+    found = test2.m_arraySize;
+    evaluateTest( expected , found , resizeErrorMessage );
 }
 
 void ArrayListTests::testArrayListMemoryUsage() {
