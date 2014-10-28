@@ -20,7 +20,7 @@ using std::endl;
 int main(int argc, const char * argv[]) {
     // insert code here...
     ArrayListTests test;
-    test.test();
+    //test.test();
     
     LinkedListTests test2;
     //test2.test();

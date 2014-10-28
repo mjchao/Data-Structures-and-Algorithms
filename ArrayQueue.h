@@ -51,6 +51,15 @@ private:
      */
     int m_numElements;
     
+    /**
+     * Determines if the given index is out of bounds in the queue
+     *
+     * @return                  if the given element is
+     */
+    bool isOutOfBounds( int index ) const {
+        return index < 0 || index >= m_numElements;
+    }
+    
 public:
     /**
      * Constructs a default queue with no elements
@@ -139,6 +148,43 @@ public:
     }
     
     /**
+     * Gets the element at the given index, relative to the head of the queue -
+     * not the underlying array-based list. Therefore, the head of the queue
+     * always corresponds to index 0, even if it is not at index 0 in the array
+     *
+     * @param index             the index of the element to obtain
+     * @return                  the element at the given index in the queue
+     */
+    E& get( int index ) const {
+        if ( isOutOfBounds( index ) ) {
+            throw std::runtime_error(
+                    ArrayList< E >::generateAccessOutOfBoundsMessage(
+                                                    index , m_numElements ) );
+        }
+        int queueIndex = (m_headIdx+index) % ArrayList< E >::getArraySize();
+        return ArrayList< E >::get( queueIndex );
+    }
+    
+    /**
+     * Sets the element at the given index to the given value. The index is
+     * relative to the head of the queue - not to the start of the underlying
+     * array-based list. Therefore, the head of the queue always corresponds to
+     * index 0, even if it is not at index 0 in the array
+     *
+     * @param index             the index of an element in the queue
+     * @param newValue          the new value for the for the specified element
+     */
+    void set( int index , const E& newValue ) {
+        if ( isOutOfBounds( index ) ) {
+            throw std::runtime_error(
+                ArrayList< E >::generateAccessOutOfBoundsMessage(
+                                                    index , m_numElements ) );
+        }
+        int queueIndex = (m_headIdx+index) % ArrayList< E >::getArraySize();
+        ArrayList< E >::set( queueIndex , newValue );
+    }
+    
+    /**
      * Clears the queue so that it contains no elements
      */
     void clear() {
@@ -167,6 +213,9 @@ public:
         if ( size() == 0 ) {
             return "[]";
         }
+        
+        //the queue with 1 element is a special case because
+        //there are no commas in the textual representation
         else if ( size() == 1 ) {
             Message rtn;
             rtn << "[" << ArrayList< E >::get( m_headIdx ) << "]";

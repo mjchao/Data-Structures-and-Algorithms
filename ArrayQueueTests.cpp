@@ -14,6 +14,8 @@ void ArrayQueueTests::test() {
     testPeek();
     testPoll();
     testQueueSystem();
+    testGet();
+    testSet();
     reportTestStatistics( "ArrayQueue" );
 }
 
@@ -230,4 +232,257 @@ void ArrayQueueTests::testQueueSystem() {
     
     //the size of the queue's underlying array should not have changed
     evaluateTest( 8 , test.getArraySize() , errorMessage );
+}
+
+void ArrayQueueTests::testGet() {
+    int expected;
+    int found;
+    string errorMessage = "ArrayQueue get() failed!";
+    string expectedException;
+    string foundException;
+    string exceptionErrorMessage =
+                        "ArrayQueue get() fails to throw proper exception!";
+    ArrayQueue< int > test;
+    
+    //test getting from an empty queue
+    expectedException = test.generateAccessOutOfBoundsMessage( 0 , 0 );
+    foundException = "No exception found.";
+    try {
+        test.get( 0 );
+    }
+    catch ( std::runtime_error e ) {
+        foundException = e.what();
+    }
+    evaluateTest( expectedException , foundException , exceptionErrorMessage );
+    
+    //test getting from a queue with one element
+    
+    //first test standard queue behavior, where the head has not yet shifted
+    test.clear();
+    test.offer( 1 );
+    expected = 1;
+    found = test.get( 0 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedException = test.generateAccessOutOfBoundsMessage( 1 , 1 );
+    foundException = "No exception found.";
+    try {
+        test.get( 1 );
+    }
+    catch ( std::runtime_error e ) {
+        foundException = e.what();
+    }
+    evaluateTest( expectedException , foundException , exceptionErrorMessage );
+    
+    expectedException = test.generateAccessOutOfBoundsMessage( -1 , 1 );
+    foundException = "No exception found.";
+    try {
+        test.get( -1 );
+    }
+    catch ( std::runtime_error e ) {
+        foundException = e.what();
+    }
+    evaluateTest( expectedException , foundException , exceptionErrorMessage );
+    
+    expectedException = test.generateAccessOutOfBoundsMessage( 20 , 1 );
+    foundException = "No exception found.";
+    try {
+        test.get( 20 );
+    }
+    catch ( std::runtime_error e ) {
+        foundException = e.what();
+    }
+    evaluateTest( expectedException , foundException , exceptionErrorMessage );
+    
+    //then test getting from a queue with 1 element with the head shifted
+    test.clear();
+    test.offer( 0 );
+    test.offer( 1 );
+    test.offer( 2 );
+    test.offer( 3 );
+    test.poll();
+    test.poll();
+    test.poll();
+    
+    expected = 3;
+    found = test.get( 0 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedException = test.generateAccessOutOfBoundsMessage( 1 , 1 );
+    foundException = "No exception found.";
+    try {
+        test.get( 1 );
+    }
+    catch ( std::runtime_error e ) {
+        foundException = e.what();
+    }
+    evaluateTest( expectedException , foundException , exceptionErrorMessage );
+    
+    
+    
+    //test getting from a queue with multiple elements, but head is not shifted
+    test.clear();
+    test.offer( 0 );
+    test.offer( 1 );
+    test.offer( 2 );
+    test.offer( 3 );
+    
+    expected = 0;
+    found = test.get( 0 );
+    evaluateTest( expected , found , errorMessage );
+    expected = 1;
+    found = test.get( 1 );
+    evaluateTest( expected , found , errorMessage );
+    expected = 2;
+    found = test.get( 2 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedException = test.generateAccessOutOfBoundsMessage( 4 , 4 );
+    foundException = "No exception found";
+    try {
+        test.get( 4 );
+    }
+    catch ( std::runtime_error e ) {
+        foundException = e.what();
+    }
+    evaluateTest( expectedException , foundException , exceptionErrorMessage );
+    
+    //test getting from a queue with multiple elements, but head is shifted, and
+    //wrapped around
+    test.clear();
+    test.offer( 0 );
+    test.offer( 1 );
+    test.offer( 2 );
+    test.offer( 3 );
+    test.poll();
+    test.poll();
+    test.poll();
+    test.offer( 0 );
+    test.offer( 1 );
+    test.offer( 2 );
+    
+    expected = 3;
+    found = test.get( 0 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = 0;
+    found = test.get( 1 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = 1;
+    found = test.get( 2 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = 2;
+    found = test.get( 3 );
+    evaluateTest( expected , found , errorMessage );
+    
+    evaluateTest( 3 , test.m_headIdx , "ArrayQueue head is off!" );
+    evaluateTest( 3 , test.m_tailIdx , "ArrayQueue tail is off!" );
+    
+    expectedException = test.generateAccessOutOfBoundsMessage( 4 , 4 );
+    foundException = "No exception found.";
+    try {
+        test.get( 4 );
+    }
+    catch ( std::runtime_error e ) {
+        foundException = e.what();
+    }
+    evaluateTest( expectedException , foundException , exceptionErrorMessage );
+}
+
+void ArrayQueueTests::testSet() {
+    string expected;
+    string found;
+    string errorMessage = "ArrayQueue set() failed!";
+    string expectedException;
+    string foundException;
+    string exceptionErrorMessage =
+                        "ArrayQueue set() fails to throw proper exception!";
+    ArrayQueue<int> test;
+    
+    //test setting in an empty queue
+    expectedException = test.generateAccessOutOfBoundsMessage( 0 , 0 );
+    foundException = "No exception found";
+    try {
+        test.set( 0 , 999 );
+    }
+    catch ( std::runtime_error e ) {
+        foundException = e.what();
+    }
+    evaluateTest( expectedException , foundException , exceptionErrorMessage );
+    
+    //test setting in a queue with one element
+    test.clear();
+    test.offer( 0 );
+    test.set( 0 , 1000 );
+    expected = "[1000]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedException = test.generateAccessOutOfBoundsMessage( 1 , 1 );
+    foundException = "No exception found";
+    try {
+        test.set( 1 , 9999 );
+    }
+    catch ( std::runtime_error e ) {
+        foundException = e.what();
+    }
+    evaluateTest( expectedException , foundException , exceptionErrorMessage );
+    
+    //test setting in a queue with multiple elements
+    test.clear();
+    test.offer( 0 );
+    test.offer( 1 );
+    test.offer( 2 );
+    test.set( 0 , 10 );
+    test.set( 1 , 11 );
+    test.set( 2 , 12 );
+    expected = "[10, 11, 12]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //test setting in a queue with head shifted
+    test.clear();
+    test.offer( 0 );
+    test.offer( 1 );
+    test.offer( 2 );
+    test.offer( 3 );
+    test.poll();
+    test.poll();
+    test.poll();
+    test.offer( 4 );
+    test.offer( 5 );
+    test.offer( 6 );
+    test.set( 0 , 13 );
+    test.set( 1 , 14 );
+    test.set( 2 , 15 );
+    test.set( 3 , 16 );
+    expected = "[13, 14, 15, 16]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //test setting in a queue with one element with head shifted
+    test.clear();
+    test.offer( 0 );
+    test.offer( 1 );
+    test.offer( 2 );
+    test.offer( 3 );
+    test.poll();
+    test.poll();
+    test.poll();
+    test.set( 0 , 999 );
+    expected = "[999]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedException = test.generateAccessOutOfBoundsMessage( 1 , 1 );
+    foundException = "No exception found.";
+    try {
+        test.set( 1 , 1 );
+    }
+    catch ( std::runtime_error e ) {
+        foundException = e.what();
+    }
+    evaluateTest( expectedException , foundException , exceptionErrorMessage );
 }

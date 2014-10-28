@@ -19,6 +19,8 @@ public:
         void testPeek();
         void testPoll();
         void testQueueSystem();
+        void testGet();
+        void testSet();
 };
 
 #endif /* defined(__Data_Structures__ArrayQueueTests__) */
