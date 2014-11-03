@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 Mickey. All rights reserved.
 //
 
-#ifndef Data_Structures_Set_h
-#define Data_Structures_Set_h
+#ifndef Data_Structures_AbstractSet_h
+#define Data_Structures_AbstractSet_h
 
 #include <string>
 using std::string;

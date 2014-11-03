@@ -16,6 +16,7 @@ void ArrayQueueTests::test() {
     testQueueSystem();
     testGetIndexInArray();
     testGet();
+    testContains();
     testSet();
     testRemoveAt();
     testRemove();
@@ -394,6 +395,41 @@ void ArrayQueueTests::testGet() {
     evaluateTest( expectedException , foundException , exceptionErrorMessage );
 }
 
+void ArrayQueueTests::testContains() {
+    bool expected;
+    bool found;
+    string errorMessage = "ArrayQueue contains() failed!";
+    ArrayQueue<int> test;
+    
+    //test contains on empty queue
+    test.clear();
+    expected = false;
+    found = test.contains( 10 );
+    evaluateTest( expected , found , errorMessage );
+    
+    //test contains on queue with 1 element
+    test.clear();
+    test.offer( 10 );
+    expected = false;
+    found = test.contains( 25 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = true;
+    found = test.contains( 10 );
+    evaluateTest( expected , found , errorMessage );
+    
+    //test contains on queue with multiple elements
+    test.clear();
+    test.offer( 20 );
+    test.offer( 30 );
+    expected = false;
+    found = test.contains( 10 );
+    evaluateTest( expected , found , errorMessage );
+    evaluateTest( test.contains( 20 ) , true , errorMessage );
+    evaluateTest( test.contains( 30 ) , true , errorMessage );
+    evaluateTest( test.contains( 40 ) ,  false , errorMessage );
+}
+
 void ArrayQueueTests::testGetIndexInArray() {
     int expected;
     int found;
@@ -624,5 +660,65 @@ void ArrayQueueTests::testRemoveAt() {
 }
 
 void ArrayQueueTests::testRemove() {
+    string expected;
+    string found;
+    string errorMessage = "ArrayQueue remove() failed!";
+    
+    
+    ArrayQueue<int> test;
+    
+    //test removing from empty list
+    test.clear();
+    evaluateTest( test.remove( 1 ) , false , errorMessage );
+    expected = "[]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //test removing from queue with 1 element
+    test.clear();
+    test.offer( 10 );
+    evaluateTest( test.remove( 10 ) , true , errorMessage );
+    expected = "[]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //test removing from queue with 2 elements
+    test.clear();
+    test.offer( 10 );
+    test.offer( 20 );
+    evaluateTest( test.remove( 20 ) , true , errorMessage );
+    expected = "[10]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    test.offer( 20 );
+    evaluateTest( test.remove( 10 ) , true , errorMessage );
+    
+    expected = "[20]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //test removing from queue with shifted head and with multiple elements
+    test.clear();
+    test.offer( 10 );
+    test.offer( 20 );
+    test.offer( 30 );
+    test.poll();
+    test.poll();
+    test.poll();
+    
+    test.offer( 40 );
+    test.offer( 50 );
+    test.offer( 60 );
+    
+    evaluateTest( test.remove( 50 ) , true , errorMessage );
+    expected = "[40, 60]";
+    found = test.toString();
+    
+    test.offer( 70 );
+    test.offer( 80 );
+    evaluateTest( test.remove( 70 ) , true , errorMessage );
+    expected = "[40, 60, 80]";
+    found = test.toString();
     
 }

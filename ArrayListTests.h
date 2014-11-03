@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 Mickey. All rights reserved.
 //
 
-#ifndef __Data_Structures__ListTests__
-#define __Data_Structures__ListTests__
+#ifndef __Data_Structures__ArrayListTests__
+#define __Data_Structures__ArrayListTests__
 
 #include "UnitTest.h"
 

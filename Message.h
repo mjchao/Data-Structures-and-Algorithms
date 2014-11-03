@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 Mickey. All rights reserved.
 //
 
-#ifndef __Data_Structures__ErrorMessage__
-#define __Data_Structures__ErrorMessage__
+#ifndef __Data_Structures__Message__
+#define __Data_Structures__Message__
 
 #include <string>
 using std::string;

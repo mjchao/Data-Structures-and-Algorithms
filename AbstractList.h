@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 Mickey. All rights reserved.
 //
 
-#ifndef Data_Structures_OrderedSet_h
-#define Data_Structures_OrderedSet_h
+#ifndef Data_Structures_AbstractList_h
+#define Data_Structures_AbstractList_h
 
 #include "AbstractSet.h"
 

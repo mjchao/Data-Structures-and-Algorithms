@@ -196,6 +196,21 @@ public:
     }
     
     /**
+     * Determines if the given element is in the queue.
+     *
+     * @param value             the value for which to look
+     * @return                  if the given value is in the queue
+     */
+    bool contains( const E& value ) const {
+        for ( int i=0 ; i<m_numElements ; i++ ) {
+            if ( get( i ) == value ) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
      * Sets the element at the given index to the given value. The index is
      * relative to the head of the queue - not to the start of the underlying
      * array-based list. Therefore, the head of the queue always corresponds to
@@ -251,7 +266,6 @@ public:
         for ( int i=0 ; i<m_numElements ; i++ ) {
             if ( get( i ) == value ) {
                 removeAt( i );
-                m_numElements--;
                 return true;
             }
         }

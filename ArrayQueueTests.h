@@ -22,6 +22,7 @@ public:
         void testGetIndexInArray();
         void testGet();
         void testSet();
+        void testContains();
         void testRemoveAt();
         void testRemove();
 };

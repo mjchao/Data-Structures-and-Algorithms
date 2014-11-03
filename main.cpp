@@ -13,6 +13,8 @@
 #include "LinkedQueueTests.h"
 #include "ArrayQueueTests.h"
 #include "UnitTest.h"
+#include <vector>
+using std::vector;
 
 using std::cout;
 using std::endl;
