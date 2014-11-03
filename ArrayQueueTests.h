@@ -19,8 +19,11 @@ public:
         void testPeek();
         void testPoll();
         void testQueueSystem();
+        void testGetIndexInArray();
         void testGet();
         void testSet();
+        void testRemoveAt();
+        void testRemove();
 };
 
 #endif /* defined(__Data_Structures__ArrayQueueTests__) */

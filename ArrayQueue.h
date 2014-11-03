@@ -60,6 +60,36 @@ private:
         return index < 0 || index >= m_numElements;
     }
     
+    /**
+     * Determines the index in the queue's underlying array, given the index
+     * of an element in the queue
+     *
+     * @return                  the index in the queue converted to the index
+     *                          in the array
+     */
+    int getIndexInArray( int queueIndex ) const {
+        
+        //queue size of 0 is special case, because we can't really define
+        //wrapping around
+        if ( m_numElements == 0 ) {
+            return 0;
+        }
+        
+        
+        if ( queueIndex >= 0 ) {
+            return (m_headIdx+queueIndex) % ArrayList< E >::getArraySize();
+        }
+        else {
+            
+            //if we are "unwrapping" around with a negative index
+            //just keep adding the size of the array
+            int wraparoundTimes = abs( queueIndex / m_numElements )+1;
+            int offset = wraparoundTimes * m_numElements;
+            return (m_headIdx + queueIndex + offset ) %
+                                            ArrayList< E >::getArraySize();
+        }
+    }
+    
 public:
     /**
      * Constructs a default queue with no elements
@@ -161,7 +191,7 @@ public:
                     ArrayList< E >::generateAccessOutOfBoundsMessage(
                                                     index , m_numElements ) );
         }
-        int queueIndex = (m_headIdx+index) % ArrayList< E >::getArraySize();
+        int queueIndex = getIndexInArray( index );
         return ArrayList< E >::get( queueIndex );
     }
     
@@ -180,8 +210,52 @@ public:
                 ArrayList< E >::generateAccessOutOfBoundsMessage(
                                                     index , m_numElements ) );
         }
-        int queueIndex = (m_headIdx+index) % ArrayList< E >::getArraySize();
+        int queueIndex = getIndexInArray( index );
         ArrayList< E >::set( queueIndex , newValue );
+    }
+    
+    /**
+     * Removes the element at the given index from the queue. The index is
+     * relative to the head of the queue - not to the start of the underlying
+     * array-based list.
+     *
+     * @param index             the index of the element in the queue
+     * @return                  the element that was removed
+     */
+    E removeAt( int index ) {
+        if ( isOutOfBounds( index ) ) {
+            throw std::runtime_error(
+                ArrayList< E >::generateAccessOutOfBoundsMessage(
+                                                    index , m_numElements ) );
+        }
+        
+        E& rtn = get( index );
+        
+        //shift subsequent elements down by 1, overwriting the element to remove
+        for ( int i=index+1 ; i<m_numElements ; i++ ) {
+            set( i-1 , get( i ) );
+        }
+        m_numElements--;
+        m_tailIdx = (m_tailIdx - 1 + ArrayList< E >::getArraySize()) %
+                                                ArrayList< E >::getArraySize();
+        return rtn;
+    }
+    
+    /**
+     * Removes the given element from the queue, if it exists
+     *
+     * @param value             the value to remove from the queue
+     * @return                  if the value was found and removed or not
+     */
+    bool remove( const E& value ) {
+        for ( int i=0 ; i<m_numElements ; i++ ) {
+            if ( get( i ) == value ) {
+                removeAt( i );
+                m_numElements--;
+                return true;
+            }
+        }
+        return false;
     }
     
     /**

@@ -14,8 +14,11 @@ void ArrayQueueTests::test() {
     testPeek();
     testPoll();
     testQueueSystem();
+    testGetIndexInArray();
     testGet();
     testSet();
+    testRemoveAt();
+    testRemove();
     reportTestStatistics( "ArrayQueue" );
 }
 
@@ -391,6 +394,55 @@ void ArrayQueueTests::testGet() {
     evaluateTest( expectedException , foundException , exceptionErrorMessage );
 }
 
+void ArrayQueueTests::testGetIndexInArray() {
+    int expected;
+    int found;
+    string errorMessage = "ArrayQueue getArrayIndex() failed!";
+    
+    ArrayQueue<int> test;
+    
+    //use array size 16
+    for ( int i=0 ; i<16 ; i++ ) {
+        test.offer( i );
+    }
+    
+    expected = 0;
+    found = test.getIndexInArray( 0 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = 15;
+    found = test.getIndexInArray( -1 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = 8;
+    found = test.getIndexInArray( 8 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = 8;
+    found = test.getIndexInArray( 8+16 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = 8;
+    found = test.getIndexInArray( 8-16 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = 3;
+    found = test.getIndexInArray( 3 + (16*5) );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = 12;
+    found = test.getIndexInArray( 12 - (16*12) );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = 1;
+    found = test.getIndexInArray( 1 + (16*9) );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = 1;
+    found = test.getIndexInArray( 1 - (16*16) );
+    evaluateTest( expected , found , errorMessage );
+}
+
 void ArrayQueueTests::testSet() {
     string expected;
     string found;
@@ -485,4 +537,92 @@ void ArrayQueueTests::testSet() {
         foundException = e.what();
     }
     evaluateTest( expectedException , foundException , exceptionErrorMessage );
+}
+
+void ArrayQueueTests::testRemoveAt() {
+    string expected;
+    string found;
+    string errorMessage;
+    string expectedException;
+    string foundException;
+    string exceptionErrorMessage;
+    
+    ArrayQueue<int> test;
+    
+    //test removing from an empty queue
+    test.clear();
+    expectedException = test.generateAccessOutOfBoundsMessage( 0 , 0 );
+    foundException = "No exception found";
+    try {
+        test.removeAt( 0 );
+    }
+    catch ( std::runtime_error e ) {
+        foundException = e.what();
+    }
+    evaluateTest( expectedException , foundException , exceptionErrorMessage );
+    
+    //test removing from an queue with non-shifted head
+    test.clear();
+    test.offer( 10 );
+    test.offer( 11 );
+    test.offer( 12 );
+    test.offer( 13 );
+    
+    test.removeAt( 3 );
+    test.removeAt( 2 );
+    expected = "[10, 11]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+
+    test.removeAt( 0 );
+    expected = "[11]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    test.removeAt( 0 );
+    expected = "[]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //test removing from a queue with shifted head
+    test.clear();
+    test.offer( 10 );
+    test.offer( 11 );
+    test.offer( 12 );
+    test.offer( 13 );
+    test.poll();
+    test.poll();
+    test.poll();
+    test.offer( 10 );
+    test.offer( 11 );
+    test.offer( 12 );
+    
+    test.removeAt( 0 );
+    expected = "[10, 11, 12]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedException = test.generateAccessOutOfBoundsMessage( 3 , 3 );
+    foundException = "No exception found.";
+    try {
+        test.removeAt( 3 );
+    }
+    catch ( std::runtime_error e ) {
+        foundException = e.what();
+    }
+    evaluateTest( expectedException , foundException , exceptionErrorMessage );
+    
+    test.removeAt( 2 );
+    expected = "[10, 11]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    test.removeAt( 1 );
+    expected = "[10]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+}
+
+void ArrayQueueTests::testRemove() {
+    
 }
