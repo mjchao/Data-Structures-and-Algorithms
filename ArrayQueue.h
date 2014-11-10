@@ -155,7 +155,7 @@ public:
      *
      * @return                  the value at the front of the queue
      */
-    E& peek() const {
+    const E& peek() const {
         if ( size() == 0 ) {
             throw runtime_error( generateEmptyQueueException() );
         }

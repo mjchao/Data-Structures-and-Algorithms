@@ -24,7 +24,7 @@ class AbstractQueue {
      *
      * @return                  the value at the front of the queue
      */
-    virtual E& peek() const = 0;
+    virtual const E& peek() const = 0;
     
     /**
      * Removes and returns the value at the front of the queue

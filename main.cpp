@@ -12,6 +12,9 @@
 #include "LinkedStackTests.h"
 #include "LinkedQueueTests.h"
 #include "ArrayQueueTests.h"
+#include "HashmapTests.h"
+#include "PriorityQueueTests.h"
+
 #include "UnitTest.h"
 #include <vector>
 using std::vector;
@@ -34,7 +37,12 @@ int main(int argc, const char * argv[]) {
     //test4.test();
     
     ArrayQueueTests test5;
-    test5.test();
+    //test5.test();
 
+    HashmapTests test6;
+    //test6.test();
+    
+    PriorityQueueTests test7;
+    test7.test();
     return 0;
 }

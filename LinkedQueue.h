@@ -54,7 +54,7 @@ public:
      *
      * @return                      the element at the front of the queue
      */
-    E& peek() const {
+    const E& peek() const {
         if ( LinkedList< E >::size() == 0 ) {
             throw runtime_error( generateEmptyQueueErrorMessage() );
         }
