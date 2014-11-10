@@ -7,11 +7,11 @@ Currently Completed:
 
 1. AbstractSet
 2. AbstractList, ArrayList, LinkedList
-3. AbstractQueue, LinkedQueue, ArrayQueue
+3. AbstractQueue, LinkedQueue, ArrayQueue, PriorityQueue
 4. AbstractStack, LinkedStack
 
 Coming in the future:
 
 1. AbstractMap, HashMap
-2. PriorityQueue
+2. PriorityQueue log(n) remove
 3. BinaryTree, BST, BBST
