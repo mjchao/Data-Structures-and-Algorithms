@@ -14,11 +14,15 @@
 
 /**
  * A queue where elements are ordered by their priority (i.e. smaller elements
- * are stored first)
+ * are stored first). 
  *
+ * The ArrayQueue's functions are hidden because
+ * the elements of the priority queue should not be modified. If they are to be
+ * modified, they should be removed then re-inserted - otherwise, the queue
+ * could no longer be guaranteed to be ordered by priority.
  */
 template< typename E >
-class PriorityQueue : public ArrayQueue< E > {
+class PriorityQueue : protected ArrayQueue< E > {
 
 private:
     Comparator< E >* m_comparator;
