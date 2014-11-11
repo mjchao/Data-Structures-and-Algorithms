@@ -28,10 +28,10 @@ private:
     
 public:
     
-    //the default moduli are the 2^n-th primes not exceeding the maximum integer
-    //value
-    const int NUM_PREDEF_MODULI = 28;
-    const int MODULI[ 28 ] = {2, 3 , 7 , 19 , 53 ,
+    //the predefined moduli are the 2^n-th primes not exceeding the maximum
+    //integer value
+    const int NUM_PREDEF_MODULI = 30;
+    const int MODULI[ 30 ] = { 1 , 2, 3 , 7 , 19 , 53 ,
                         131 , 311 , 719 , 1619 , 3617 ,
                         8161 , 17863 , 38873 , 84017 , 180503 ,
                         386093 , 821641 , 1742537 , 3681131 , 7754077 ,
