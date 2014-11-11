@@ -16,8 +16,8 @@ public:
     /**
      * Compares two elements.
      *
-     * @return              1 if v1 is greater than v2, 0 if v1 == v2, and 
-     *                      -1 if v1 is less than v2
+     * @return              positive if v1 is greater than v2, 0 if v1 == v2,
+     *                      and negative if v1 is less than v2
      */
     virtual int compare( const T& v1 , const T& v2 ) const = 0;
     
