@@ -67,6 +67,18 @@ public:
      */
     virtual E removeAt( int index ) = 0;
     
+    bool operator==( const AbstractList< E >& l ) const {
+        if ( this->size() != l.size() ) {
+            return false;
+        }
+        for ( int idx=0 ; idx<this->size() ; idx++ ) {
+            if ( !(this->get( idx ) == this->get( idx )) ) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
 };
 
 #endif

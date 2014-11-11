@@ -976,6 +976,18 @@ void ArrayListTests::systemTest() {
     expected = "[10, 9, 8, 7, 6, 5, 4, 3, 2, 1]";
     found = test.toString();
     evaluateTest( expected , found , errorMessage );
+    
+    //test list equality
+    ArrayList<int> list1;
+    ArrayList<int> list2;
+    for ( int i=0 ; i<10 ; i++ ) {
+        list1.append( i );
+        list2.append( i );
+    }
+    evaluateTest( list1 == list2 , true , errorMessage );
+    
+    list1.removeAt( 0 );
+    evaluateTest( list1 == list2 , false , errorMessage );
 }
 
 void ArrayListTests::testArrayListCopy() {
