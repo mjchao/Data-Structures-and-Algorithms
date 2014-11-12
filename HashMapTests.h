@@ -19,6 +19,8 @@ public:
     void test();
     void testDefaultHasher();
     void testConstructors();
+    void testPut();
+    void testGet();
 };
 
 #endif /* defined(__Data_Structures__HashMapTests__) */

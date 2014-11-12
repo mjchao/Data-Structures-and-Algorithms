@@ -1026,4 +1026,10 @@ void LinkedListTests::testCopy() {
     evaluateTest( test.get( 0 ) , copy.get( 0 ) , errorMessage );
     evaluateTest( test.get( 0 ), copy.get( 0 ) , errorMessage );
     evaluateTest( test.get( 0 ) , copy.get( 0 ) , errorMessage );
+    
+    //test copying empty list
+    LinkedList<int> test2;
+    LinkedList<int> copy2;
+    copy2 = test2;
+    evaluateTest( test2 == copy2 , true , errorMessage );
 }

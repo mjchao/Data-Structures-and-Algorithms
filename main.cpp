@@ -12,7 +12,7 @@
 #include "LinkedStackTests.h"
 #include "LinkedQueueTests.h"
 #include "ArrayQueueTests.h"
-#include "HashmapTests.h"
+#include "HashMapTests.h"
 #include "PriorityQueueTests.h"
 
 #include "UnitTest.h"
@@ -28,7 +28,7 @@ int main(int argc, const char * argv[]) {
     //test.test();
     
     LinkedListTests test2;
-    //test2.test();
+    test2.test();
     
     LinkedStackTests test3;
     //test3.test();
@@ -38,11 +38,12 @@ int main(int argc, const char * argv[]) {
     
     ArrayQueueTests test5;
     //test5.test();
-
-    HashmapTests test6;
+    
+    PriorityQueueTests test6;
     //test6.test();
     
-    PriorityQueueTests test7;
+    HashMapTests test7;
     test7.test();
+    
     return 0;
 }

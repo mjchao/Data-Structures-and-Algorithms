@@ -23,7 +23,19 @@ public:
      * @param val               the object for which to generate the hash value
      * @return                  a hash value for the given object
      */
-    virtual long long hash( const T& val ) = 0;
+    virtual long long hash( const T& val ) const = 0;
+    
+    /**
+     * Determines if two objects are equivalent. This will be used to determine
+     * if two keys are the same or not. It is advisable that if two objects
+     * generate the same hashcode, then they are equivalent.
+     *
+     * @param v1                an object
+     * @param v2                another object
+     * @return                  if the two objects are equivalent by some
+     *                          arbitrary rules
+     */
+    virtual bool areEquivalent( const T& v1 , const T& v2 ) const = 0;
     
     /**
      * When the HashMap's underlying array resizes, it may be necessary to

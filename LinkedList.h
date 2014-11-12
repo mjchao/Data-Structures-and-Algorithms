@@ -137,24 +137,28 @@ public:
     
     LinkedList( const LinkedList& toCopy ) {
         Link* currElement = toCopy.m_head;
-        while( currElement != toCopy.m_tail ) {
+        if ( currElement != 0 ) {
+            while( currElement != toCopy.m_tail ) {
+                append( (*currElement).value );
+                currElement = (*currElement).next;
+            }
+            
+            //don't forget to add the tail
             append( (*currElement).value );
-            currElement = (*currElement).next;
         }
-        
-        //don't forget to add the tail
-        append( (*currElement).value );
     }
     
     LinkedList& operator=( const LinkedList& toAssign ) {
         Link* currElement = toAssign.m_head;
-        while( currElement != toAssign.m_tail ) {
+        if ( currElement != 0 ) {
+            while( currElement != toAssign.m_tail ) {
+                append( (*currElement).value );
+                currElement = (*currElement).next;
+            }
+            
+            //don't forget to add the tail
             append( (*currElement).value );
-            currElement = (*currElement).next;
         }
-        
-        //don't forget to add the tail
-        append( (*currElement).value );
         return *this;
     }
     
