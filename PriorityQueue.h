@@ -193,6 +193,17 @@ public:
         return rtn;
     }
     
+
+    /**
+     * Clears the queue so that it contains no elements
+     */
+    void clear() {
+        ArrayQueue< E >::clear();
+    }
+    
+    string generateEmptyQueueException() const {
+        return ArrayQueue< E >::generateEmptyQueueException();
+    }
     
     string toString() {
         if ( ArrayQueue< E >::size() == 0 ) {

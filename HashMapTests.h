@@ -1,5 +1,5 @@
 //
-//  HashmapTests.h
+//  HashMapTests.h
 //  Data Structures
 //
 //  Created by Mickey on 11/3/14.

@@ -1,5 +1,5 @@
 //
-//  HashmapTests.cpp
+//  HashMapTests.cpp
 //  Data Structures
 //
 //  Created by Mickey on 11/3/14.
@@ -7,7 +7,7 @@
 //
 
 #include "HashMap.h"
-#include "HashmapTests.h"
+#include "HashMapTests.h"
 #include "DefaultHasher.h"
 #include <vector>
 using std::vector;
