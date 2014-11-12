@@ -9,7 +9,7 @@ Currently Completed:
 2. AbstractList, ArrayList, LinkedList
 3. AbstractQueue, LinkedQueue, ArrayQueue, PriorityQueue
 4. AbstractStack, LinkedStack
-5. AbstractMap, Hasher, DefaultHasher
+5. AbstractMap, Hasher, Memory address hash function (DefaultHasher)
 
 Coming in the future:
 
