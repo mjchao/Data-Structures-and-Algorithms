@@ -16,6 +16,7 @@ void HashMapTests::test() {
     testDefaultHasher();
     testPut();
     testGet();
+    testRemove();
     reportTestStatistics( "HashMap" );
 }
 
@@ -24,7 +25,7 @@ void HashMapTests::testDefaultHasher() {
     vector< long long > previousAddresses;
     
     //test generating hashcodes for 10000 different integers. since
-    //they all have different memory addresses, they should most likely
+    //they all have different memory addresses, they should
     //all have different hashcodes
     int NUM_ADDRESSES_TO_TEST = 10000;
     int* testInts[ NUM_ADDRESSES_TO_TEST ];
@@ -146,4 +147,51 @@ void HashMapTests::testGet() {
     evaluateTest( 11 , *test.get( eleven ) , errorMessage );
 }
 
+void HashMapTests::testRemove() {
+    string errorMessage = "HashMap remove() failed!";
+    
+    HashMap< string , int > test;
+    int expected;
+    int found;
+    int* noKeyFound = 0;
+    string keys[] = { "zero" , "one" , "two" , "three" , "four" , "five" ,
+        "six" , "seven" , "eight" , "nine" , "ten" , "eleven" , "twelve" ,
+        "thirteen" , "fourteen" , "fifteen" };
+    int values[] = { 0 , 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10 , 11 , 12 , 13 ,
+                    14 , 15 };
+
+    for ( int i=0 ; i<=15 ; i++ ) {
+        test.put( keys[ i ] , values[ i ] );
+    }
+
+    //check that "two" is still in the map
+    evaluateTest( *test.get( keys[ 2 ] ) , 2 , errorMessage );
+    
+    //remove "one"
+    expected = 1;
+    found = *test.remove( keys[ 1 ] );
+    evaluateTest( expected , found , errorMessage );
+    
+    //then check that "one" is gone and "two" is unaffected
+    evaluateTest( test.get( keys[ 1 ] ) , noKeyFound , errorMessage );
+    evaluateTest( test.get( "onee" ) , noKeyFound , errorMessage );
+    evaluateTest( *test.get( keys[ 2 ] ) , 2 , errorMessage );
+    
+    //check that removing "one" again does not do anything
+    evaluateTest( test.remove( keys[ 1 ] ), noKeyFound , errorMessage );
+    
+    //try putting "one" back into the map
+    test.put( keys[ 1 ] , values[ 1 ] );
+    
+    //try removing everything
+    for ( int i=0 ; i<=15 ; i++ ) {
+        evaluateTest( *test.remove( keys[ i ] ) , values[ i ] , errorMessage );
+        evaluateTest( test.get( keys[ i ] ) , noKeyFound , errorMessage );
+    }
+    
+    //try removing everything again
+    for ( int i=0 ; i<=15 ; i++ ) {
+        evaluateTest( test.remove( keys[ i ] ) , noKeyFound , errorMessage );
+    }
+}
 

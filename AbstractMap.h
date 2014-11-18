@@ -42,14 +42,6 @@ public:
     virtual bool containsKey( const Key& k ) const = 0;
     
     /**
-     * Determines if the given value is in the map.
-     *
-     * @param v             the value
-     * @return              if the value is in the map
-     */
-    virtual bool containsValue( const Value& v ) const = 0;
-    
-    /**
      * Removes the given key from the map.
      *
      * @param k             the key to remove

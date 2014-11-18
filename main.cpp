@@ -28,7 +28,7 @@ int main(int argc, const char * argv[]) {
     //test.test();
     
     LinkedListTests test2;
-    test2.test();
+    //test2.test();
     
     LinkedStackTests test3;
     //test3.test();

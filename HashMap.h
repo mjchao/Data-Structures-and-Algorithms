@@ -229,19 +229,7 @@ public:
      * @return              if the key is in the map
      */
     virtual bool containsKey( const Key& k ) const {
-        //TODO
-        return false;
-    }
-    
-    /**
-     * Determines if the given value is in the map.
-     *
-     * @param v             the value
-     * @return              if the value is in the map
-     */
-    virtual bool containsValue( const Value& v ) const {
-        //TODO
-        return false;
+        return get( k ) != 0;
     }
     
     /**
@@ -252,7 +240,25 @@ public:
      *                      if the value was not found.
      */
     virtual Value* remove( const Key& k ) {
-        //TODO
+        int hashCode = (int)m_hasher->hash( k );
+        LinkedList< KVPair >* chain = m_entries.get( hashCode );
+        if ( chain == 0 ) {
+            return 0;
+        }
+        else {
+            KVPair entryToSearch;
+            entryToSearch.hasher = m_hasher;
+            entryToSearch.key = &k;
+            int idx = chain->indexOf( entryToSearch );
+            if ( idx == -1 ) {
+                return 0;
+            }
+            else {
+                Value* rtn = chain->get( idx ).value;
+                chain->removeAt( idx );
+                return rtn;
+            }
+        }
         return 0;
     }
 

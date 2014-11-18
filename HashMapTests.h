@@ -21,6 +21,7 @@ public:
     void testConstructors();
     void testPut();
     void testGet();
+    void testRemove();
 };
 
 #endif /* defined(__Data_Structures__HashMapTests__) */
