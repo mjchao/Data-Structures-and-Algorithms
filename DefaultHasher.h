@@ -47,6 +47,10 @@ public:
         m_modulus = DEFAULT_MODULUS;
     }
     
+    ~DefaultHasher() {
+        //nothing to delete
+    }
+    
     /**
      * Creates a DefaultHasher where hashcodes are calculated modulo the given
      * modulus

@@ -14,6 +14,10 @@ class Hasher {
     
 public:
     
+    virtual ~Hasher() {
+        //nothing to delete
+    }
+    
     /**
      * Returns a hash value for a given object for use in a HashMap. For
      * effective use of the HashMap, the hash function should generally

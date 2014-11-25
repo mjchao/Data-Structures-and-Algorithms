@@ -30,6 +30,7 @@ public:
         void testArrayListRemove();
         void testArrayListResize();
         void testArrayListMemoryUsage();
+        void testArrayListPointerMemoryUsage();
         void testArrayListReferences();
         void testArrayListCopy();
         void systemTest();

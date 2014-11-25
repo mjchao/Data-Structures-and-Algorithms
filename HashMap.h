@@ -35,7 +35,11 @@ private:
         Hasher< Key >* hasher = 0;
         
         const Key* key;
-        Value* value;
+        Value value;
+        
+        ~KVPair() {
+            
+        }
         
         bool operator==( const KVPair& p ) const {
             if ( hasher == 0 ) {
@@ -51,6 +55,13 @@ private:
      * The entries in this map
      */
     ArrayList< LinkedList< KVPair >* > m_entries;
+    
+    /**
+     * The key chains that will need to be deleted. Since ArrayList does not
+     * use smart pointers, it does not delete the key chain's allocated memory.
+     * Thus, we will have to delete them manually ourselves.
+     */
+    ArrayList< LinkedList< KVPair >* > m_allocatedMemory;
     
     int m_loadFactor;
     
@@ -103,6 +114,14 @@ public:
         m_loadFactor = DEFAULT_LOAD_FACTOR;
         ensureArrayCapacity( DEFAULT_ARRAY_SIZE );
         m_hasher->handleHashMapResize( DEFAULT_ARRAY_SIZE );
+    }
+    
+    ~HashMap() {
+        delete m_hasher;
+        while( m_allocatedMemory.size() > 0 ) {
+            delete m_allocatedMemory.removeAt( m_allocatedMemory.size()-1 );
+        }
+        m_entries.clear();
     }
     
     /**
@@ -172,15 +191,14 @@ public:
         
         newPair.key = &k;
         
-        Value* newValue = new Value;
-        *newValue = v;
-        newPair.value = newValue;
+        newPair.value = v;
         
         int chainIdx = (int)m_hasher->hash( k );
         LinkedList< KVPair >* keyChain = m_entries.get( chainIdx );
         
         if ( keyChain == 0 ) {
             LinkedList< KVPair >* newChain = new LinkedList< KVPair >();
+            m_allocatedMemory.append( newChain );
             m_entries.set( chainIdx , newChain );
             m_entries.get( chainIdx )->append( newPair );
         }
@@ -190,7 +208,7 @@ public:
                 keyChain->append( newPair );
             }
             else {
-                *(keyChain->get( pairIdx ).value) = v;
+                keyChain->get( pairIdx ).value = v;
             }
         }
     }
@@ -202,7 +220,7 @@ public:
      * @return              the value corresponding to the given key, or 0
      *                      if the key was never in the map
      */
-    virtual Value* get( const Key& k ) const {
+    virtual Value get( const Key& k ) const {
         int hashCode = (int)m_hasher->hash( k );
         LinkedList< KVPair >* chain = m_entries.get( hashCode );
         if ( chain == 0 ) {
@@ -239,7 +257,7 @@ public:
      * @return              a pointer to the value that was removed, or 0
      *                      if the value was not found.
      */
-    virtual Value* remove( const Key& k ) {
+    virtual Value remove( const Key& k ) {
         int hashCode = (int)m_hasher->hash( k );
         LinkedList< KVPair >* chain = m_entries.get( hashCode );
         if ( chain == 0 ) {
@@ -254,7 +272,7 @@ public:
                 return 0;
             }
             else {
-                Value* rtn = chain->get( idx ).value;
+                Value rtn = chain->get( idx ).value;
                 chain->removeAt( idx );
                 return rtn;
             }

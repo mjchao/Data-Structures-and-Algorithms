@@ -17,6 +17,7 @@ void HashMapTests::test() {
     testPut();
     testGet();
     testRemove();
+    testDestructor();
     reportTestStatistics( "HashMap" );
 }
 
@@ -64,7 +65,7 @@ void HashMapTests::testPut() {
     test.put( hello , 1 );
     int hashCode = (int)test.m_hasher->hash( hello );
     expected = 1;
-    found = *(test.m_entries.get( hashCode )->get( 0 ).value);
+    found = (test.m_entries.get( hashCode )->get( 0 ).value);
     evaluateTest( expected , 1 , errorMessage );
     
     string hello2 = "hello";
@@ -73,10 +74,10 @@ void HashMapTests::testPut() {
     
     expected = 2;
     if ( hashCode2 == hashCode ) {
-        found = *(test.m_entries.get( hashCode2 )->get( 1 ).value);
+        found = (test.m_entries.get( hashCode2 )->get( 1 ).value);
     }
     else {
-        found = *(test.m_entries.get( hashCode2 )->get( 0 ).value);
+        found = (test.m_entries.get( hashCode2 )->get( 0 ).value);
     }
     evaluateTest( expected , found , errorMessage );
 }
@@ -115,36 +116,39 @@ void HashMapTests::testGet() {
     test.put( fourteen , 14 );
     
     
-    evaluateTest( 1 , *test.get( one ) , errorMessage );
-    evaluateTest( 2 , *test.get( two ) , errorMessage );
-    evaluateTest( 3 , *test.get( three ), errorMessage );
-    evaluateTest( 4 , *test.get( four ) , errorMessage );
-    evaluateTest( 5 , *test.get( five ) , errorMessage );
-    evaluateTest( 6 , *test.get( six ) , errorMessage );
-    evaluateTest( 7 , *test.get( seven ) , errorMessage );
-    evaluateTest( 8 , *test.get( eight ) , errorMessage );
-    evaluateTest( 9 , *test.get( nine ) , errorMessage );
-    evaluateTest( 10 , *test.get( ten ) , errorMessage );
-    evaluateTest( 11 , *test.get( eleven ) , errorMessage );
-    evaluateTest( 12 , *test.get( twelve ) , errorMessage );
-    evaluateTest( 13 , *test.get( thirteen ) , errorMessage );
+    evaluateTest( 1 , test.get( one ) , errorMessage );
+    evaluateTest( 2 , test.get( two ) , errorMessage );
+    evaluateTest( 3 , test.get( three ), errorMessage );
+    evaluateTest( 4 , test.get( four ) , errorMessage );
+    evaluateTest( 5 , test.get( five ) , errorMessage );
+    evaluateTest( 6 , test.get( six ) , errorMessage );
+    evaluateTest( 7 , test.get( seven ) , errorMessage );
+    evaluateTest( 8 , test.get( eight ) , errorMessage );
+    evaluateTest( 9 , test.get( nine ) , errorMessage );
+    evaluateTest( 10 , test.get( ten ) , errorMessage );
+    evaluateTest( 11 , test.get( eleven ) , errorMessage );
+    evaluateTest( 12 , test.get( twelve ) , errorMessage );
+    evaluateTest( 13 , test.get( thirteen ) , errorMessage );
     
     //we've gone past the default size by now, so there should certainly
     //have been collisions by now
-    evaluateTest( 14 , *test.get( fourteen ) , errorMessage );
+    evaluateTest( 14 , test.get( fourteen ) , errorMessage );
     
     //our hasher hashes by memory address, so the key "eleven" should be
     //different from the previously defined eleven variable and nothing
     //should be found
-    int* zeroPtr = 0;
-    evaluateTest( zeroPtr , test.get( "eleven" ), errorMessage );
+    evaluateTest( 0 , test.get( "eleven" ), errorMessage );
+    
+    //we should be able to overwrite entries in the map as well
+    test.put( one , 11111 );
+    evaluateTest( 11111 , test.get( one ) , errorMessage );
     
     //in addition, if we change the value of one of the keys, it should
     //still map to the same value because the address has not changed
     eleven.at( 0 ) = 'E';
-    evaluateTest( 11 , *test.get( eleven ) , errorMessage );
+    evaluateTest( 11 , test.get( eleven ) , errorMessage );
     eleven = "jdhfjdhfjhdjfahsdkjhfjsdhfcjsfadffdsafhsjfhdsjfhsda";
-    evaluateTest( 11 , *test.get( eleven ) , errorMessage );
+    evaluateTest( 11 , test.get( eleven ) , errorMessage );
 }
 
 void HashMapTests::testRemove() {
@@ -153,7 +157,7 @@ void HashMapTests::testRemove() {
     HashMap< string , int > test;
     int expected;
     int found;
-    int* noKeyFound = 0;
+    int noKeyFound = 0;
     string keys[] = { "zero" , "one" , "two" , "three" , "four" , "five" ,
         "six" , "seven" , "eight" , "nine" , "ten" , "eleven" , "twelve" ,
         "thirteen" , "fourteen" , "fifteen" };
@@ -165,17 +169,17 @@ void HashMapTests::testRemove() {
     }
 
     //check that "two" is still in the map
-    evaluateTest( *test.get( keys[ 2 ] ) , 2 , errorMessage );
+    evaluateTest( test.get( keys[ 2 ] ) , 2 , errorMessage );
     
     //remove "one"
     expected = 1;
-    found = *test.remove( keys[ 1 ] );
+    found = test.remove( keys[ 1 ] );
     evaluateTest( expected , found , errorMessage );
     
     //then check that "one" is gone and "two" is unaffected
     evaluateTest( test.get( keys[ 1 ] ) , noKeyFound , errorMessage );
     evaluateTest( test.get( "onee" ) , noKeyFound , errorMessage );
-    evaluateTest( *test.get( keys[ 2 ] ) , 2 , errorMessage );
+    evaluateTest( test.get( keys[ 2 ] ) , 2 , errorMessage );
     
     //check that removing "one" again does not do anything
     evaluateTest( test.remove( keys[ 1 ] ), noKeyFound , errorMessage );
@@ -185,7 +189,7 @@ void HashMapTests::testRemove() {
     
     //try removing everything
     for ( int i=0 ; i<=15 ; i++ ) {
-        evaluateTest( *test.remove( keys[ i ] ) , values[ i ] , errorMessage );
+        evaluateTest( test.remove( keys[ i ] ) , values[ i ] , errorMessage );
         evaluateTest( test.get( keys[ i ] ) , noKeyFound , errorMessage );
     }
     
@@ -193,5 +197,27 @@ void HashMapTests::testRemove() {
     for ( int i=0 ; i<=15 ; i++ ) {
         evaluateTest( test.remove( keys[ i ] ) , noKeyFound , errorMessage );
     }
+}
+
+void HashMapTests::testDestructor() {
+    HashMap< string , int >* testPtr;
+    testPtr = new HashMap< string , int >( 10000 );
+    cout << "Prepare to observe memory usage. Press enter to continue." << endl;
+    getchar();
+    for ( int i=0 ; i<100000 ; i++ ) {
+        testPtr->put( "1" , 1 );
+        testPtr->put( "2" , 2 );
+        testPtr->put( "3" , 3 );
+        testPtr->put( "4" , 4 );
+        testPtr->put( "5" , 5 );
+        delete testPtr;
+        testPtr = new HashMap< string , int >( 10000 );
+    }
+    delete testPtr;
+    cout << "Was memory usage constant? (y/n)" << endl;
+    string errorMessage = "HashMap destructor failed!";
+    char expected = 'y';
+    char found = tolower( getchar() );
+    evaluateTest( expected, found , errorMessage );
 }
 

@@ -355,9 +355,9 @@ public:
      * Removes all elements from the ArrayList
      */
     void clear() {
+        useResizedArray( 0 );
         m_numElements = 0;
         m_arraySize = 0;
-        useResizedArray( 0 );
     }
     
     int size() const {

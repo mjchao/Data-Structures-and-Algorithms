@@ -47,6 +47,7 @@ void ArrayListTests::test() {
     testArrayListResize();
     testArrayListSet();
     //testArrayListMemoryUsage();
+    testArrayListPointerMemoryUsage();
     testArrayListReferences();
     testArrayListCopy();
     systemTest();
@@ -934,6 +935,33 @@ void ArrayListTests::testArrayListMemoryUsage() {
     cout << "Was memory usage constant? (y/n)" << endl;
     char result = tolower( getchar() );
     evaluateTest( 'y' , result , "Memory usage by ArrayList is too great.");
+}
+
+void ArrayListTests::testArrayListPointerMemoryUsage() {
+    cout << "Testing memory usage.... Press enter when ready." << endl;
+    getchar();
+    ArrayList< string* > test;
+    for ( int i=0 ; i<3000000 ; i++ ) {
+        string* one = new string( "one" );
+        string* two = new string( "two" );
+        string* three = new string( "three" );
+        string* four = new string( "four" );
+        string* five = new string( "five" );
+        test.append( one );
+        test.append( two );
+        test.append( three );
+        test.append( four );
+        test.append( five );
+        delete one;
+        delete two;
+        delete three;
+        delete four;
+        delete five;
+        test.clear();
+    }
+    cout << "Was memory usage constant? (y/n)" << endl;
+    char result = tolower( getchar() );
+    evaluateTest( 'y' , result , "ArrayList fails to manage pointer memory!" );
 }
 
 void ArrayListTests::testArrayListReferences() {

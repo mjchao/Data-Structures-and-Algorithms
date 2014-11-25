@@ -31,7 +31,7 @@ public:
      * @param k             the key
      * @return              the value corresponding to the given key
      */
-    virtual Value* get( const Key& k ) const = 0;
+    virtual Value get( const Key& k ) const = 0;
 
     /**
      * Determines if the given key is in the map.
@@ -48,7 +48,7 @@ public:
      * @return              a pointer to the value that was removed, or 0
      *                      if the value was not found.
      */
-    virtual Value* remove( const Key& k ) = 0;
+    virtual Value remove( const Key& k ) = 0;
     
 };
 
