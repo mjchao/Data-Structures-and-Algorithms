@@ -23,6 +23,8 @@ public:
     void testGet();
     void testRemove();
     void testDestructor();
+    void testResize();
+    void testClear();
 };
 
 #endif /* defined(__Data_Structures__HashMapTests__) */

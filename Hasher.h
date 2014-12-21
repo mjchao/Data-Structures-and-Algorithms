@@ -9,6 +9,13 @@
 #ifndef Data_Structures_Hasher_h
 #define Data_Structures_Hasher_h
 
+/**
+ * Generates hashcodes for objects. These hashcodes can then be used in a
+ * hashmap
+ *
+ * @param T                     the type of object for which to generate 
+ *                              hashcodes
+ */
 template< typename T >
 class Hasher {
     
@@ -40,15 +47,6 @@ public:
      *                          arbitrary rules
      */
     virtual bool areEquivalent( const T& v1 , const T& v2 ) const = 0;
-    
-    /**
-     * When the HashMap's underlying array resizes, it may be necessary to
-     * update the hash function. If it is not necessary, then this function
-     * can be left empty
-     *
-     * @param                   the new size of the HashMap array after resizing
-     */
-    virtual void handleHashMapResize( int newSize ) = 0;
 };
 
 #endif

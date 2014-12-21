@@ -17,12 +17,14 @@ void HashMapTests::test() {
     testPut();
     testGet();
     testRemove();
-    testDestructor();
+    //testDestructor();
+    testResize();
+    testClear();
     reportTestStatistics( "HashMap" );
 }
 
 void HashMapTests::testDefaultHasher() {
-    DefaultHasher< int > test( 15485863 );
+    DefaultHasher< int > test;
     vector< long long > previousAddresses;
     
     //test generating hashcodes for 10000 different integers. since
@@ -56,6 +58,7 @@ void HashMapTests::testConstructors() {
 }
 
 void HashMapTests::testPut() {
+    
     int expected;
     int found;
     string errorMessage = "HashMap put() failed!";
@@ -63,23 +66,24 @@ void HashMapTests::testPut() {
     HashMap< string , int > test;
     string hello = "hello";
     test.put( hello , 1 );
-    int hashCode = (int)test.m_hasher->hash( hello );
+    int hashCode = test.indexOf( test.m_hasher.hash( hello ) );
     expected = 1;
-    found = (test.m_entries.get( hashCode )->get( 0 ).value);
+    found = (test.m_table.get( hashCode )->value);
     evaluateTest( expected , 1 , errorMessage );
     
     string hello2 = "hello";
     test.put( hello2 , 2 );
-    int hashCode2 = (int)test.m_hasher->hash( hello2 );
+    int hashCode2 = test.indexOf( test.m_hasher.hash( hello2 ) );
     
     expected = 2;
-    if ( hashCode2 == hashCode ) {
-        found = (test.m_entries.get( hashCode2 )->get( 1 ).value);
-    }
-    else {
-        found = (test.m_entries.get( hashCode2 )->get( 0 ).value);
-    }
+    found = (test.m_table.get( hashCode2 )->value);
     evaluateTest( expected , found , errorMessage );
+    
+    if ( hashCode2 == hashCode ) {
+        expected = 1;
+        found = (test.m_table.get( hashCode2 )->next->value);
+        evaluateTest( expected , found , errorMessage );
+    }
 }
 
 void HashMapTests::testGet() {
@@ -219,5 +223,72 @@ void HashMapTests::testDestructor() {
     char expected = 'y';
     char found = tolower( getchar() );
     evaluateTest( expected, found , errorMessage );
+}
+
+void HashMapTests::testResize() {
+    string errorMessage = "HashMap resize() failed!";
+    
+    HashMap< string , int > test( 2 );
+    evaluateTest( 2 , test.m_size , errorMessage );
+    
+    string one = "one";
+    test.put( one , 1 );
+    evaluateTest( 2 , test.m_size , errorMessage );
+
+    string two = "two";
+    test.put( two , 2 );
+    evaluateTest( 3 , test.m_size , errorMessage );
+    
+    string three = "three";
+    test.put( three , 3 );
+    evaluateTest( 7 , test.m_size , errorMessage );
+    
+    string four = "four";
+    test.put( four , 4 );
+    evaluateTest( 7 , test.m_size , errorMessage );
+    
+    //very unlikely that all 4 numbers get hashed to same index
+    int oneIdx = test.indexOf( test.m_hasher.hash( one ) );
+    int twoIdx = test.indexOf( test.m_hasher.hash( two ) );
+    int threeIdx = test.indexOf( test.m_hasher.hash( three ) );
+    int fourIdx = test.indexOf( test.m_hasher.hash( four ) );
+    bool allSameIdx = (oneIdx == twoIdx) && (twoIdx == threeIdx ) &&
+                                                        (threeIdx==fourIdx);
+    evaluateTest( allSameIdx , false , errorMessage );
+    
+    //make sure that four is actually at the index its supposed to be
+    evaluateTest( test.m_table.get( fourIdx )->value , 4 , errorMessage );
+    test.remove( four );
+    
+    //make sure that three is at the correct index
+    evaluateTest( test.m_table.get( threeIdx )->value , 3 , errorMessage );
+    test.remove( three );
+    
+    //make sure that two is at the correct index
+    evaluateTest( test.m_table.get( twoIdx )->value , 2 , errorMessage );
+    test.remove( two );
+
+    //make sure that one is at the correct index
+    int oneValue = test.m_table.get( oneIdx )->value;
+    evaluateTest( oneValue , 1 , errorMessage );
+}
+
+void HashMapTests::testClear() {
+    string errorMessage = "HashMap clear() failed!";
+    
+    HashMap< string , int > test;
+    
+    string one = "one";
+    test.put( one , 1 );
+    
+    string two = "two";
+    test.put( two , 2 );
+    
+    string three = "three";
+    test.put( three , 3 );
+    
+    test.clear();
+    evaluateTest( test.get( one ) , 0 , errorMessage );
+    evaluateTest( test.m_table.size() , test.DEFAULT_SIZE , errorMessage );
 }
 
