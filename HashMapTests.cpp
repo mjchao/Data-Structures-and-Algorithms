@@ -278,6 +278,20 @@ void HashMapTests::testResize() {
     }
     evaluateTest( test2.m_table.size() , 180503, errorMessage );
     evaluateTest( test2.m_size , 180503 , errorMessage );
+    
+    //test boundary resize
+    //0.7*180503 = 126352.1, so we add 126352 entries
+    //then we add another entry and see if the map resizes
+    test2.clear();
+    for ( int i=0 ; i<126352 ; i++ ) {
+        test2.put( i , i );
+    }
+    evaluateTest( test2.m_table.size() , 180503 , errorMessage );
+    evaluateTest( test2.m_size , 180503 , errorMessage );
+    
+    test2.put( 126353 , 126353 );
+    evaluateTest( test2.m_table.size() , 386093, errorMessage );
+    evaluateTest( test2.m_size , 386093 , errorMessage );
 }
 
 void HashMapTests::testClear() {

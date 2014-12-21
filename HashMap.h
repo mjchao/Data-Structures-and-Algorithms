@@ -443,6 +443,10 @@ void HashMap< Key , Value >::clear() {
 
 template< typename Key , typename Value >
 void HashMap< Key , Value >::setLoadFactor( double loadFactor ) {
+    if ( m_loadFactor <= 0 || m_loadFactor >= 1 ) {
+        throw new std::runtime_error(
+                "Illegal load factor. Must be between 0 and 1 exclusive.");
+    }
     m_loadFactor = loadFactor;
 }
 
