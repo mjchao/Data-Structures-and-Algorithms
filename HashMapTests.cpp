@@ -271,6 +271,13 @@ void HashMapTests::testResize() {
     //make sure that one is at the correct index
     int oneValue = test.m_table.get( oneIdx )->value;
     evaluateTest( oneValue , 1 , errorMessage );
+    
+    HashMap< int , int > test2;
+    for ( int i=0 ; i<100000 ; i++ ) {
+        test2.put( i , i );
+    }
+    evaluateTest( test2.m_table.size() , 180503, errorMessage );
+    evaluateTest( test2.m_size , 180503 , errorMessage );
 }
 
 void HashMapTests::testClear() {
