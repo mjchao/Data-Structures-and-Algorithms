@@ -9,10 +9,9 @@ Currently Completed:
 2. AbstractList, ArrayList, LinkedList
 3. AbstractQueue, LinkedQueue, ArrayQueue, PriorityQueue
 4. AbstractStack, LinkedStack
-5. AbstractMap, Hasher, Memory address hash function (DefaultHasher)
+5. AbstractMap, Hasher, Memory address hash function (DefaultHasher), HashMap
 
 Coming in the future:
 
-1. HashMap
-2. PriorityQueue log(n) remove
-3. BinaryTree, BST, BBST
+1. PriorityQueue log(n) remove
+2. BinaryTree, BST, BBST
