@@ -14,4 +14,5 @@ Currently Completed:
 Coming in the future:
 
 1. PriorityQueue log(n) remove
-2. BinaryTree, BST, BBST
+2. BBST
+3. Standard Sorting
