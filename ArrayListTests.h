@@ -33,6 +33,7 @@ public:
         void testArrayListPointerMemoryUsage();
         void testArrayListReferences();
         void testArrayListCopy();
+        void testArrayListCopyMemoryUsage();
         void systemTest();
 };
 #endif /* defined(__Data_Structures__ListTests__) */

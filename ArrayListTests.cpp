@@ -47,9 +47,10 @@ void ArrayListTests::test() {
     testArrayListResize();
     testArrayListSet();
     //testArrayListMemoryUsage();
-    testArrayListPointerMemoryUsage();
+    //testArrayListPointerMemoryUsage();
     testArrayListReferences();
     testArrayListCopy();
+    //testArrayListCopyMemoryUsage();
     systemTest();
     reportTestStatistics( "ArrayList" );
 }
@@ -1031,6 +1032,24 @@ void ArrayListTests::testArrayListCopy() {
     evaluateTest( test.get( 1 ) , copy.get( 1 ) , errorMessage );
     evaluateTest( test.get( 2 ) , copy.get( 2 ) , errorMessage );
     evaluateTest( test.size() , copy.size() , errorMessage );
+}
+
+void ArrayListTests::testArrayListCopyMemoryUsage() {
+    cout << "Testing memory usage.... Press enter when ready." << endl;
+    getchar();
+    ArrayList< string > test2;
+    ArrayList< string > test3;
+    test3.append( "one" );
+    test3.append( "two" );
+    test3.append( "three" );
+    test3.append( "four" );
+    test3.append( "five" );
+    for ( int i=0 ; i<100000000 ; i++ ) {
+        test2 = test3;
+    }
+    cout << "Was memory usage constant? (y/n)" << endl;
+    char result = tolower( getchar() );
+    evaluateTest( 'y' , result , "ArrayList fails to manage pointer memory!" );
 }
 
 ArrayList<int> reverseList( ArrayList<int> l ) {

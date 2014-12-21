@@ -164,6 +164,7 @@ public:
      * Copies the contents of the given ArrayList into this ArrayList
      */
     ArrayList<E>& operator=( const ArrayList<E>& listToCopy ) {
+        delete[] m_values;
         m_arraySize = listToCopy.m_arraySize;
         m_numElements = listToCopy.m_numElements;
         m_values = new E[ m_arraySize ];
