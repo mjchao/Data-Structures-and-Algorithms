@@ -1,5 +1,5 @@
 //
-//  ErrorMessage.h
+//  Message.h
 //  Data Structures
 //
 //  Created by Mickey on 10/11/14.
@@ -14,6 +14,9 @@ using std::string;
 
 #include <sstream>
 using std::stringstream;
+
+//Address printing algorithm acknowledgement:
+//http://stackoverflow.com/questions/26458177/printing-textual-representation-of-objects
 
 namespace has_insertion_operator_impl {
     typedef char no;
