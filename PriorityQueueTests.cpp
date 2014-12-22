@@ -363,4 +363,53 @@ void PriorityQueueTests::testRemove() {
     foundRepresentation = test.toString();
     evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
     
+    //test removing from the middle
+    test.clear();
+    for ( int i=1 ; i<=4 ; i++ ) {
+        test.offer( i );
+    }
+    
+    expectedRepresentation = "[1, 2, 3, 4]";
+    foundRepresentation = test.toString();
+    
+    expected = true;
+    found = test.remove( 2 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[1, 4, 3]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = true;
+    found = test.remove( 3 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[1, 4]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = false;
+    found = test.remove( 2 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = true;
+    found = test.remove( 1 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[4]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = true;
+    found = test.remove( 4 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = false;
+    found = test.remove( 4 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
 }
