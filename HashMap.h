@@ -19,7 +19,10 @@
  * containsKey() and remove() are implemented with O(1) complexity; however
  * put() is generally O(1), but inserting into the map may sometimes cause
  * the entire map to be resized and reorganized, which will be O(n) in the size
- * of the underlying array of the map.
+ * of the underlying array of the map. Since the size of the underlying array
+ * of the map is comparable in size to the number of entries (they differ by 
+ * a load factor between 0 and 1), this resize is also O(n) in the number of
+ * entries in the HashMap.
  *
  * @param Key           the type of key used in the map
  * @param Value         the type of value to be stored in the map
@@ -313,6 +316,10 @@ void HashMap< Key , Value >::clearTable( ArrayList< Entry* >& table ) {
 
 template< typename Key , typename Value >
 void HashMap< Key , Value >::ensureCapacity( int size ) {
+    
+    //we must append 0-pointers to the end of the table array so that
+    //the size of the table is big enough and so that we do not set() out
+    //of bounds at higher indices
     for ( int i=m_table.size() ; i<size ; i++ ) {
         m_table.append( 0 );
     }
@@ -320,9 +327,15 @@ void HashMap< Key , Value >::ensureCapacity( int size ) {
 
 template< typename Key , typename Value >
 void HashMap< Key , Value >::resize( int size ) {
+    
+    //pick the smallest predefined prime number that is larger than the
+    //specified size.
+    
+    //if no size meets the size requirement, then we can only use the largest
+    //predeinfed prime number available
     int newSize = SIZES[ 0 ];
     if ( newSize < size ) {
-        for ( int i=1 ; i< NUM_PREDEF_SIZES ; i++ ) {
+        for ( int i=0 ; i< NUM_PREDEF_SIZES ; i++ ) {
             newSize = SIZES[ i ];
             if ( newSize >= size ) {
                 break;
@@ -346,6 +359,9 @@ void HashMap< Key , Value >::transferTo( ArrayList< Entry* >& newTable ) const {
         Entry* e = m_table.get( i );
         while ( e != 0 ) {
             Entry* nextElement = e->next;
+            
+            //the indices of elements in the array must be recalculated
+            //because the size has changed
             int newIdx = e->hashcode % newTable.size();
             if ( newTable.get( newIdx ) == 0 ) {
                 e->next = 0;
@@ -400,6 +416,8 @@ void HashMap< Key , Value >::put( const Key& key , Value value ) {
 template< typename Key , typename Value >
 Value HashMap< Key , Value >:: get( const Key& key ) const {
     Entry* e = m_table.get( indexOf( m_hasher.hash( key ) ) );
+    
+    //search the bucket for the given key
     while( e != 0 && !m_hasher.areEquivalent( e->key , key ) ) {
         e = e->next;
     }

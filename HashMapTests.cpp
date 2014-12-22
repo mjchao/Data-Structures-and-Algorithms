@@ -345,7 +345,7 @@ void HashMapTests::testOverwrite() {
         test.put( one , i );
     }
     evaluateTest( 99999999 , test.get( one ) , errorMessage );
-    cout << "Was memory usage constant?" << endl;
+    cout << "Was memory usage constant? (y/n)" << endl;
     char found = tolower( getchar() );
     evaluateTest( 'y' , found , errorMessage );
 }
