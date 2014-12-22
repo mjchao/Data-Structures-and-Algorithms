@@ -25,6 +25,10 @@ template< typename E >
 class PriorityQueue : protected ArrayQueue< E > {
 
 private:
+    
+    /**
+     * allows for comparisons between elements in this queue.
+     */
     Comparator< E >* m_comparator;
     
     /**
@@ -80,6 +84,7 @@ private:
      * Sifts the element at the given index upwards in the priority queue
      *
      * @param idx                   index of the element to sift upwards
+     * @return                      the final index of the element in the array
      */
     void siftUp( int idx ) {
         int currIdx = idx;
@@ -100,6 +105,7 @@ private:
      * Sifts the element at the given index downwards in the priority queue
      *
      * @param idx                   index of the element to sift downwards
+     * @return                      the final index of the element in the array
      */
     void siftDown( int idx ) {
         int currIdx = idx;
@@ -193,6 +199,27 @@ public:
         return rtn;
     }
     
+    /**
+     * Removes the element with the given value from the queue. This requires
+     * O(n) time, as the entire queue must be searched for the value.
+     *
+     * @return                      if the element was found and removed
+     */
+    bool remove( const E& value ) {
+        
+        for ( int i=0 ; i<ArrayQueue< E >::size() ; i++ ) {
+            if ( compare( value , ArrayQueue< E >::get( i ) ) == 0 ) {
+                swap( i+1 , ArrayQueue< E >::size() );
+                ArrayQueue< E >::removeAt(
+                                getIdxInArrayQueue( ArrayQueue< E >::size() ) );
+                if ( ArrayQueue< E >::size() > 0 ) {
+                    siftDown( 1 );
+                }
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * Clears the queue so that it contains no elements

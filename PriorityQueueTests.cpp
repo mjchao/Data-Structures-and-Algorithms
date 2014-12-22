@@ -12,6 +12,7 @@
 void PriorityQueueTests::test() {
     testOffer();
     testQueueSystem();
+    testRemove();
     reportTestStatistics( "PriorityQueue" );
 }
 
@@ -214,5 +215,152 @@ void PriorityQueueTests::testQueueSystem() {
     found = test.peek();
     evaluateTest( expected , found , errorMessage );
     test.poll();
+}
+
+void PriorityQueueTests::testRemove() {
+    
+    bool expected;
+    bool found;
+    string expectedRepresentation;
+    string foundRepresentation;
+    string errorMessage = "PriorityQueue remove() failed!";
+    
+    PriorityQueue< int > test;
+
+    //test removing from the front (equivalent to polling)
+    test.offer( 1 );
+    test.offer( 2 );
+    test.offer( 3 );
+    test.offer( 4 );
+    test.offer( 5 );
+    
+    expectedRepresentation = "[1, 2, 3, 4, 5]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = true;
+    found = test.remove( 1 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[2, 4, 3, 5]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = false;
+    found = test.remove( -1 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[2, 4, 3, 5]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = true;
+    found = test.remove( 2 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[3, 4, 5]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = false;
+    found = test.remove( 1 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = true;
+    found = test.remove( 3 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[4, 5]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = true;
+    found = test.remove( 4 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[5]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = true;
+    found = test.remove( 5 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    //test removing from an empty queue
+    expected = false;
+    found = test.remove( 5 );
+    evaluateTest( expected , found , errorMessage );
+    
+    //test removing from the back
+    test.clear();
+    test.offer( 1 );
+    test.offer( 2 );
+    test.offer( 3 );
+    test.offer( 4 );
+    test.offer( 5 );
+    test.offer( 6 );
+    expectedRepresentation = "[1, 2, 3, 4, 5, 6]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = true;
+    found = test.remove( 6 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[1, 2, 3, 4, 5]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = true;
+    found = test.remove( 5 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[1, 2, 3, 4]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = true;
+    found = test.remove( 4 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[1, 2, 3]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = false;
+    found = test.remove( 4 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = true;
+    found = test.remove( 3 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[1, 2]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = false;
+    found = test.remove( -1 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = true;
+    found = test.remove( 2 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[1]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
+    
+    expected = true;
+    found = test.remove( 1 );
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedRepresentation = "[]";
+    foundRepresentation = test.toString();
+    evaluateTest( expectedRepresentation , foundRepresentation , errorMessage );
     
 }

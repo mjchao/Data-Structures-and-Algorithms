@@ -17,6 +17,7 @@ public:
     void test();
         void testOffer();
         void testQueueSystem();
+        void testRemove();
 };
 
 #endif /* defined(__Data_Structures__PriorityQueueTests__) */
