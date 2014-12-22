@@ -25,6 +25,7 @@ public:
     void testDestructor();
     void testResize();
     void testClear();
+    void testOverwrite();
 };
 
 #endif /* defined(__Data_Structures__HashMapTests__) */

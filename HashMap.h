@@ -166,6 +166,14 @@ public:
     HashMap( int initialSize );
     
     /**
+     * Creates a HashMap with the specified hasher , the default initial size,
+     * and the default load factor
+     *
+     * @param hasher                the hasher for generating hash codes
+     */
+    HashMap( const Hasher< Key >& hasher );
+    
+    /**
      * Creates a HashMap with the specified hasher and initial size and the
      * default load factor
      *
@@ -253,6 +261,13 @@ template< typename Key , typename Value >
 HashMap< Key , Value >::HashMap( int initialSize ) :
                             m_hasher( DEFAULT_HASHER ) {
     m_size = initialSize;
+    resize( m_size );
+}
+
+template< typename Key , typename Value >
+HashMap< Key , Value >::HashMap( const Hasher< Key >& hasher ) :
+                                                            m_hasher( hasher ) {
+    m_size = DEFAULT_SIZE;
     resize( m_size );
 }
 
@@ -351,15 +366,30 @@ int HashMap< Key , Value >::indexOf( long long hashcode ) const {
 
 template< typename Key , typename Value >
 void HashMap< Key , Value >::put( const Key& key , Value value ) {
+    long long hashcode = m_hasher.hash( key );
+    int idx = indexOf( hashcode );
+    
+    Entry* arrPtr = m_table.get( idx );
+    
+    //check if the key is already in the bucket. if it is, then overwrite it
+    for ( Entry* currPtr = arrPtr ; currPtr != 0 ; currPtr = currPtr->next ) {
+        if ( m_hasher.areEquivalent( key , currPtr->key ) ) {
+            currPtr->value = value;
+            //cout << "ok" << endl;
+            return;
+        }
+    }
+    
+    //check if resize is needed
     if ( m_entries+1 >= m_size*m_loadFactor ) {
         int newSize = (int)(m_size/m_loadFactor+1);
         resize( newSize );
+        idx = indexOf( hashcode );
+        arrPtr = m_table.get( idx );
     }
-    Entry* e = new Entry( m_hasher.hash( key ) , key , value );
-    e->next = 0;
-    int idx = indexOf( e->hashcode );
     
-    Entry* arrPtr = m_table.get( idx );
+    Entry* e = new Entry( hashcode , key , value );
+    e->next = 0;
     if ( arrPtr != 0 ) {
         e->next = arrPtr;
     }

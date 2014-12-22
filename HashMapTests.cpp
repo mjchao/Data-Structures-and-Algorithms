@@ -20,6 +20,7 @@ void HashMapTests::test() {
     //testDestructor();
     testResize();
     testClear();
+    testOverwrite();
     reportTestStatistics( "HashMap" );
 }
 
@@ -225,6 +226,25 @@ void HashMapTests::testDestructor() {
     evaluateTest( expected, found , errorMessage );
 }
 
+/**
+ * A test hasher for integer values. The hashcode of an integer value
+ * is the integer value itself
+ */
+class IntHasher : public Hasher< int >{
+    
+private:
+    
+public:
+    
+    long long hash( const int& value ) const {
+        return value;
+    }
+    
+    bool areEquivalent( const int& v1 , const int& v2 ) const {
+        return v1 == v2;
+    }
+};
+
 void HashMapTests::testResize() {
     string errorMessage = "HashMap resize() failed!";
     
@@ -272,12 +292,13 @@ void HashMapTests::testResize() {
     int oneValue = test.m_table.get( oneIdx )->value;
     evaluateTest( oneValue , 1 , errorMessage );
     
-    HashMap< int , int > test2;
+    IntHasher intHasher;
+    HashMap< int , int > test2( intHasher );
     for ( int i=0 ; i<100000 ; i++ ) {
         test2.put( i , i );
     }
-    evaluateTest( test2.m_table.size() , 180503, errorMessage );
-    evaluateTest( test2.m_size , 180503 , errorMessage );
+    evaluateTest( 180503 , test2.m_table.size() , errorMessage );
+    evaluateTest( 180503 , test2.m_size , errorMessage );
     
     //test boundary resize
     //0.7*180503 = 126352.1, so we add 126352 entries
@@ -286,12 +307,12 @@ void HashMapTests::testResize() {
     for ( int i=0 ; i<126352 ; i++ ) {
         test2.put( i , i );
     }
-    evaluateTest( test2.m_table.size() , 180503 , errorMessage );
-    evaluateTest( test2.m_size , 180503 , errorMessage );
+    evaluateTest( 180503 , test2.m_table.size() , errorMessage );
+    evaluateTest( 180503 , test2.m_size , errorMessage );
     
     test2.put( 126353 , 126353 );
-    evaluateTest( test2.m_table.size() , 386093, errorMessage );
-    evaluateTest( test2.m_size , 386093 , errorMessage );
+    evaluateTest( 386093 , test2.m_table.size() , errorMessage );
+    evaluateTest( 386093 , test2.m_size , errorMessage );
 }
 
 void HashMapTests::testClear() {
@@ -311,5 +332,21 @@ void HashMapTests::testClear() {
     test.clear();
     evaluateTest( test.get( one ) , 0 , errorMessage );
     evaluateTest( test.m_table.size() , test.DEFAULT_SIZE , errorMessage );
+}
+
+void HashMapTests::testOverwrite() {
+    string errorMessage = "HashMap put() does not overwrite properly!";
+    HashMap< string , int > test;
+    string one = "one";
+    cout << "Please watch for constant memory usage. " <<
+                                            "Press enter to continue." << endl;
+    getchar();
+    for ( int i=0 ; i<100000000 ; i++ ) {
+        test.put( one , i );
+    }
+    evaluateTest( 99999999 , test.get( one ) , errorMessage );
+    cout << "Was memory usage constant?" << endl;
+    char found = tolower( getchar() );
+    evaluateTest( 'y' , found , errorMessage );
 }
 
