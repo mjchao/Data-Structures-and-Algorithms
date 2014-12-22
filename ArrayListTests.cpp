@@ -34,8 +34,6 @@ ArrayListTests::~ArrayListTests() {
 }
 
 void ArrayListTests::test() {
-    vector<int> t1;
-    vector<int> t2;
     testArrayListAppend();
     testArrayListInsert();
     testArrayListClear();

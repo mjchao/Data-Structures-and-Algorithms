@@ -10,7 +10,6 @@
 #define Data_Structures_DefaultHasher_h
 
 #include "Hasher.h"
-#include <iostream>
 
 /**
  * A default hasher that uses the memory addresses of objects as their 

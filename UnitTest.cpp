@@ -11,7 +11,6 @@
     using std::endl;
 
 #include "UnitTest.h"
-#include "ArrayList.h"
 
 UnitTest::UnitTest() {
     m_numFailed = 0;

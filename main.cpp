@@ -40,10 +40,10 @@ int main(int argc, const char * argv[]) {
     //test5.test();
     
     PriorityQueueTests test6;
-    test6.test();
+    //test6.test();
     
     HashMapTests test7;
-    //test7.test();
+    test7.test();
     
     return 0;
 }

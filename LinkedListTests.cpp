@@ -9,8 +9,6 @@
 #include "LinkedListTests.h"
 #include "LinkedList.h"
 #include "ArrayList.h"
-#include <vector>
-    using std::vector;
 
 using std::tolower;
 using std::runtime_error;
