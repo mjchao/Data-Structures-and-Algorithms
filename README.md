@@ -13,5 +13,5 @@ Currently Completed:
 
 Coming in the future:
 
-1. B+ Tree
+1. B+ Tree, AVL Tree
 2. Standard Sorting
