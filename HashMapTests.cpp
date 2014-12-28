@@ -55,7 +55,7 @@ void HashMapTests::testDefaultHasher() {
 }
 
 void HashMapTests::testConstructors() {
-
+    
 }
 
 void HashMapTests::testPut() {
@@ -167,12 +167,12 @@ void HashMapTests::testRemove() {
         "six" , "seven" , "eight" , "nine" , "ten" , "eleven" , "twelve" ,
         "thirteen" , "fourteen" , "fifteen" };
     int values[] = { 0 , 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10 , 11 , 12 , 13 ,
-                    14 , 15 };
-
+        14 , 15 };
+    
     for ( int i=0 ; i<=15 ; i++ ) {
         test.put( keys[ i ] , values[ i ] );
     }
-
+    
     //check that "two" is still in the map
     evaluateTest( test.get( keys[ 2 ] ) , 2 , errorMessage );
     
@@ -254,7 +254,7 @@ void HashMapTests::testResize() {
     string one = "one";
     test.put( one , 1 );
     evaluateTest( 2 , test.m_size , errorMessage );
-
+    
     string two = "two";
     test.put( two , 2 );
     evaluateTest( 3 , test.m_size , errorMessage );
@@ -273,7 +273,7 @@ void HashMapTests::testResize() {
     int threeIdx = test.indexOf( test.m_hasher.hash( three ) );
     int fourIdx = test.indexOf( test.m_hasher.hash( four ) );
     bool allSameIdx = (oneIdx == twoIdx) && (twoIdx == threeIdx ) &&
-                                                        (threeIdx==fourIdx);
+    (threeIdx==fourIdx);
     evaluateTest( allSameIdx , false , errorMessage );
     
     //make sure that four is actually at the index its supposed to be
@@ -287,7 +287,7 @@ void HashMapTests::testResize() {
     //make sure that two is at the correct index
     evaluateTest( test.m_table.get( twoIdx )->value , 2 , errorMessage );
     test.remove( two );
-
+    
     //make sure that one is at the correct index
     int oneValue = test.m_table.get( oneIdx )->value;
     evaluateTest( oneValue , 1 , errorMessage );
@@ -339,7 +339,7 @@ void HashMapTests::testOverwrite() {
     HashMap< string , int > test;
     string one = "one";
     cout << "Please watch for constant memory usage. " <<
-                                            "Press enter to continue." << endl;
+    "Press enter to continue." << endl;
     getchar();
     for ( int i=0 ; i<100000000 ; i++ ) {
         test.put( one , i );
@@ -349,4 +349,3 @@ void HashMapTests::testOverwrite() {
     char found = tolower( getchar() );
     evaluateTest( 'y' , found , errorMessage );
 }
-

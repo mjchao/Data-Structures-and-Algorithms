@@ -13,7 +13,7 @@
  * Generates hashcodes for objects. These hashcodes can then be used in a
  * hashmap
  *
- * @param T                     the type of object for which to generate 
+ * @param T                     the type of object for which to generate
  *                              hashcodes
  */
 template< typename T >

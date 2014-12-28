@@ -20,7 +20,7 @@
  * put() is generally O(1), but inserting into the map may sometimes cause
  * the entire map to be resized and reorganized, which will be O(n) in the size
  * of the underlying array of the map. Since the size of the underlying array
- * of the map is comparable in size to the number of entries (they differ by 
+ * of the map is comparable in size to the number of entries (they differ by
  * a load factor between 0 and 1), this resize is also O(n) in the number of
  * entries in the HashMap.
  *
@@ -29,9 +29,9 @@
  */
 template< typename Key , typename Value >
 class HashMap : public AbstractMap< Key , Value > {
-  
-friend class HashMapTests;
-
+    
+    friend class HashMapTests;
+    
 private:
     
     /**
@@ -59,7 +59,7 @@ private:
         Entry* next;
         
         Entry( long long hash , const Key& k , Value v ) : hashcode( hash ) ,
-                                                        key( k ) , value( v ) {
+        key( k ) , value( v ) {
             next = 0;
         }
         
@@ -70,7 +70,7 @@ private:
     
     /**
      * Ensures that the underlying array can hold the given number of elements
-     * 
+     *
      * @param size                  the minimum number of elements the array
      *                              must be capable of holding
      */
@@ -262,21 +262,21 @@ HashMap< Key , Value >::HashMap() : m_hasher( DEFAULT_HASHER ) {
 
 template< typename Key , typename Value >
 HashMap< Key , Value >::HashMap( int initialSize ) :
-                            m_hasher( DEFAULT_HASHER ) {
+m_hasher( DEFAULT_HASHER ) {
     m_size = initialSize;
     resize( m_size );
 }
 
 template< typename Key , typename Value >
 HashMap< Key , Value >::HashMap( const Hasher< Key >& hasher ) :
-                                                            m_hasher( hasher ) {
+m_hasher( hasher ) {
     m_size = DEFAULT_SIZE;
     resize( m_size );
 }
 
 template< typename Key , typename Value >
 HashMap< Key, Value >::HashMap( const Hasher< Key >& hasher, int initialSize ) :
-                                                            m_hasher( hasher ) {
+m_hasher( hasher ) {
     m_size = initialSize;
     resize( m_size );
 }
@@ -493,7 +493,7 @@ template< typename Key , typename Value >
 void HashMap< Key , Value >::setLoadFactor( double loadFactor ) {
     if ( m_loadFactor <= 0 || m_loadFactor >= 1 ) {
         throw new std::runtime_error(
-                "Illegal load factor. Must be between 0 and 1 exclusive.");
+                                     "Illegal load factor. Must be between 0 and 1 exclusive.");
     }
     m_loadFactor = loadFactor;
 }

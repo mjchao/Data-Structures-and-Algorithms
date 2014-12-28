@@ -12,7 +12,7 @@
 #include "Hasher.h"
 
 /**
- * A default hasher that uses the memory addresses of objects as their 
+ * A default hasher that uses the memory addresses of objects as their
  * hash-values
  *
  * @param T                     the type of object for which this Hasher
@@ -30,7 +30,7 @@ public:
      * object's address
      */
     DefaultHasher() {
-
+        
     }
     
     ~DefaultHasher() {
@@ -49,7 +49,7 @@ public:
         long long address = (long long)(void*)( &val );
         return address;
     }
-  
+    
     /**
      * Determines if two objects are equivalent. This will be used to determine
      * if two keys are the same or not.
