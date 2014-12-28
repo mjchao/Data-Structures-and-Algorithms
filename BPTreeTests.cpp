@@ -143,6 +143,7 @@ void BPTreeTests::testInsert() {
     string errorMessage = "BPTree insert() failed!";
     BPTree< int , int > test( 5 );
     
+    //test unique inserts
     test.insert( 10  , 10 );
     test.insert( 12 , 12 );
     test.insert( 23 , 23 );
@@ -168,7 +169,8 @@ void BPTreeTests::testInsert() {
     
     test.insert( 30 , 30 );
     expected = "[[18, 23, 33, 48]\n";
-    expected += "[10, 12, 15], [18, 20, 21], [23, 30, 31], [33, 45, 47], [48, 50, 52]]";
+    expected += "[10, 12, 15], [18, 20, 21], [23, 30, 31], [33, 45, 47], ";
+    expected +=                                                 "[48, 50, 52]]";
     found = test.toString();
     evaluateTest( expected , found , errorMessage );
     
@@ -186,7 +188,22 @@ void BPTreeTests::testInsert() {
     test.insert( 14 , 14 );
     expected = "[[26]\n";
     expected += "[13, 18, 23], [26, 33, 48]\n";
-    expected += "[10, 11, 12], [13, 14, 15], [18, 20, 21], [23, 24, 25], [26, 30, 31], [33, 45, 47], [48, 50, 52]]";
+    expected += "[10, 11, 12], [13, 14, 15], [18, 20, 21], [23, 24, 25], ";
+    expected +=                     "[26, 30, 31], [33, 45, 47], [48, 50, 52]]";
     found = test.toString();
     evaluateTest( expected , found , errorMessage );
+    
+    for ( int i=60 ; i<=100 ; i++ ) {
+        test.insert( i ,  i );
+    }
+    
+    int expectedVal;
+    int foundVal;
+    expectedVal = 60;
+    foundVal = test.find( 60 );
+    evaluateTest( expectedVal , foundVal , errorMessage );
+    
+    expectedVal = 0;
+    foundVal = test.find( -50 );
+    evaluateTest( expectedVal , foundVal , errorMessage );
 }

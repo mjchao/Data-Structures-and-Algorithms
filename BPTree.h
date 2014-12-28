@@ -161,6 +161,9 @@ private:
          * @param entries           an array of entries into which to insert
          * @param entriesSize       the size of the entries array
          * @param toInsert          the entry to insert
+         * @return                  if the insertion was sucessful (it is
+         *                          unsuccessful if the given key was already
+         *                          in the entries array
          */
         void insertEntry( BPEntry** entries , int entriesSize ,
                          BPEntry* toInsert ) {
@@ -169,10 +172,10 @@ private:
             //determine the index at which we should insert the new entry
             int insertIdx;
             
-            //if we are inserting at the end of the array, then
-            //we insert there no matter what
+            //if we are inserting past the end of the array, then
+            //we insert at the end no matter what (just as safety)
             if ( searchIdx >= entriesSize ) {
-                insertIdx = searchIdx;
+                insertIdx = entriesSize-1;
             }
             
             //if we are inserting at a location in the array that's empty,
@@ -184,7 +187,7 @@ private:
                 
                 //if the entry currently in the array is less,
                 //then we need to insert the new entry after the current element
-                if ( compare( entries[ searchIdx ]->key, toInsert->key ) <= 0 ) {
+                if ( compare( entries[ searchIdx ]->key, toInsert->key ) < 0 ) {
                     insertIdx = searchIdx+1;
                 }
                 
@@ -254,6 +257,7 @@ private:
             for ( int i=0 ; i<m_numRecords ; i++ ) {
                 combinedEntries[ i ] = m_entries[ i ];
             }
+            combinedEntries[ m_numRecords ] = 0;
             insertEntry( combinedEntries , m_numRecords+1 , toInsert );
             
             BPNode* parent = this->m_parent;
@@ -274,14 +278,18 @@ private:
             int middleIdx = (m_numRecords+1)/2;
             BPNode* leftNode = new BPNode( m_comparator , m_order );
             leftNode->m_isLeaf = this->m_isLeaf;
+            leftNode->m_parent = parent;
+            
             BPNode* rightNode = new BPNode( m_comparator , m_order );
             rightNode->m_isLeaf = this->m_isLeaf;
+            rightNode->m_parent = parent;
             leftNode->m_rightSibling = rightNode;
+            
             for ( int i=0 ; i<middleIdx ; i++ ) {
                 leftNode->m_entries[ i ] = combinedEntries[ i ];
                 if ( !leftNode->isLeaf() ) {
-                    leftNode->m_entries[ i ]->leftNode->m_parent = parent;
-                    leftNode->m_entries[ i ]->rightNode->m_parent = parent;
+                    leftNode->m_entries[ i ]->leftNode->m_parent = leftNode;
+                    leftNode->m_entries[ i ]->rightNode->m_parent = leftNode;
                 }
                 leftNode->m_numRecords++;
             }
@@ -289,9 +297,9 @@ private:
                 rightNode->m_entries[ i-middleIdx ] = combinedEntries[ i ];
                 if ( !rightNode->isLeaf() ) {
                     rightNode->m_entries[ i-middleIdx ]->leftNode->m_parent =
-                                                                        parent;
+                                                                    rightNode;
                     rightNode->m_entries[ i-middleIdx ]->rightNode->m_parent =
-                                                                        parent;
+                                                                    rightNode;
                 }
                 rightNode->m_numRecords++;
             }
@@ -310,10 +318,6 @@ private:
             if ( rtn == 0 ) {
                 rtn = higherParent;
             }
-            
-            //update the left and right branches of their parents
-            leftNode->m_parent = parent;
-            rightNode->m_parent = parent;
             
             return rtn;
         }
@@ -404,11 +408,11 @@ private:
             }
             else {
                 BPEntry* guideEntry = m_entries[ locationIdx ];
-                if ( compare( guideEntry->key , k ) < 0 ) {
-                    return guideEntry->rightNode;
+                if ( compare( k , guideEntry->key ) < 0 ) {
+                    return guideEntry->leftNode;
                 }
                 else {
-                    return guideEntry->leftNode;
+                    return guideEntry->rightNode;
                 }
             }
         }
@@ -426,6 +430,28 @@ private:
             }
             m_numRecords++;
             return 0;
+        }
+        
+        /**
+         * Finds the entry with the given key
+         * 
+         * @param k                 a key value
+         * @return                  the entry associated with the given key, or
+         *                          0 if the key was not found in the tree
+         */
+        Value* find( const Key& k ) {
+            if ( isLeaf() ) {
+                int findIdx = locateIdx( m_entries , m_numRecords , k );
+                if ( compare( m_entries[ findIdx ]->key , k ) == 0 ) {
+                    return m_entries[ findIdx ]->value;
+                }
+                else {
+                    return 0;
+                }
+            }
+            else {
+                return findBranch( k )->find( k );
+            }
         }
         
         string toString() {
@@ -501,6 +527,35 @@ public:
             m_root = newRoot;
         }
     }
+    
+    /**
+     * Determines if the given key is in the tree
+     *
+     * @param k                     a key value for which to search
+     * @return                      if the given key is in the tree
+     */
+    void contains( const Key& k ) {
+        return m_root->find( k ) == 0;
+    }
+    
+    /**
+     * Finds the value associated with the given key, or returns a default value
+     * if the key is not in the tree
+     *
+     * @param k                     a key value for which to search
+     * @return                      the value associated with the given key, or
+     *                              the default value if the key is not found
+     */
+    Value find( const Key& k ) {
+        Value* v = m_root->find( k );
+        if ( v == 0 ) {
+            return Value();
+        }
+        else {
+            return *v;
+        }
+    }
+    
     
     string toString() {
         Message rtn;
