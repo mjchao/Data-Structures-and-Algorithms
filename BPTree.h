@@ -204,10 +204,14 @@ private:
             //then put the new entry in its place
             entries[ insertIdx ] = toInsert;
             
-            //and update the neighbors
+            //and update the neighbors and their siblings
             if ( insertIdx-1 >= 0 ) {
                 entries[ insertIdx-1 ]->rightNode = toInsert->leftNode;
                 if ( entries[ insertIdx-1 ]->rightNode != 0 ) {
+                    
+                    //TODO explain why would code fail without this line?
+                    entries[ insertIdx-1 ]->leftNode->m_rightSibling =
+                                            entries[ insertIdx-1 ]->rightNode;
                     entries[ insertIdx-1 ]->rightNode->m_rightSibling =
                                                             toInsert->rightNode;
                 }
@@ -216,6 +220,8 @@ private:
                 if ( entries[ insertIdx+1 ] != 0 ) {
                     entries[ insertIdx+1 ]->leftNode = toInsert->rightNode;
                     if ( toInsert->rightNode != 0 ) {
+                        toInsert->leftNode->m_rightSibling =
+                                                    toInsert->rightNode;
                         toInsert->rightNode->m_rightSibling =
                                         entries[ insertIdx+1 ]->rightNode;
                     }
@@ -240,7 +246,8 @@ private:
          * correctly if the node is not full.
          *
          * @param toInsert          the entry to be inserted into this full node
-         * @return                  a pointer to the new parent node
+         * @return                  a pointer to the new root if a new root was
+         *                          created
          */
         BPNode* split( BPEntry* toInsert) {
             BPEntry* combinedEntries[ m_numRecords+1 ];
@@ -249,36 +256,49 @@ private:
             }
             insertEntry( combinedEntries , m_numRecords+1 , toInsert );
             
+            BPNode* parent = this->m_parent;
+            BPNode* rtn = 0;
+            
+            //create the parent if the parent does not yet exist
+            //this must mean that the root has split
+            if ( parent == 0 ) {
+                parent = new BPNode( m_comparator , m_order );
+                
+                //since a new root was created, we must indicate that in the
+                //return value
+                rtn = parent;
+            }
+            parent->m_isLeaf = false;
+            
             //split the overfilled array evenly
-            int middleIdx = m_numRecords/2 + 1;
+            int middleIdx = (m_numRecords+1)/2;
             BPNode* leftNode = new BPNode( m_comparator , m_order );
+            leftNode->m_isLeaf = this->m_isLeaf;
             BPNode* rightNode = new BPNode( m_comparator , m_order );
+            rightNode->m_isLeaf = this->m_isLeaf;
             leftNode->m_rightSibling = rightNode;
             for ( int i=0 ; i<middleIdx ; i++ ) {
                 leftNode->m_entries[ i ] = combinedEntries[ i ];
+                if ( !leftNode->isLeaf() ) {
+                    leftNode->m_entries[ i ]->leftNode->m_parent = parent;
+                    leftNode->m_entries[ i ]->rightNode->m_parent = parent;
+                }
                 leftNode->m_numRecords++;
             }
             for ( int i=middleIdx ; i<m_numRecords+1 ; i++ ) {
                 rightNode->m_entries[ i-middleIdx ] = combinedEntries[ i ];
+                if ( !rightNode->isLeaf() ) {
+                    rightNode->m_entries[ i-middleIdx ]->leftNode->m_parent =
+                                                                        parent;
+                    rightNode->m_entries[ i-middleIdx ]->rightNode->m_parent =
+                                                                        parent;
+                }
                 rightNode->m_numRecords++;
             }
             
             //promote the first key in the right branch into the parent's
             //entries
             Key& promotedKey = rightNode->m_entries[ 0 ]->key;
-            
-            BPNode* parent = this->m_parent;
-            BPNode* rtn = 0;
-            
-            //create the parent if the parent does not yet exist
-            if ( parent == 0 ) {
-                parent = new BPNode( m_comparator , m_order );
-                parent->m_isLeaf = false;
-                
-                //since a new root was created, we must indicate that in the
-                //return value
-                rtn = parent;
-            }
             
             //insert the promoted key into the parent
             BPNode* higherParent = parent->insertPromotedKey(
@@ -366,6 +386,10 @@ private:
             return m_parent;
         }
         
+        BPNode* getLeftmostChild() {
+            return m_entries[ 0 ]->leftNode;
+        }
+        
         /**
          * Finds the branch that should contain the given key
          *
@@ -422,6 +446,21 @@ private:
             }
             return rtn.str();
         }
+        
+        /**
+         * Returns the textual representation of this node and all its 
+         * siblings to the right.
+         */
+        string toStringSiblings() {
+            Message rtn;
+            rtn << this->toString();
+            BPNode* currNode = this->m_rightSibling;
+            while( currNode != 0 ) {
+                rtn << ", " << currNode->toString();
+                currNode = currNode->m_rightSibling;
+            }
+            return rtn.str();
+        }
     };
     
     /**
@@ -461,6 +500,22 @@ public:
         if ( newRoot != 0 ) {
             m_root = newRoot;
         }
+    }
+    
+    string toString() {
+        Message rtn;
+        rtn << "[" << m_root->toStringSiblings();
+        if ( !m_root->isLeaf() ) {
+            rtn << "\n";
+            BPNode* curr = m_root->getLeftmostChild();
+            while( !curr->isLeaf() ) {
+                rtn << curr->toStringSiblings() << "\n";
+                curr = curr->getLeftmostChild();
+            }
+            rtn << curr->toStringSiblings();
+        }
+        rtn << "]";
+        return rtn.str();
     }
 };
 

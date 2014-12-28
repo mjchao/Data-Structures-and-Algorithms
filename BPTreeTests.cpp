@@ -138,14 +138,20 @@ void BPTreeTests::testNodeInsertKeyMemory() {
 }
 
 void BPTreeTests::testInsert() {
+    string expected;
+    string found;
+    string errorMessage = "BPTree insert() failed!";
     BPTree< int , int > test( 5 );
     
-    //currently just stepping through with debugger to ensure correctness
     test.insert( 10  , 10 );
     test.insert( 12 , 12 );
     test.insert( 23 , 23 );
     test.insert( 33 , 33 );
     test.insert( 48 , 48 );
+    expected = "[[10, 12, 23, 33, 48]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
     test.insert( 50 , 50 );
     test.insert( 15 , 15 );
     test.insert( 18 , 18 );
@@ -155,5 +161,32 @@ void BPTreeTests::testInsert() {
     test.insert( 45 , 45 );
     test.insert( 47 , 47 );
     test.insert( 52 , 52 );
-    test.insert( 53 , 53 );//*/
+    expected = "[[18, 33, 48]\n";
+    expected+="[10, 12, 15], [18, 20, 21, 23, 31], [33, 45, 47], [48, 50, 52]]";
+    found = test.toString();
+    evaluateTest(  expected , found , errorMessage );
+    
+    test.insert( 30 , 30 );
+    expected = "[[18, 23, 33, 48]\n";
+    expected += "[10, 12, 15], [18, 20, 21], [23, 30, 31], [33, 45, 47], [48, 50, 52]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    test.insert( 24 , 24 );
+    test.insert( 25 , 25 );
+    test.insert( 26 , 26 );
+    expected = "[[18, 23, 26, 33, 48]\n";
+    expected += "[10, 12, 15], [18, 20, 21], [23, 24, 25], ";
+    expected +=                     "[26, 30, 31], [33, 45, 47], [48, 50, 52]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    test.insert( 11 , 11 );
+    test.insert( 13 , 13 );
+    test.insert( 14 , 14 );
+    expected = "[[26]\n";
+    expected += "[13, 18, 23], [26, 33, 48]\n";
+    expected += "[10, 11, 12], [13, 14, 15], [18, 20, 21], [23, 24, 25], [26, 30, 31], [33, 45, 47], [48, 50, 52]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
 }

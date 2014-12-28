@@ -14,6 +14,7 @@
 #include "ArrayQueueTests.h"
 #include "HashMapTests.h"
 #include "PriorityQueueTests.h"
+#include "BPTreeTests.h"
 
 #include "UnitTest.h"
 #include <vector>
@@ -43,7 +44,9 @@ int main(int argc, const char * argv[]) {
     //test6.test();
     
     HashMapTests test7;
-    test7.test();
+    //test7.test();
     
+    BPTreeTests test8;
+    test8.test();
     return 0;
 }
