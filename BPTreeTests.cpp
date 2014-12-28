@@ -206,4 +206,9 @@ void BPTreeTests::testInsert() {
     expectedVal = 0;
     foundVal = test.find( -50 );
     evaluateTest( expectedVal , foundVal , errorMessage );
+    
+    test.insert( 60 , 999 );
+    expectedVal = 999;
+    foundVal = test.find( 60 );
+    evaluateTest( expectedVal , foundVal , errorMessage );
 }

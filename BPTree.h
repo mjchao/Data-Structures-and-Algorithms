@@ -442,7 +442,10 @@ private:
         Value* find( const Key& k ) {
             if ( isLeaf() ) {
                 int findIdx = locateIdx( m_entries , m_numRecords , k );
-                if ( compare( m_entries[ findIdx ]->key , k ) == 0 ) {
+                if ( m_numRecords == 0 ) {
+                    return 0;
+                }
+                else if ( compare( m_entries[ findIdx ]->key , k ) == 0 ) {
                     return m_entries[ findIdx ]->value;
                 }
                 else {
@@ -518,6 +521,12 @@ public:
     }
     
     void insert( const Key& k , const Value& v ) {
+        
+        //overide value if the key is already in the tree
+        if ( contains( k ) ) {
+            *m_root->find( k ) = v;
+            return;
+        }
         BPNode* curr = m_root;
         while( !curr->isLeaf() ) {
             curr = curr->findBranch( k );
@@ -534,8 +543,8 @@ public:
      * @param k                     a key value for which to search
      * @return                      if the given key is in the tree
      */
-    void contains( const Key& k ) {
-        return m_root->find( k ) == 0;
+    bool contains( const Key& k ) {
+        return m_root->find( k ) != 0;
     }
     
     /**
