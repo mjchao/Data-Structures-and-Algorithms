@@ -49,7 +49,7 @@ void HashMapTests::testDefaultHasher() {
     
     //report successful test
     evaluateTest( true , true , "DefaultHasher failed!" );
-    for ( int i=0 ; i<1000 ; i++ ) {
+    for ( int i=0 ; i<NUM_ADDRESSES_TO_TEST ; i++ ) {
         delete testInts[ i ];
     }
 }
