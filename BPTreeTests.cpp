@@ -13,6 +13,7 @@ void BPTreeTests::test() {
     testNodeInsertKey();
     //testNodeInsertKeyMemory();
     testInsert();
+    //testMemoryManagement();
     reportTestStatistics( "BPTree" );
 }
 
@@ -118,15 +119,15 @@ void BPTreeTests::testNodeInsertKey() {
     testNode.insertKeyValue( 7 , 7 );
     expected = "[5, 5, 5, 7, 7, 7, 10, 10, 10, 10]";
     found = testNode.toString();
-    evaluateTest( expected , found , errorMessage );
+    evaluateTest( expected , found , errorMessage );//*/
 }
 
 void BPTreeTests::testNodeInsertKeyMemory() {
     cout << "Prepare to observe memory usage. Press Enter to continue." << endl;
     getchar();
-    for ( int i=0 ; i<100000 ; i++ ) {
+    for ( int i=0 ; i<500000 ; i++ ) {
         BPTree< int , int >::BPNode test( 100 );
-        for ( int i=0 ; i<50 ; i++ ) {
+        for ( int i=0 ; i<99 ; i++ ) {
             test.insertKeyValue( i , i );
         }
     }
@@ -211,4 +212,21 @@ void BPTreeTests::testInsert() {
     expectedVal = 999;
     foundVal = test.find( 60 );
     evaluateTest( expectedVal , foundVal , errorMessage );
+    
+    cout << test.toString() << endl;//*/
+}
+
+void BPTreeTests::testMemoryManagement() {
+    cout << "Prepare to observe memory usage. Press enter to continue.";
+    getchar();
+    for ( int i=0 ; i<1000 ; i++ ) {
+        BPTree<int , int> test;
+        for ( int j=0 ; j<10000 ; j++ ) {
+            test.insert( j , j );
+        }
+    }
+    cout << "Was memory usage constant? (y/n)";
+    char expected = 'y';
+    char found = tolower( getchar() );
+    evaluateTest( expected , found , "BPTree memory management failed!" );
 }

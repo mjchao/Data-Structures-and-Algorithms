@@ -72,6 +72,7 @@ private:
             Value* value;
             BPNode* leftNode;
             BPNode* rightNode;
+            bool splitFlag;
             
             BPEntry( Key k ) {
                 key = k;
@@ -79,6 +80,7 @@ private:
                 leftNode = 0;
                 rightNode = 0;
                 rightNode = 0;
+                splitFlag = false;
             }
             
             BPEntry( Key k , Value v ) {
@@ -88,6 +90,7 @@ private:
                 leftNode = 0;
                 rightNode = 0;
                 rightNode = 0;
+                splitFlag = false;
             }
             
             BPEntry( const BPEntry& other ) {
@@ -95,9 +98,18 @@ private:
                 value = other.value;
                 leftNode = other.leftNode;
                 rightNode = other.rightNode;
+                splitFlag = other.splitFlag;
             }
             
-            ~BPEntry() {
+            ~BPEntry() {                
+                if ( leftNode != 0 ) {
+                    delete leftNode;
+                }
+                if ( rightNode != 0 ) {
+                    if ( rightNode->m_rightSibling == 0 ) {
+                        delete rightNode;
+                    }
+                }
                 if ( value != 0 ) {
                     delete value;
                 }
@@ -108,6 +120,7 @@ private:
                 value = other.value;
                 leftNode = other.leftNode;
                 rightNode = other.rightNode;
+                splitFlag = other.splitFlag;
                 return *this;
             }
         };
@@ -119,6 +132,10 @@ private:
         BPEntry** m_entries;
         BPNode* m_rightSibling;
         
+        //signals the destructor on how to free memory
+        //a node that was split will need to be treated differently
+        bool m_splitFlag;
+        
         /**
          * Initializes the node to reflect its initial properties, such as order
          */
@@ -128,6 +145,14 @@ private:
             m_isLeaf = true;
             m_entries = new BPEntry*[ m_order ];
             m_rightSibling = 0;
+            m_splitFlag = false;
+        }
+        
+        void deleteEntries() {
+            for ( int i=0 ; i<m_numRecords ; i++ ) {
+                delete m_entries[ i ];
+            }
+            delete[] m_entries;
         }
         
         /**
@@ -275,7 +300,6 @@ private:
             parent->m_isLeaf = false;
             
             //split the overfilled array evenly
-            int middleIdx = (m_numRecords+1)/2;
             BPNode* leftNode = new BPNode( m_comparator , m_order );
             leftNode->m_isLeaf = this->m_isLeaf;
             leftNode->m_parent = parent;
@@ -285,6 +309,7 @@ private:
             rightNode->m_parent = parent;
             leftNode->m_rightSibling = rightNode;
             
+            int middleIdx = (m_numRecords+1)/2;
             for ( int i=0 ; i<middleIdx ; i++ ) {
                 leftNode->m_entries[ i ] = combinedEntries[ i ];
                 if ( !leftNode->isLeaf() ) {
@@ -319,6 +344,9 @@ private:
                 rtn = higherParent;
             }
             
+            m_splitFlag = true;
+            delete this;
+            
             return rtn;
         }
         
@@ -343,11 +371,19 @@ private:
         }
         
         BPNode( const BPNode& other ) {
+            //delete the old data
+            deleteEntries();
+            
+            //only the comparator and order can be defined before the tree
+            //is initialized
             m_comparator = other.m_comparator;
-            m_parent = other.m_parent;
             m_order = other.m_order;
+            initialize();
+            
+            m_parent = other.m_parent;
             m_numRecords = other.m_numRecords;
             m_isLeaf = other.m_isLeaf;
+            m_splitFlag = other.m_splitFlag;
             for ( int i=0 ; i<m_numRecords ; i++ ) {
                 if ( other.m_entries[ i ] != 0 ) {
                     m_entries[ i ] = other.m_entries[ i ];
@@ -356,20 +392,34 @@ private:
         }
         
         ~BPNode() {
-            for ( int i=0 ; i<m_numRecords ; i++ ) {
-                if ( m_entries[ i ] != 0 ) {
-                    delete m_entries[ i ];
-                }
+            //if we are deleting a node that was not split, then
+            //delete the entries associated with it.
+            if ( !m_splitFlag ) {
+                deleteEntries();
             }
-            delete[] m_entries;
+            //if the node was split, then the entries were given to
+            //the two new nodes and we do not want to delete those.
+            //we just want to delete the array pointer
+            else {
+                delete[] m_entries;
+            }
         }
         
         BPNode& operator=( const BPNode& other ) {
+            
+            //delete the old data
+            deleteEntries();
+            
+            //only the comparator and order can be defined before the tree
+            //is initialized
             m_comparator = other.m_comparator;
-            m_parent = other.m_parent;
             m_order = other.m_order;
+            initialize();
+            
+            m_parent = other.m_parent;
             m_numRecords = other.m_numRecords;
             m_isLeaf = other.m_isLeaf;
+            m_splitFlag = other.m_splitFlag;
             for ( int i=0 ; i<m_numRecords ; i++ ) {
                 if ( other.m_entries[ i ] != 0 ) {
                     m_entries[ i ] = other.m_entries[ i ];
@@ -520,6 +570,10 @@ public:
                 m_comparator( comparator ) , m_root( new BPNode( m_order ) ) {
     }
     
+    ~BPTree() {
+        delete m_root;
+    }
+    
     void insert( const Key& k , const Value& v ) {
         
         //overide value if the key is already in the tree
@@ -563,6 +617,14 @@ public:
         else {
             return *v;
         }
+    }
+    
+    /**
+     * Removes all entries from the tree
+     */
+    void clear() {
+        delete m_root;
+        m_root = new BPNode( m_order , m_comparator );
     }
     
     

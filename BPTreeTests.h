@@ -20,6 +20,7 @@ public:
     void testNodeInsertKey();
     void testNodeInsertKeyMemory();
     void testInsert();
+    void testMemoryManagement();
     
 };
 
