@@ -1030,6 +1030,13 @@ void ArrayListTests::testArrayListCopy() {
     evaluateTest( test.get( 1 ) , copy.get( 1 ) , errorMessage );
     evaluateTest( test.get( 2 ) , copy.get( 2 ) , errorMessage );
     evaluateTest( test.size() , copy.size() , errorMessage );
+    
+    //test self assignment
+    copy = copy;
+    evaluateTest( test.get( 0 ) , copy.get( 0 ) , errorMessage );
+    evaluateTest( test.get( 1 ) , copy.get( 1 ) , errorMessage );
+    evaluateTest( test.get( 2 ) , copy.get( 2 ) , errorMessage );
+    evaluateTest( test.size() , copy.size() , errorMessage );
 }
 
 void ArrayListTests::testArrayListCopyMemoryUsage() {

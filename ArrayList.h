@@ -164,13 +164,14 @@ public:
      * Copies the contents of the given ArrayList into this ArrayList
      */
     ArrayList<E>& operator=( const ArrayList<E>& listToCopy ) {
-        delete[] m_values;
         m_arraySize = listToCopy.m_arraySize;
         m_numElements = listToCopy.m_numElements;
-        m_values = new E[ m_arraySize ];
+        E* newArr = new E[ m_arraySize ];
         for ( int idx=0 ; idx<m_numElements ; idx++ ) {
-            m_values[ idx ] = listToCopy.m_values[ idx ];
+            newArr[ idx ] = listToCopy.m_values[ idx ];
         }
+        delete[] m_values;
+        m_values = newArr;
         return *this;
     }
     
