@@ -20,7 +20,7 @@ void HashMapTests::test() {
     //testDestructor();
     testResize();
     testClear();
-    testOverwrite();
+    //testOverwrite();
     reportTestStatistics( "HashMap" );
 }
 

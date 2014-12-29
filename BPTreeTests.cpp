@@ -212,8 +212,6 @@ void BPTreeTests::testInsert() {
     expectedVal = 999;
     foundVal = test.find( 60 );
     evaluateTest( expectedVal , foundVal , errorMessage );
-    
-    cout << test.toString() << endl;//*/
 }
 
 void BPTreeTests::testMemoryManagement() {
