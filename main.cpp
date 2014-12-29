@@ -26,7 +26,7 @@ using std::endl;
 int main(int argc, const char * argv[]) {
     // insert code here...
     ArrayListTests test;
-    test.test();
+    //test.test();
     
     LinkedListTests test2;
     //test2.test();
@@ -38,10 +38,10 @@ int main(int argc, const char * argv[]) {
     //test4.test();
     
     ArrayQueueTests test5;
-    //test5.test();
+    test5.test();
     
     PriorityQueueTests test6;
-    //test6.test();
+    test6.test();
     
     HashMapTests test7;
     //test7.test();

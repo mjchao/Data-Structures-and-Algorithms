@@ -117,13 +117,14 @@ public:
         //if we exceed capacity, we might as well just resize the array
         //and start everything over with the head at the 0-th index
         if ( m_numElements+1 > ArrayList< E >::getArraySize() ) {
-            E* tmp[ m_numElements ];
-            for ( int i=0 ; i<m_numElements ; i++ ) {
-                tmp[ i ] = &ArrayList< E >::get( (m_headIdx+i)%ArrayList< E >::getArraySize() );
-            }
+            int previousArraySize = ArrayList< E >::getArraySize();
             ArrayList< E >::ensureCapacity( (m_numElements)*2 );
+            E tmp[ m_numElements ];
             for ( int i=0 ; i<m_numElements ; i++ ) {
-                ArrayList< E >::set( i , *tmp[ i ] );
+                tmp[ i ] = ArrayList< E >::get((m_headIdx+i)%previousArraySize);
+            }
+            for ( int i=0 ; i<m_numElements ; i++ ) {
+                ArrayList< E >::set( i , tmp[ i ] );
             }
             m_headIdx = 0;
             m_tailIdx = m_numElements;

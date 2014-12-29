@@ -50,7 +50,7 @@ void ArrayQueueTests::testOffer() {
     test.offer( 3 );
     expected = "[1, 2, 3]";
     found = test.toString();
-    evaluateTest( expected , found , errorMessage );
+    evaluateTest( expected , found , errorMessage );//*/
 }
 
 void ArrayQueueTests::testPeek() {
