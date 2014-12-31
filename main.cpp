@@ -38,15 +38,15 @@ int main(int argc, const char * argv[]) {
     //test4.test();
     
     ArrayQueueTests test5;
-    test5.test();
+    //test5.test();
     
     PriorityQueueTests test6;
-    test6.test();
+    //test6.test();
     
     HashMapTests test7;
     //test7.test();
     
     BPTreeTests test8;
-    //test8.test();
+    test8.test();
     return 0;
 }

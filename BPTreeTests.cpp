@@ -14,6 +14,8 @@ void BPTreeTests::test() {
     //testNodeInsertKeyMemory();
     testInsert();
     //testMemoryManagement();
+    testRange();
+    testCopy();
     reportTestStatistics( "BPTree" );
 }
 
@@ -227,4 +229,142 @@ void BPTreeTests::testMemoryManagement() {
     char expected = 'y';
     char found = tolower( getchar() );
     evaluateTest( expected , found , "BPTree memory management failed!" );
+}
+
+void BPTreeTests::testRange() {
+    BPTree< int , int > test;
+    vector< int > expected;
+    vector< int > found;
+    string errorMessage = "BPTree range() failed!";
+    
+    //TEST CASE 1: test empty tree
+    test.clear();
+    expected = vector< int >();
+    found = test.range( -99999 , 99999 );
+    evaluateTest( expected , found , errorMessage );
+    
+    //TEST CASE 2: test a tree with 1 element
+    test.clear();
+    test.insert( 1 , 1 );
+    expected = vector< int >();
+    expected.push_back( 1 );
+    
+    //check the boundaries for inclusiveness
+    found = test.range( -1 , 1 );
+    evaluateTest( expected , found , errorMessage );
+    
+    found = test.range( 1 , 23 );
+    evaluateTest( expected , found , errorMessage );
+    
+    found = test.range(-23 , 25 );
+    evaluateTest( expected , found , errorMessage );
+    
+    //TEST CASE 3: test tree with many elements
+    test.clear();
+    //insert 25, 30, ... , 55, 60
+    for ( int i=25 ; i<=60 ; i+= 5 ) {
+        test.insert( i , i );
+    }
+    
+    //insert -18, -15, ... , 0
+    for ( int i=-18 ; i<=0 ; i+= 3 ) {
+        test.insert( i , i );
+    }
+    
+    //overwrite -18, 0, and 60
+    test.insert( -18 , -9999 );
+    test.insert( 0 , 1 );
+    test.insert( 60 , 9999 );
+    
+    //check lower range
+    expected = vector< int >();
+    expected.push_back( -12 );
+    expected.push_back( -9 );
+    found = test.range( -12 , -9 );
+    evaluateTest( expected , found , errorMessage );
+    
+    //check the lower range and its overwritten key of 18
+    expected = vector< int >();
+    expected.push_back( -9999 );
+    expected.push_back( -15 );
+    expected.push_back( -12 );
+    found = test.range( -18 , -11 );
+    evaluateTest( expected , found , errorMessage );
+    
+    //check the middle range and its overwritten key of 0
+    expected = vector< int >();
+    expected.push_back( -3 );
+    expected.push_back( 1 );
+    expected.push_back( 25 );
+    expected.push_back( 30 );
+    found = test.range( -5 , 33 );
+    evaluateTest( expected , found , errorMessage );
+    
+    //check the upper range and its overwritten key of 60
+    expected = vector< int >();
+    expected.push_back( 50 );
+    expected.push_back( 55 );
+    expected.push_back( 9999 );
+    found = test.range( 46 , 1000 );
+    evaluateTest( expected , found , errorMessage );
+    
+    //TEST CASE 4: Check that values do not need to be in increasing order
+    //with the keys
+    test = BPTree< int , int >();
+    test.insert( -9 , -86 );
+    test.insert( -2 , 87 );
+    test.insert( 0 , 12 );
+    test.insert( 23 , 48 );
+    test.insert( 43 , 39 );
+    test.insert( 50 , -3 );
+    
+    expected = vector< int >();
+    expected.push_back( -86 );
+    expected.push_back( 87 );
+    expected.push_back( 12 );
+    expected.push_back( 48 );
+    expected.push_back( 39 );
+    expected.push_back( -3 );
+    found = test.range( -100 , 100 );
+    evaluateTest( expected , found , errorMessage );
+}
+
+void BPTreeTests::testCopy() {
+    
+    string errorMessage = "BPTree operator= failed!";
+    BPTree< int , int >* original = new BPTree< int , int >;
+    original->insert( 1 , 1 );
+    original->insert( 2 , 2 );
+    original->insert( 3 , 3 );
+    original->insert( 4 , 4 );
+    original->insert( 5 , 5 );
+    original->insert( 6 , 6 );
+    
+    //test the copying produces identical trees
+    BPTree< int , int >* copy = new BPTree< int , int >;
+    *copy = *original;
+    evaluateTest( original->toString() , copy->toString() , errorMessage );
+    
+    //test that the copy has no pointers/references to the original
+    copy->insert( 7 , 7 );
+    evaluateTest( original->toString()==copy->toString(), false, errorMessage );
+    
+    //test that the original has no pointers/references to the copy
+    original->insert( 8 , 8 );
+    delete original;
+    
+    vector< int > expRng;
+    expRng.push_back( 4 );
+    expRng.push_back( 5 );
+    expRng.push_back( 6 );
+    expRng.push_back( 7 );
+    vector< int > foundRng = copy->range( 4 , 10 );
+    evaluateTest( expRng , foundRng , errorMessage );
+    
+    //test that the copy constructor works properly
+    BPTree< int , int >* copycopy = new BPTree< int , int >( *copy );
+    evaluateTest( copycopy->toString() , copy->toString() , errorMessage );
+    delete copycopy;
+    
+    delete copy;
 }

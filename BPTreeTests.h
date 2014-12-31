@@ -21,7 +21,8 @@ public:
     void testNodeInsertKeyMemory();
     void testInsert();
     void testMemoryManagement();
-    
+    void testRange();
+    void testCopy();
 };
 
 #endif /* defined(__Data_Structures__BPTreeTests__) */

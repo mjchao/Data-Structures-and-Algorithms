@@ -14,6 +14,9 @@
 #include <string>
 using std::string;
 
+#include <vector>
+using std::vector;
+
 #include "Message.h"
 
 
@@ -34,8 +37,8 @@ class BPTree {
     
 private:
     
-    const Comparator< Key >* m_comparator;
-    const int m_order;
+    Comparator< Key >* m_comparator;
+    int m_order;
     
     /**
      * A node in a B+ Tree. It stores some keys in increasing order, which
@@ -49,7 +52,7 @@ private:
         
         Comparator< Key >* m_comparator;
         
-        int compare( Key k1 , Key k2 ) {
+        int compare( const Key& k1 , const Key& k2 ) {
             if ( m_comparator == 0 ) {
                 if ( k1 < k2 ) {
                     return -1;
@@ -64,6 +67,10 @@ private:
             else {
                 return m_comparator->compare( k1 , k2 );
             }
+        }
+        
+        bool inRange( const Key& lower , const Key& upper , const Key& k ) {
+            return compare( k , lower ) >= 0 && compare( k , upper ) <= 0;
         }
         
         struct BPEntry {
@@ -89,15 +96,25 @@ private:
                 *value = v;
                 leftNode = 0;
                 rightNode = 0;
-                rightNode = 0;
                 splitFlag = false;
             }
             
             BPEntry( const BPEntry& other ) {
                 key = other.key;
-                value = other.value;
-                leftNode = other.leftNode;
-                rightNode = other.rightNode;
+                value = 0;
+                if ( other.value != 0 ) {
+                    value = new Value( *other.value );
+                }
+                
+                leftNode = 0;
+                if ( other.leftNode != 0 ) {
+                    leftNode = new BPNode( *other.leftNode );
+                }
+                
+                rightNode = 0;
+                if ( other.rightNode != 0 ) {
+                    rightNode = new BPNode( *other.rightNode );
+                }
                 splitFlag = other.splitFlag;
             }
             
@@ -117,9 +134,20 @@ private:
             
             BPEntry& operator=( const BPEntry& other ) {
                 key = other.key;
-                value = other.value;
-                leftNode = other.leftNode;
-                rightNode = other.rightNode;
+                value = 0;
+                if ( other.value != 0 ) {
+                    value = new Value( *other.value );
+                }
+                
+                leftNode = 0;
+                if ( other.leftNode != 0 ) {
+                    leftNode = new BPNode( *other.leftNode );
+                }
+                
+                rightNode = 0;
+                if ( other.rightNode != 0 ) {
+                    *rightNode = new BPNode( *other.rightNode );
+                }
                 splitFlag = other.splitFlag;
                 return *this;
             }
@@ -371,8 +399,6 @@ private:
         }
         
         BPNode( const BPNode& other ) {
-            //delete the old data
-            deleteEntries();
             
             //only the comparator and order can be defined before the tree
             //is initialized
@@ -386,7 +412,7 @@ private:
             m_splitFlag = other.m_splitFlag;
             for ( int i=0 ; i<m_numRecords ; i++ ) {
                 if ( other.m_entries[ i ] != 0 ) {
-                    m_entries[ i ] = other.m_entries[ i ];
+                    m_entries[ i ] = new BPEntry( *other.m_entries[ i ] );
                 }
             }
         }
@@ -407,6 +433,10 @@ private:
         
         BPNode& operator=( const BPNode& other ) {
             
+            if ( this == &other ) {
+                return *this;
+            }
+            
             //delete the old data
             deleteEntries();
             
@@ -422,7 +452,7 @@ private:
             m_splitFlag = other.m_splitFlag;
             for ( int i=0 ; i<m_numRecords ; i++ ) {
                 if ( other.m_entries[ i ] != 0 ) {
-                    m_entries[ i ] = other.m_entries[ i ];
+                    m_entries[ i ] = new BPEntry( *other.m_entries[ i ] );
                 }
             }
             return *this;
@@ -507,6 +537,48 @@ private:
             }
         }
         
+        /**
+         * Gets all values in the tree that are associated with a key in the
+         * given range (inclusive).
+         *
+         * @param lower                 the lower bound
+         * @param upper                 the upper bound
+         * @param collection            the vector in which to store values
+         *                              that are in the given key range
+         */
+        void range( const Key& lower , const Key& upper ,
+                   vector< Value >& collection ) {
+            if ( isLeaf() ) {
+                
+                //put everything in this node that is within the range
+                //into the collections vector
+                int findIdx = locateIdx( m_entries , m_numRecords , lower );
+                for ( int i=findIdx ; i<m_numRecords ; i++ ) {
+                    if ( inRange( lower , upper , m_entries[ i ]->key ) ) {
+                        collection.push_back( *m_entries[ i ]->value );
+                    }
+                    else {
+                        
+                        //the entries are stored in increasing key order.
+                        //therefore, if we've passed the upper bound, then we're
+                        //finished
+                        if ( compare( m_entries[ i ]->key , upper ) > 0 ) {
+                            return;
+                        }
+                    }
+                }
+                
+                //check if the next node to the right might have any more keys
+                //in the given range
+                if ( m_rightSibling != 0 ) {
+                    m_rightSibling->range( lower , upper , collection );
+                }
+            }
+            else {
+                return findBranch( lower )->range( lower , upper , collection );
+            }
+        }
+        
         string toString() {
             Message rtn;
             rtn << "[";
@@ -570,8 +642,25 @@ public:
                 m_comparator( comparator ) , m_root( new BPNode( m_order ) ) {
     }
     
+    BPTree( const BPTree& other ) {
+        m_order = other.m_order;
+        m_comparator = other.m_comparator;
+        m_root = new BPNode( *other.m_root );
+    }
+    
     ~BPTree() {
         delete m_root;
+    }
+    
+    BPTree& operator=( const BPTree& other ) {
+        if ( this == &other ) {
+            return *this;
+        }
+        clear();
+        m_order = other.m_order;
+        m_comparator = other.m_comparator;
+        *m_root = *other.m_root;
+        return *this;
     }
     
     void insert( const Key& k , const Value& v ) {
@@ -620,11 +709,27 @@ public:
     }
     
     /**
+     * Gets all values in the tree that are associated with a key in the given
+     * key range (inclusive). Values are reported from lowest key to highest
+     * key
+     *
+     * @param lower                 the lower key bound
+     * @param higher                the higher key bound
+     * @return                      a list of values associated with keys in the
+     *                              specified range
+     */
+    vector< Value > range( const Key& lower , const Key& upper ) {
+        vector< Value > rtn;
+        m_root->range( lower , upper , rtn );
+        return rtn;
+    }
+    
+    /**
      * Removes all entries from the tree
      */
     void clear() {
         delete m_root;
-        m_root = new BPNode( m_order , m_comparator );
+        m_root = new BPNode( m_comparator , m_order );
     }
     
     
