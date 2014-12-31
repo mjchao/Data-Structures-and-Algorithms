@@ -13,6 +13,8 @@
     using std::cout;
     using std::endl;
 
+#include "Message.h"
+
 #include <string>
     using std::string;
 
@@ -37,9 +39,11 @@ protected:
             incrementSucceededTests();
         }
         else {
-            cout << descriptionIfFailed << endl;
-            cout << "Expected: " << expected << endl;
-            cout << "Found: " << found << endl;
+            Message toPrint;
+            toPrint << descriptionIfFailed << "\n";
+            toPrint << "Expected: " << expected << "\n";
+            toPrint << "Found: " << found << "\n";
+            cout << toPrint.str();
             incrementFailedTests();
         }
         incrementTotalTests();
