@@ -52,7 +52,7 @@ private:
         
         Comparator< Key >* m_comparator;
         
-        int compare( const Key& k1 , const Key& k2 ) {
+        int compare( const Key& k1 , const Key& k2 ) const {
             if ( m_comparator == 0 ) {
                 if ( k1 < k2 ) {
                     return -1;
@@ -69,7 +69,7 @@ private:
             }
         }
         
-        bool inRange( const Key& lower , const Key& upper , const Key& k ) {
+        bool inRange( const Key& lower, const Key& upper, const Key& k ) const {
             return compare( k , lower ) >= 0 && compare( k , upper ) <= 0;
         }
         
@@ -79,24 +79,27 @@ private:
             Value* value;
             BPNode* leftNode;
             BPNode* rightNode;
+            bool deleteRightFlag;
             bool splitFlag;
             
-            BPEntry( Key k ) {
-                key = k;
+            void initialize() {
                 value = 0;
                 leftNode = 0;
                 rightNode = 0;
-                rightNode = 0;
+                deleteRightFlag = false;
                 splitFlag = false;
             }
             
+            BPEntry( Key k ) {
+                initialize();
+                key = k;
+            }
+            
             BPEntry( Key k , Value v ) {
+                initialize();
                 key = k;
                 value = new Value;
                 *value = v;
-                leftNode = 0;
-                rightNode = 0;
-                splitFlag = false;
             }
             
             BPEntry( const BPEntry& other ) {
@@ -112,19 +115,22 @@ private:
                 }
                 
                 rightNode = 0;
-                if ( other.rightNode != 0 ) {
-                    rightNode = new BPNode( *other.rightNode );
-                }
+                //we do not copy the right node, because the right node
+                //is going to be another entry's left node
+                
+                deleteRightFlag = other.deleteRightFlag;
                 splitFlag = other.splitFlag;
             }
             
-            ~BPEntry() {                
-                if ( leftNode != 0 ) {
-                    delete leftNode;
-                }
-                if ( rightNode != 0 ) {
-                    if ( rightNode->m_rightSibling == 0 ) {
-                        delete rightNode;
+            ~BPEntry() {
+                if ( !splitFlag ) {
+                    if ( leftNode != 0 ) {
+                        delete leftNode;
+                    }
+                    if ( rightNode != 0 ) {
+                        if ( deleteRightFlag ) {
+                            delete rightNode;
+                        }
                     }
                 }
                 if ( value != 0 ) {
@@ -145,9 +151,9 @@ private:
                 }
                 
                 rightNode = 0;
-                if ( other.rightNode != 0 ) {
-                    *rightNode = new BPNode( *other.rightNode );
-                }
+                //we do not copy the right node, because the right node
+                //is going to be another entry's left node
+                
                 splitFlag = other.splitFlag;
                 return *this;
             }
@@ -158,6 +164,7 @@ private:
         int m_numRecords;
         bool m_isLeaf;
         BPEntry** m_entries;
+        BPNode* m_leftSibling;
         BPNode* m_rightSibling;
         
         //signals the destructor on how to free memory
@@ -172,15 +179,69 @@ private:
             m_numRecords = 0;
             m_isLeaf = true;
             m_entries = new BPEntry*[ m_order ];
+            m_leftSibling = 0;
             m_rightSibling = 0;
             m_splitFlag = false;
         }
         
         void deleteEntries() {
-            for ( int i=0 ; i<m_numRecords ; i++ ) {
+            for ( int i=0 ; i<m_numRecords-1 ; i++ ) {
                 delete m_entries[ i ];
             }
+            if ( m_numRecords-1 >= 0 ) {
+                m_entries[ m_numRecords-1 ]->deleteRightFlag = true;
+                delete m_entries[ m_numRecords-1 ];
+            }
             delete[] m_entries;
+        }
+        
+        /**
+         * Links together the children of this node after the tree has been
+         * copied
+         */
+        void linkCopies() {
+            
+            //first, within each entry, we must link the right nodes
+            for ( int i=0 ; i<m_numRecords-1 ; i++ ) {
+                m_entries[ i ]->rightNode = m_entries[ i+1 ]->leftNode;
+            }
+            //remember that the last entry's right node has already been linked
+            //by the node's copy constructor
+            
+            //leaf nodes do not have children to link together
+            if ( isLeaf() ) {
+                return;
+            }
+            
+            //link internally
+            for ( int i=0 ; i<m_numRecords ; i++ ) {
+                m_entries[ i ]->leftNode->m_rightSibling =
+                                                    m_entries[ i ]->rightNode;
+                m_entries[ i ]->rightNode->m_leftSibling =
+                                                    m_entries[ i ]->leftNode;
+            }
+            
+            //link externally with the left
+            if ( m_leftSibling != 0 && m_leftSibling->m_numRecords > 0 ) {
+                m_entries[ 0 ]->leftNode->m_leftSibling = m_leftSibling->
+                        m_entries[ m_leftSibling->m_numRecords-1 ]->rightNode;
+                m_leftSibling->m_entries[ m_leftSibling->m_numRecords-1 ]->
+                        rightNode->m_rightSibling = m_entries[ 0 ]->leftNode;
+            }
+            
+            //link externally with the right
+            if ( m_rightSibling != 0 && m_rightSibling->m_numRecords > 0 ) {
+                    m_entries[ m_numRecords-1 ]->rightNode->m_rightSibling =
+                                m_rightSibling->m_entries[ 0 ]->leftNode;
+                    m_rightSibling->m_entries[ 0 ]->leftNode->m_leftSibling =
+                                m_entries[ m_numRecords-1 ]->rightNode;
+            }
+            
+            //have children link together thier child nodes
+            for ( int i=0 ; i<m_numRecords ; i++ ) {
+                m_entries[ i ]->leftNode->linkCopies();
+                m_entries[ i ]->rightNode->linkCopies();
+            }
         }
         
         /**
@@ -191,7 +252,7 @@ private:
          * @param entriesSize       the size of the entry array
          * @param k                 the key to insert
          */
-        int locateIdx( BPEntry** entries , int entriesSize , const Key& k ) {
+        int locateIdx( BPEntry** entries, int entriesSize, const Key& k ) const{
             int low = 0;
             int high = entriesSize-1;
             int guess = (low+high)/2;
@@ -346,12 +407,19 @@ private:
                 }
                 leftNode->m_numRecords++;
             }
-            for ( int i=middleIdx ; i<m_numRecords+1 ; i++ ) {
-                rightNode->m_entries[ i-middleIdx ] = combinedEntries[ i ];
+            
+            //if we are not splitting a leaf node, then the promoted key in the
+            //middle does not stay in this node
+            int startRight = middleIdx;
+            if ( !isLeaf() ) {
+                startRight = middleIdx+1;
+            }
+            for ( int i=startRight ; i<m_numRecords+1 ; i++ ) {
+                rightNode->m_entries[ i-startRight ] = combinedEntries[ i ];
                 if ( !rightNode->isLeaf() ) {
-                    rightNode->m_entries[ i-middleIdx ]->leftNode->m_parent =
+                    rightNode->m_entries[ i-startRight ]->leftNode->m_parent =
                                                                     rightNode;
-                    rightNode->m_entries[ i-middleIdx ]->rightNode->m_parent =
+                    rightNode->m_entries[ i-startRight ]->rightNode->m_parent =
                                                                     rightNode;
                 }
                 rightNode->m_numRecords++;
@@ -359,7 +427,15 @@ private:
             
             //promote the first key in the right branch into the parent's
             //entries
-            Key& promotedKey = rightNode->m_entries[ 0 ]->key;
+            Key promotedKey = combinedEntries[ middleIdx ]->key;
+            
+            //the memory associated with the middle, promoted node must be freed
+            //because it does not stay in this node.
+            if ( !isLeaf() ) {
+                combinedEntries[ middleIdx ]->splitFlag = true;
+                delete combinedEntries[ middleIdx ];
+            }
+            
             
             //insert the promoted key into the parent
             BPNode* higherParent = parent->insertPromotedKey(
@@ -415,6 +491,14 @@ private:
                     m_entries[ i ] = new BPEntry( *other.m_entries[ i ] );
                 }
             }
+            
+            //manually copy the rightmost node that is not linked to another
+            //entry's left node
+            if ( other.m_entries[ m_numRecords-1 ] != 0 && !other.isLeaf() ) {
+                m_entries[ m_numRecords-1 ]->rightNode =
+                    new BPNode( *other.m_entries[ m_numRecords-1 ]->rightNode );
+            }
+            linkCopies();
         }
         
         ~BPNode() {
@@ -455,18 +539,27 @@ private:
                     m_entries[ i ] = new BPEntry( *other.m_entries[ i ] );
                 }
             }
+            
+            //manually copy the right node that is not linked to another entry's
+            //left node
+            if ( m_numRecords-1 >= 0 && other.m_entries[m_numRecords-1] != 0 &&
+                !other.isLeaf() ) {
+                m_entries[ m_numRecords-1 ]->rightNode =
+                    new BPNode( *other.m_entries[ m_numRecords-1 ]->rightNode );
+            }
+            linkCopies();
             return *this;
         }
         
-        bool isLeaf() {
+        bool isLeaf() const {
             return m_isLeaf;
         }
         
-        int getNumRecords() {
+        int getNumRecords() const {
             return m_numRecords;
         }
         
-        BPNode* getParent() {
+        BPNode* getParent() const {
             return m_parent;
         }
         
@@ -481,7 +574,7 @@ private:
          * @return                  the branch that should contain the given key
          *                          or 0 if no branch was found
          */
-        BPNode* findBranch( const Key& k ) {
+        BPNode* findBranch( const Key& k ) const {
             int locationIdx = locateIdx( m_entries , m_numRecords , k );
             if ( m_entries[ locationIdx ] == 0 ) {
                 return 0;
@@ -519,7 +612,7 @@ private:
          * @return                  the entry associated with the given key, or
          *                          0 if the key was not found in the tree
          */
-        Value* find( const Key& k ) {
+        Value* find( const Key& k ) const {
             if ( isLeaf() ) {
                 int findIdx = locateIdx( m_entries , m_numRecords , k );
                 if ( m_numRecords == 0 ) {
@@ -686,7 +779,7 @@ public:
      * @param k                     a key value for which to search
      * @return                      if the given key is in the tree
      */
-    bool contains( const Key& k ) {
+    bool contains( const Key& k ) const {
         return m_root->find( k ) != 0;
     }
     

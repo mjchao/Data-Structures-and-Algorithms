@@ -11,9 +11,9 @@
 
 void BPTreeTests::test() {
     testNodeInsertKey();
-    //testNodeInsertKeyMemory();
+    testNodeInsertKeyMemory();
     testInsert();
-    //testMemoryManagement();
+    testMemoryManagement();
     testRange();
     testCopy();
     reportTestStatistics( "BPTree" );
@@ -125,19 +125,14 @@ void BPTreeTests::testNodeInsertKey() {
 }
 
 void BPTreeTests::testNodeInsertKeyMemory() {
-    cout << "Prepare to observe memory usage. Press Enter to continue." << endl;
-    getchar();
-    for ( int i=0 ; i<500000 ; i++ ) {
+    
+    //run on valgrind
+    for ( int i=0 ; i<500 ; i++ ) {
         BPTree< int , int >::BPNode test( 100 );
         for ( int i=0 ; i<99 ; i++ ) {
             test.insertKeyValue( i , i );
         }
     }
-    cout << "Was memory usage constant? (y/n)" << endl;
-    char expected = 'y';
-    char found = tolower( getchar() );
-    string errorMessage = "BPNode does not free memory!";
-    evaluateTest( expected , found , errorMessage );
 }
 
 void BPTreeTests::testInsert() {
@@ -190,7 +185,7 @@ void BPTreeTests::testInsert() {
     test.insert( 13 , 13 );
     test.insert( 14 , 14 );
     expected = "[[26]\n";
-    expected += "[13, 18, 23], [26, 33, 48]\n";
+    expected += "[13, 18, 23], [33, 48]\n";
     expected += "[10, 11, 12], [13, 14, 15], [18, 20, 21], [23, 24, 25], ";
     expected +=                     "[26, 30, 31], [33, 45, 47], [48, 50, 52]]";
     found = test.toString();
@@ -217,18 +212,14 @@ void BPTreeTests::testInsert() {
 }
 
 void BPTreeTests::testMemoryManagement() {
-    cout << "Prepare to observe memory usage. Press enter to continue.";
-    getchar();
-    for ( int i=0 ; i<1000 ; i++ ) {
+    
+    //run on valgrind
+    for ( int i=0 ; i<10 ; i++ ) {
         BPTree<int , int> test;
         for ( int j=0 ; j<10000 ; j++ ) {
             test.insert( j , j );
         }
     }
-    cout << "Was memory usage constant? (y/n)";
-    char expected = 'y';
-    char found = tolower( getchar() );
-    evaluateTest( expected , found , "BPTree memory management failed!" );
 }
 
 void BPTreeTests::testRange() {
@@ -332,7 +323,7 @@ void BPTreeTests::testRange() {
 void BPTreeTests::testCopy() {
     
     string errorMessage = "BPTree operator= failed!";
-    BPTree< int , int >* original = new BPTree< int , int >;
+    BPTree< int , int >* original = new BPTree< int , int >( 3 );
     original->insert( 1 , 1 );
     original->insert( 2 , 2 );
     original->insert( 3 , 3 );
@@ -367,4 +358,16 @@ void BPTreeTests::testCopy() {
     delete copycopy;
     
     delete copy;
+    
+    BPTree< int , int >* bigTree = new BPTree< int , int >( 3 );
+    for ( int i=0 ; i<10 ; i++ ) {
+        bigTree->insert( i , i );
+    }
+    
+    BPTree< int , int >* bigCopy = new BPTree< int , int >( 3 );
+    *bigCopy = *bigTree;
+    evaluateTest( bigTree->toString() , bigCopy->toString() , errorMessage );
+    
+    delete bigTree;
+    delete bigCopy;
 }
