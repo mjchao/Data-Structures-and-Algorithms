@@ -471,92 +471,52 @@ private:
         }
         
         /**
-         * Updates the parent node's indexing to reflect a lend. This must be
-         * called on the parent node of the two nodes involved in a lend, or
-         * else it will not work properly.
+         * Distributes the entries of two sibling leaf nodes evenly and modifies 
+         * their parent node to have the correct indexing. The nodes must be
+         * leaf nodes and siblings or else the function will not work properly.
          *
-         * @param lentKey               the key of the entry that was lent
-         * @param lendingNode           the node lending an entry
-         * @param receivingNode         the underflowing node that received an
-         *                              entry
+         * @param n1                    the left node of the two nodes
+         * @param n2                    the right node of the two nodes
          */
-        void updateLend( const Key& lentKey , BPNode* lendingNode ,
-                        BPNode* receivingNode ) {
-            int idxToModify = locateIdx( m_entries , m_numRecords , lentKey );
-            BPEntry* parentEntry = 0;
-            bool borrowedFromLeft;
-            if ( m_entries[ idxToModify ]->leftNode == lendingNode &&
-                        m_entries[ idxToModify ]->rightNode == receivingNode ) {
-                parentEntry = m_entries[ idxToModify ];
-                borrowedFromLeft = true;
+        void distributeEntries( BPNode* n1 , BPNode* n2 , Key middleKey ) {
+            
+            //we will have to change the key to the parent of these two nodes
+            //as we are redistributing entries
+            //note that these nodes must have a parent, or they cannot be
+            //siblings
+            BPNode* parent = n1->m_parent;
+            int parentEntryIdx = locateIdx( parent->m_entries ,
+                                    parent->m_numRecords , middleKey );
+            BPEntry* parentEntry = parent->m_entries[ parentEntryIdx ];
+            
+            BPEntry* combinedEntries[ n1->m_numRecords + n2->m_numRecords ];
+            for ( int i=0 ; i<n1->m_numRecords ; i++ ) {
+                combinedEntries[ i ] = n1->m_entries[ i ];
             }
-            else if ( m_entries[ idxToModify ]->rightNode == lendingNode &&
-                        m_entries[ idxToModify ]->leftNode == receivingNode ) {
-                parentEntry = m_entries[ idxToModify ];
-                borrowedFromLeft = false;
+            for ( int i=0 ; i<n2->m_numRecords ; i++ ) {
+                combinedEntries[ m_numRecords+i ] = n2->m_entries[ i ];
             }
-            else if ( idxToModify-1 >=0 &&
-                     m_entries[ idxToModify-1 ]->leftNode == lendingNode &&
-                     m_entries[ idxToModify-1 ]->rightNode == receivingNode ) {
-                parentEntry = m_entries[ idxToModify-1 ];
-                borrowedFromLeft = true;
-            }
-            else if ( idxToModify+1 < m_numRecords &&
-                     m_entries[ idxToModify+1 ]->rightNode == lendingNode &&
-                     m_entries[ idxToModify+1 ]->leftNode == receivingNode ) {
-                parentEntry = m_entries[ idxToModify+1 ];
-                borrowedFromLeft = false;
-            }
-            else {
-                //sanity check
-                throw 1;
+        
+            int totalEntries = n1->m_numRecords + n2->m_numRecords;
+            
+            //add an additional 1 to favor the right node in case of odd
+            //number of entries
+            int middleIdx = (totalEntries + 1)/2;
+            
+            n1->m_numRecords = 0;
+            for ( int i=0 ; i<middleIdx ; i++ ) {
+                n1->m_entries[ i ] = combinedEntries[ i ];
+                n1->m_numRecords++;
             }
             
-            //update the indexing
-            if ( borrowedFromLeft ) {
-                
-                //if we took another value from the left, then the right node
-                //(the receiver) has the lent key in the first index, so we have
-                //to modify the parent indexing to account for that
-                parentEntry->key = lentKey;
+            n2->m_numRecords = 0;
+            for ( int i=middleIdx ; i<totalEntries ; i++ ) {
+                n2->m_entries[ i-middleIdx ] = combinedEntries[ i ];
+                n2->m_numRecords++;
             }
-            else {
-                
-                //if we took another value from the right, then the right node
-                //(the lender) has a new key in the first index, so we have
-                //to modify the parent indexing to account for that
-                parentEntry->key = parentEntry->rightNode->m_entries[ 0 ]->key;
-            }
-        }
-        
-        /**
-         * Lends an entry from this node if possible, and modifies the entry
-         * to reflect this lend. The caller must update the parent to correctly
-         * modify the parent's search index.
-         *
-         * @param fromEnd               whether to lend an entry from the end
-         *                              of the array or from the start
-         * @return                      a borrowed entry, or 0 if this node
-         *                              cannot lend an entry without underflow
-         */
-        BPEntry* lendEntry( bool fromEnd ) {
-            if ( m_numRecords-1 < (m_order+1)/2 ) {
-                return 0;
-            }
-            else {
-                if ( fromEnd ) {
-                    m_numRecords--;
-                    return m_entries[ m_numRecords ];
-                }
-                else {
-                    BPEntry* rtn = m_entries[ 0 ];
-                    for ( int i=1 ; i<m_numRecords ; i++ ) {
-                        m_entries[ i-1 ] = m_entries[ i ];
-                    }
-                    m_numRecords--;
-                    return rtn;
-                }
-            }
+            
+            //update their parent entry to have the correct indexing
+            parentEntry->key = n2->m_entries[ 0 ]->key;
         }
         
         /**
@@ -569,6 +529,10 @@ private:
          */
         void removeLeafEntry( int entryIdx ) {
             
+            //keep a copy of the deleted key in case we need it for the tree's
+            //indexing again
+            Key deletedKey = m_entries[ entryIdx ]->key;
+            
             //first remove the entry - there is no need to set any delete flags
             //because leaf nodes have no more children
             delete m_entries[ entryIdx ];
@@ -579,35 +543,56 @@ private:
             }
             m_entries[ m_numRecords-1 ] = 0;
             m_numRecords--;
+            
+            //change from lending to complete redistribution
 
             //check if we underflowed
             if ( m_numRecords < (m_order+1)/2 ) {
                 
-                //try borrowing from siblings with the same parent
+                //try redistributing with the sibling that has the most number
+                //of records
+                BPNode* sibling;
+                bool distributingWithLeftSibling;
                 
-                //first check the left because when we inserted, we favored
-                //the left with more elements in splits if the order was odd
+                //first we assume the left sibling has more records
                 if ( m_leftSibling != 0 &&
                                 m_leftSibling->m_parent == this->m_parent ) {
-                    BPEntry* borrowLeft = m_leftSibling->lendEntry( true );
-                    if ( borrowLeft != 0 ) {
-                        insertEntry( m_entries , m_numRecords+1 , borrowLeft );
-                        m_numRecords++;
-                        m_parent->updateLend( borrowLeft->key , m_leftSibling , this );
-                        return;
+                    sibling = m_leftSibling;
+                    distributingWithLeftSibling = true;
+                    
+                    //and if the right sibling actually has more records,
+                    //then we update to reflect that
+                    if ( m_rightSibling != 0 &&
+                                m_rightSibling->m_parent == this->m_parent ) {
+                        if ( m_rightSibling->m_numRecords >
+                                                m_leftSibling->m_numRecords ) {
+                            sibling = m_rightSibling;
+                            distributingWithLeftSibling = false;
+                        }
                     }
                 }
+                else {
+                    sibling = m_rightSibling;
+                    distributingWithLeftSibling = false;
+                }
                 
-                //if left cannot lend, then check right sibling
-                if ( m_rightSibling != 0 &&
-                                m_rightSibling->m_parent == this->m_parent ) {
-                    BPEntry* borrowRight = m_rightSibling->lendEntry( false );
-                    if ( borrowRight != 0 ) {
-                        insertEntry( m_entries , m_numRecords+1 , borrowRight );
-                        m_numRecords++;
-                        m_parent->updateLend( borrowRight->key , m_rightSibling ,  this );
-                        return;
+                //check if it is possible to distribute
+                if ( sibling->m_numRecords + m_numRecords >= m_order ) {
+                    if ( distributingWithLeftSibling ) {
+                        Key middleKey;
+                        if ( entryIdx == 0 ) {
+                            middleKey = deletedKey;
+                        }
+                        else {
+                            middleKey = m_entries[ 0 ]->key;
+                        }
+                        distributeEntries( sibling , this , middleKey );
                     }
+                    else {
+                        Key middleKey = sibling->m_entries[ 0 ]->key;
+                        distributeEntries( this , sibling , middleKey );
+                    }
+                    return;
                 }
                 
                 //if neither left nor right can lend, then merge with left.
