@@ -17,6 +17,8 @@ using std::string;
 #include <vector>
 using std::vector;
 
+using std::runtime_error;
+
 #include "Message.h"
 
 
@@ -39,6 +41,12 @@ private:
     
     Comparator< Key >* m_comparator;
     int m_order;
+    
+    void checkIfOrderValid() {
+        if ( m_order < 2 ) {
+            throw std::runtime_error("Invalid tree order. Must be at least 2");
+        }
+    }
     
     /**
      * A node in a B+ Tree. It stores some keys in increasing order, which
@@ -822,10 +830,12 @@ public:
     
     BPTree( int order ) : m_order( order ) , m_comparator( 0 ) ,
                                             m_root( new BPNode( m_order ) ) {
+        checkIfOrderValid();
     }
     
     BPTree( int order , Comparator< Key > comparator ) : m_order( order ) ,
                 m_comparator( comparator ) , m_root( new BPNode( m_order ) ) {
+        checkIfOrderValid();
     }
     
     BPTree( const BPTree& other ) {

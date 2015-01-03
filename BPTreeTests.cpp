@@ -429,5 +429,6 @@ void BPTreeTests::testLeftLinkage() {
     expected = "[[23]\n";
     expected +="[48, 33], [12, 0]\n";
     expected +="[79, 48], [34, 33], [32, 23], [12], [10, 0], [-100]]";
+    found = test.toStringLeft();
     evaluateTest( expected , found , errorMessage );
 }
