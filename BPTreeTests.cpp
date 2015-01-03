@@ -10,12 +10,13 @@
 #include "BPTree.h"
 
 void BPTreeTests::test() {
-    testNodeInsertKey();
-    testNodeInsertKeyMemory();
-    testInsert();
-    testMemoryManagement();
-    testRange();
-    testCopy();
+    //testNodeInsertKey();
+    //testNodeInsertKeyMemory();
+    //testInsert();
+    //testMemoryManagement();
+    //testRange();
+    //testCopy();
+    testLeftLinkage();
     reportTestStatistics( "BPTree" );
 }
 
@@ -360,7 +361,7 @@ void BPTreeTests::testCopy() {
     delete copy;
     
     BPTree< int , int >* bigTree = new BPTree< int , int >( 3 );
-    for ( int i=0 ; i<10 ; i++ ) {
+    for ( int i=0 ; i<100000 ; i++ ) {
         bigTree->insert( i , i );
     }
     
@@ -370,4 +371,63 @@ void BPTreeTests::testCopy() {
     
     delete bigTree;
     delete bigCopy;
+}
+
+void BPTreeTests::testLeftLinkage() {
+    string expected;
+    string found;
+    string errorMessage = "BPTree left linkage failed!";
+    
+    BPTree< int , int > test( 5 );
+    test.insert( 10 , 10 );
+    test.insert( 12 , 12 );
+    test.insert( 23 , 23 );
+    test.insert( 33 , 33 );
+    test.insert( 48 , 48 );
+    
+    expected = "[[48, 33, 23, 12, 10]]";
+    found = test.toStringLeft();
+    evaluateTest( expected , found , errorMessage );
+    
+    test.insert( 79 , 79 );
+    expected = "[[33]\n";
+    expected +="[79, 48, 33], [23, 12, 10]]";
+    found = test.toStringLeft();
+    evaluateTest( expected , found , errorMessage );
+    
+    test.insert( 34 , 34 );
+    test.insert( 0 , 0 );
+    test.insert( -100 , -100 );
+    expected = "[[33]\n";
+    expected +="[79, 48, 34, 33], [23, 12, 10, 0, -100]]";
+    found = test.toStringLeft();
+    evaluateTest( expected , found , errorMessage );
+    
+    test.insert( 32 , 32 );
+    expected = "[[33, 12]\n";
+    expected+= "[79, 48, 34, 33], [32, 23, 12], [10, 0, -100]]";
+    found = test.toStringLeft();
+    evaluateTest( expected , found , errorMessage );
+    
+    test = BPTree< int , int >( 2 );
+    test.insert( 10 , 10 );
+    test.insert( 12 , 12 );
+    test.insert( 23 , 23 );
+    test.insert( 33 , 33 );
+    test.insert( 48 , 48 );
+    expected = "[[23]\n";
+    expected +="[33], [12]\n";
+    expected +="[48, 33], [23], [12], [10]]";
+    found = test.toStringLeft();
+    evaluateTest( expected , found , errorMessage );
+    
+    test.insert( 79 , 79 );
+    test.insert( 34 , 34 );
+    test.insert( 0 , 0 );
+    test.insert( -100 , -100 );
+    test.insert( 32 , 32 );
+    expected = "[[23]\n";
+    expected +="[48, 33], [12, 0]\n";
+    expected +="[79, 48], [34, 33], [32, 23], [12], [10, 0], [-100]]";
+    evaluateTest( expected , found , errorMessage );
 }

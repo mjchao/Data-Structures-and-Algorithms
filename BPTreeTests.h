@@ -23,6 +23,7 @@ public:
     void testMemoryManagement();
     void testRange();
     void testCopy();
+    void testLeftLinkage();
 };
 
 #endif /* defined(__Data_Structures__BPTreeTests__) */

@@ -331,6 +331,10 @@ private:
                                             entries[ insertIdx-1 ]->rightNode;
                     entries[ insertIdx-1 ]->rightNode->m_rightSibling =
                                                             toInsert->rightNode;
+                    toInsert->rightNode->m_leftSibling =
+                                                            toInsert->leftNode;
+                    toInsert->leftNode->m_leftSibling =
+                                            entries[ insertIdx-1 ]->leftNode;
                 }
             }
             if ( insertIdx+1 < entriesSize+1 ) {
@@ -341,6 +345,8 @@ private:
                                                     toInsert->rightNode;
                         toInsert->rightNode->m_rightSibling =
                                         entries[ insertIdx+1 ]->rightNode;
+                        entries[ insertIdx+1 ]->leftNode->m_leftSibling = toInsert->leftNode;
+                        entries[ insertIdx+1 ]->rightNode->m_leftSibling = toInsert->rightNode;
                     }
                 }
             }
@@ -396,7 +402,9 @@ private:
             BPNode* rightNode = new BPNode( m_comparator , m_order );
             rightNode->m_isLeaf = this->m_isLeaf;
             rightNode->m_parent = parent;
+            
             leftNode->m_rightSibling = rightNode;
+            rightNode->m_leftSibling = leftNode;
             
             int middleIdx = (m_numRecords+1)/2;
             for ( int i=0 ; i<middleIdx ; i++ ) {
@@ -551,20 +559,55 @@ private:
             return *this;
         }
         
+        /**
+         * @return                  if this node is a leaf node or not. Leaf
+         *                          nodes have no children.
+         */
         bool isLeaf() const {
             return m_isLeaf;
         }
         
+        /**
+         * @return                  the number of records stored in this node
+         */
         int getNumRecords() const {
             return m_numRecords;
         }
         
+        /**
+         * Gets a pointer to the parent of this node. The pointer is 0 if the
+         * parent does not exist (i.e. this node is the root node). The parent
+         * should not be modified to maintain the B+ Tree's correct internal
+         * structure
+         *
+         * @return                  a pointer to the parent of this node
+         */
         BPNode* getParent() const {
             return m_parent;
         }
         
+        /**
+         * Gets a pointer to the leftmost child that is a direct descendant of
+         * this node. The child should not be modified to maintain the B+
+         * Tree's correct internal structure.
+         *
+         * @return                  a pointer tothe leftmost child that is a 
+         *                          direct descendant of this node.
+         */
         BPNode* getLeftmostChild() {
             return m_entries[ 0 ]->leftNode;
+        }
+        
+        /**
+         * Gets a pointer to the rightmost child that is a direct descendant of
+         * this node. The child should not be modified to maintain the B+
+         * Tree's correct internal structure.
+         *
+         * @return                  a pointer to the rightmost child that is a 
+         *                          direct descendant of this node.
+         */
+        BPNode* getRightmostChild() const {
+            return m_entries[ m_numRecords-1 ]->rightNode;
         }
         
         /**
@@ -590,6 +633,14 @@ private:
             }
         }
         
+        /**
+         * Inserts the given key-value pair into the B+ Tree
+         *
+         * @param k                 the key
+         * @param v                 the value associated with the given key
+         * @return                  a pointer to the new root of the B+ Tree
+         *                          if the root node was split, or 0 otherwise.
+         */
         BPNode* insertKeyValue( const Key& k , const Value& v ) {
             BPEntry* toInsert = new BPEntry( k , v );
             if ( m_numRecords == 0 ) {
@@ -640,7 +691,7 @@ private:
          *                              that are in the given key range
          */
         void range( const Key& lower , const Key& upper ,
-                   vector< Value >& collection ) {
+                   vector< Value >& collection ) const {
             if ( isLeaf() ) {
                 
                 //put everything in this node that is within the range
@@ -672,7 +723,11 @@ private:
             }
         }
         
-        string toString() {
+        /**
+         * @return                  the textual representation of the keys of
+         *                          this node as a list
+         */
+        string toString() const {
             Message rtn;
             rtn << "[";
             if ( m_numRecords == 0 ) {
@@ -692,16 +747,54 @@ private:
         }
         
         /**
-         * Returns the textual representation of this node and all its 
-         * siblings to the right.
+         * @return                  the textual representation of the keys of
+         *                          this node as a reversed list (right to left)
          */
-        string toStringSiblings() {
+        string toStringRightToLeft() const {
+            Message rtn;
+            rtn << "[";
+            if ( m_numRecords == 0 ) {
+                rtn << "]";
+            }
+            else if ( m_numRecords == 1 ) {
+                rtn << m_entries[ 0 ]->key << "]";
+            }
+            else {
+                rtn << m_entries[ m_numRecords-1 ]->key;
+                for ( int i=m_numRecords-2 ; i>=0 ; i-- ) {
+                    rtn << ", " << m_entries[ i ]->key;
+                }
+                rtn << "]";
+            }
+            return rtn.str();
+        }
+        
+        /**
+         * @return                      the textual representation of this node 
+         *                              and all its siblings to the right.
+         */
+        string toStringSiblings() const {
             Message rtn;
             rtn << this->toString();
             BPNode* currNode = this->m_rightSibling;
             while( currNode != 0 ) {
                 rtn << ", " << currNode->toString();
                 currNode = currNode->m_rightSibling;
+            }
+            return rtn.str();
+        }
+        
+        /**
+         * @return                      the textual representation of this node
+         *                              and all its siblings to the left.
+         */
+        string toStringLeftSiblings() const {
+            Message rtn;
+            rtn << this->toStringRightToLeft();
+            BPNode* currNode = this->m_leftSibling;
+            while( currNode != 0 ) {
+                rtn << ", " << currNode->toStringRightToLeft();
+                currNode = currNode->m_leftSibling;
             }
             return rtn.str();
         }
@@ -791,7 +884,7 @@ public:
      * @return                      the value associated with the given key, or
      *                              the default value if the key is not found
      */
-    Value find( const Key& k ) {
+    Value find( const Key& k ) const {
         Value* v = m_root->find( k );
         if ( v == 0 ) {
             return Value();
@@ -811,7 +904,7 @@ public:
      * @return                      a list of values associated with keys in the
      *                              specified range
      */
-    vector< Value > range( const Key& lower , const Key& upper ) {
+    vector< Value > range( const Key& lower , const Key& upper ) const {
         vector< Value > rtn;
         m_root->range( lower , upper , rtn );
         return rtn;
@@ -825,8 +918,14 @@ public:
         m_root = new BPNode( m_comparator , m_order );
     }
     
-    
-    string toString() {
+    /**
+     * Determines the textual representation of the tree by traversing the
+     * linked list of each level from right to left.
+     *
+     * @return              the textual representation of the tree traversed
+     *                      from right to left.
+     */
+    string toString() const {
         Message rtn;
         rtn << "[" << m_root->toStringSiblings();
         if ( !m_root->isLeaf() ) {
@@ -837,6 +936,29 @@ public:
                 curr = curr->getLeftmostChild();
             }
             rtn << curr->toStringSiblings();
+        }
+        rtn << "]";
+        return rtn.str();
+    }
+    
+    /**
+     * Determines the textual representation of the tree by traversing the
+     * linked list of each level from left to right. 
+     * 
+     * @return              the textual representation of the tree traversed
+     *                      from left to right
+     */
+    string toStringLeft() const {
+        Message rtn;
+        rtn << "[" << m_root->toStringLeftSiblings();
+        if ( !m_root->isLeaf() ) {
+            rtn << "\n";
+            BPNode* curr = m_root->getRightmostChild();
+            while( !curr->isLeaf() ) {
+                rtn << curr->toStringLeftSiblings() << "\n";
+                curr = curr->getRightmostChild();
+            }
+            rtn << curr->toStringLeftSiblings();
         }
         rtn << "]";
         return rtn.str();
