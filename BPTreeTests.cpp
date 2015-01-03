@@ -10,13 +10,14 @@
 #include "BPTree.h"
 
 void BPTreeTests::test() {
-    //testNodeInsertKey();
-    //testNodeInsertKeyMemory();
-    //testInsert();
-    //testMemoryManagement();
-    //testRange();
-    //testCopy();
-    testLeftLinkage();
+    testNodeInsertKey();
+    testNodeInsertKeyMemory();
+    testInsert();
+    testMemoryManagement();
+    testRange();
+    testCopy();
+    testLeftLinkage();//*/
+    testRemove();
     reportTestStatistics( "BPTree" );
 }
 
@@ -430,5 +431,76 @@ void BPTreeTests::testLeftLinkage() {
     expected +="[48, 33], [12, 0]\n";
     expected +="[79, 48], [34, 33], [32, 23], [12], [10, 0], [-100]]";
     found = test.toStringLeft();
+    evaluateTest( expected , found , errorMessage );
+    
+    BPTree< int , int >* testCopy = new BPTree< int , int >( test );
+    string copyLeftRep = testCopy->toStringLeft();
+    evaluateTest( copyLeftRep , test.toStringLeft(), errorMessage );
+    delete testCopy;
+    evaluateTest( copyLeftRep , test.toStringLeft() , errorMessage );
+}
+
+void BPTreeTests::testRemove() {
+    string expected;
+    string found;
+    string errorMessage = "BPTree remove() failed!";
+    BPTree< int , int > test( 2 );
+    for ( int i=0 ; i<8 ; i++ ) {
+        test.insert( i , i );
+    }
+    /* tree structure:
+                [2     ,     4]
+          [1]         [3]        [5  ,  6]
+      [0]     [1]  [2]   [3]   [4]  [5]   [6, 7]
+     */
+    
+    //test borrowing form the right by removing 5:
+    //removing 5 should borrow a 6
+    test.remove( 5 );
+    
+    /* tree structure after removing 5:
+               [2     ,     4]
+         [1]         [3]        [5  ,  7]
+     [0]     [1]  [2]   [3]   [4]  [6]   [7]
+     */
+    expected = "[[2, 4]\n";
+    expected +="[1], [3], [5, 7]\n";
+    expected +="[0], [1], [2], [3], [4], [6], [7]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    test.clear();
+    for ( int i=0 ; i<16 ; i+= 2 ) {
+        test.insert( i , i );
+    }
+    test.insert( 5 , 5 );
+    
+    /* tree structure:
+               [4       ,     8]
+         [2]           [6]        [10  , 12]
+     [0]     [2]  [4, 5]   [6]   [8]  [10]   [12, 14]
+     */
+    
+    //test borrowing from the left by removing 6:
+    //removing 6 should borrow a 5
+    test.remove( 6 );
+    /* tree structure:
+               [4       ,     8]
+         [2]           [5]         [10  , 12]
+     [0]     [2]   [4]     [5]   [8]  [10]   [12, 14]
+     */
+    expected = "[[4, 8]\n";
+    expected+= "[2], [5], [10, 12]\n";
+    expected+= "[0], [2], [4], [5], [8], [10], [12, 14]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //test borrowing without underflow
+    //removing 14 should not cause any borrowing or merging
+    test.remove( 14 );
+    expected = "[[4, 8]\n";
+    expected+= "[2], [5], [10, 12]\n";
+    expected+= "[0], [2], [4], [5], [8], [10], [12]]";
+    found = test.toString();
     evaluateTest( expected , found , errorMessage );
 }

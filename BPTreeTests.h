@@ -24,6 +24,7 @@ public:
     void testRange();
     void testCopy();
     void testLeftLinkage();
+    void testRemove();
 };
 
 #endif /* defined(__Data_Structures__BPTreeTests__) */

@@ -24,7 +24,7 @@ using std::runtime_error;
 
 /**
  * A B+ Tree which maintains that each node is at least half full, except the
- * root. The order if the B+ Tree, m, defines the number of entries permitted 
+ * root. The order of the B+ Tree, m, defines the number of entries permitted
  * in each node.
  *
  * The tree is balanced, and given that there are n entries total, the height of
@@ -88,14 +88,14 @@ private:
             BPNode* leftNode;
             BPNode* rightNode;
             bool deleteRightFlag;
-            bool splitFlag;
+            bool deleteOnlyValueFlag;
             
             void initialize() {
                 value = 0;
                 leftNode = 0;
                 rightNode = 0;
                 deleteRightFlag = false;
-                splitFlag = false;
+                deleteOnlyValueFlag = false;
             }
             
             BPEntry( Key k ) {
@@ -127,11 +127,11 @@ private:
                 //is going to be another entry's left node
                 
                 deleteRightFlag = other.deleteRightFlag;
-                splitFlag = other.splitFlag;
+                deleteOnlyValueFlag = other.deleteOnlyValueFlag;
             }
             
             ~BPEntry() {
-                if ( !splitFlag ) {
+                if ( !deleteOnlyValueFlag ) {
                     if ( leftNode != 0 ) {
                         delete leftNode;
                     }
@@ -162,7 +162,7 @@ private:
                 //we do not copy the right node, because the right node
                 //is going to be another entry's left node
                 
-                splitFlag = other.splitFlag;
+                deleteOnlyValueFlag = other.deleteOnlyValueFlag;
                 return *this;
             }
         };
@@ -448,7 +448,7 @@ private:
             //the memory associated with the middle, promoted node must be freed
             //because it does not stay in this node.
             if ( !isLeaf() ) {
-                combinedEntries[ middleIdx ]->splitFlag = true;
+                combinedEntries[ middleIdx ]->deleteOnlyValueFlag = true;
                 delete combinedEntries[ middleIdx ];
             }
             
@@ -468,6 +468,155 @@ private:
             delete this;
             
             return rtn;
+        }
+        
+        /**
+         * Updates the parent node's indexing to reflect a lend. This must be
+         * called on the parent node of the two nodes involved in a lend, or
+         * else it will not work properly.
+         *
+         * @param lentKey               the key of the entry that was lent
+         * @param lendingNode           the node lending an entry
+         * @param receivingNode         the underflowing node that received an
+         *                              entry
+         */
+        void updateLend( const Key& lentKey , BPNode* lendingNode ,
+                        BPNode* receivingNode ) {
+            int idxToModify = locateIdx( m_entries , m_numRecords , lentKey );
+            BPEntry* parentEntry = 0;
+            bool borrowedFromLeft;
+            if ( m_entries[ idxToModify ]->leftNode == lendingNode &&
+                        m_entries[ idxToModify ]->rightNode == receivingNode ) {
+                parentEntry = m_entries[ idxToModify ];
+                borrowedFromLeft = true;
+            }
+            else if ( m_entries[ idxToModify ]->rightNode == lendingNode &&
+                        m_entries[ idxToModify ]->leftNode == receivingNode ) {
+                parentEntry = m_entries[ idxToModify ];
+                borrowedFromLeft = false;
+            }
+            else if ( idxToModify-1 >=0 &&
+                     m_entries[ idxToModify-1 ]->leftNode == lendingNode &&
+                     m_entries[ idxToModify-1 ]->rightNode == receivingNode ) {
+                parentEntry = m_entries[ idxToModify-1 ];
+                borrowedFromLeft = true;
+            }
+            else if ( idxToModify+1 < m_numRecords &&
+                     m_entries[ idxToModify+1 ]->rightNode == lendingNode &&
+                     m_entries[ idxToModify+1 ]->leftNode == receivingNode ) {
+                parentEntry = m_entries[ idxToModify+1 ];
+                borrowedFromLeft = false;
+            }
+            else {
+                //sanity check
+                throw 1;
+            }
+            
+            //update the indexing
+            if ( borrowedFromLeft ) {
+                
+                //if we took another value from the left, then the right node
+                //(the receiver) has the lent key in the first index, so we have
+                //to modify the parent indexing to account for that
+                parentEntry->key = lentKey;
+            }
+            else {
+                
+                //if we took another value from the right, then the right node
+                //(the lender) has a new key in the first index, so we have
+                //to modify the parent indexing to account for that
+                parentEntry->key = parentEntry->rightNode->m_entries[ 0 ]->key;
+            }
+        }
+        
+        /**
+         * Lends an entry from this node if possible, and modifies the entry
+         * to reflect this lend. The caller must update the parent to correctly
+         * modify the parent's search index.
+         *
+         * @param fromEnd               whether to lend an entry from the end
+         *                              of the array or from the start
+         * @return                      a borrowed entry, or 0 if this node
+         *                              cannot lend an entry without underflow
+         */
+        BPEntry* lendEntry( bool fromEnd ) {
+            if ( m_numRecords-1 < (m_order+1)/2 ) {
+                return 0;
+            }
+            else {
+                if ( fromEnd ) {
+                    m_numRecords--;
+                    return m_entries[ m_numRecords ];
+                }
+                else {
+                    BPEntry* rtn = m_entries[ 0 ];
+                    for ( int i=1 ; i<m_numRecords ; i++ ) {
+                        m_entries[ i-1 ] = m_entries[ i ];
+                    }
+                    m_numRecords--;
+                    return rtn;
+                }
+            }
+        }
+        
+        /**
+         * Removes the entry at the given index from this node
+         * and rearranges the structure of the tree if underflow occurs. This
+         * should only be called on leaf nodes. Otherwise, the function will not
+         * work correctly.
+         *
+         * @param entryIdx              the index of the entry to remove
+         */
+        void removeLeafEntry( int entryIdx ) {
+            
+            //first remove the entry - there is no need to set any delete flags
+            //because leaf nodes have no more children
+            delete m_entries[ entryIdx ];
+            m_entries[ entryIdx ] = 0;
+            
+            for ( int i=entryIdx+1 ; i<m_numRecords ; i++ ) {
+                m_entries[ i-1 ] = m_entries[ i ];
+            }
+            m_entries[ m_numRecords-1 ] = 0;
+            m_numRecords--;
+
+            //check if we underflowed
+            if ( m_numRecords < (m_order+1)/2 ) {
+                
+                //try borrowing from siblings with the same parent
+                
+                //first check the left because when we inserted, we favored
+                //the left with more elements in splits if the order was odd
+                if ( m_leftSibling != 0 &&
+                                m_leftSibling->m_parent == this->m_parent ) {
+                    BPEntry* borrowLeft = m_leftSibling->lendEntry( true );
+                    if ( borrowLeft != 0 ) {
+                        insertEntry( m_entries , m_numRecords+1 , borrowLeft );
+                        m_numRecords++;
+                        m_parent->updateLend( borrowLeft->key , m_leftSibling , this );
+                        return;
+                    }
+                }
+                
+                //if left cannot lend, then check right sibling
+                if ( m_rightSibling != 0 &&
+                                m_rightSibling->m_parent == this->m_parent ) {
+                    BPEntry* borrowRight = m_rightSibling->lendEntry( false );
+                    if ( borrowRight != 0 ) {
+                        insertEntry( m_entries , m_numRecords+1 , borrowRight );
+                        m_numRecords++;
+                        m_parent->updateLend( borrowRight->key , m_rightSibling ,  this );
+                        return;
+                    }
+                }
+                
+                //if neither left nor right can lend, then merge with left.
+                //we can merge for certain because the left node
+                //could not lend us an entry so it was exactly half full,
+                //and this node is less than half full
+                
+                //TODO
+            }
         }
         
     public:
@@ -619,13 +768,13 @@ private:
         }
         
         /**
-         * Finds the branch that should contain the given key
+         * Finds the node that should contain the given key
          *
          * @param k                 the key for which to look
          * @return                  the branch that should contain the given key
          *                          or 0 if no branch was found
          */
-        BPNode* findBranch( const Key& k ) const {
+        BPNode* findNode( const Key& k ) const {
             int locationIdx = locateIdx( m_entries , m_numRecords , k );
             if ( m_entries[ locationIdx ] == 0 ) {
                 return 0;
@@ -685,7 +834,7 @@ private:
                 }
             }
             else {
-                return findBranch( k )->find( k );
+                return findNode( k )->find( k );
             }
         }
         
@@ -727,7 +876,24 @@ private:
                 }
             }
             else {
-                return findBranch( lower )->range( lower , upper , collection );
+                return findNode( lower )->range( lower , upper , collection );
+            }
+        }
+        
+        /**
+         * Removes the given key and the value associated with it from this node
+         *
+         * @param k                 the key to remove
+         * @return                  if the key was found and removed
+         */
+        bool remove( const Key& k ) {
+            int idxToRemove = locateIdx( m_entries , m_numRecords , k );
+            if ( compare( m_entries[ idxToRemove ]->key , k ) == 0 ) {
+                removeLeafEntry( idxToRemove );
+                return true;
+            }
+            else {
+                return false;
             }
         }
         
@@ -868,7 +1034,7 @@ public:
         }
         BPNode* curr = m_root;
         while( !curr->isLeaf() ) {
-            curr = curr->findBranch( k );
+            curr = curr->findNode( k );
         }
         BPNode* newRoot = curr->insertKeyValue( k , v );
         if ( newRoot != 0 ) {
@@ -918,6 +1084,25 @@ public:
         vector< Value > rtn;
         m_root->range( lower , upper , rtn );
         return rtn;
+    }
+    
+    /**
+     * Removes the given key and the value associated with it from the tree.
+     *
+     * @param k                     the key to remove
+     * @return                      if the key was found and removed
+     */
+    bool remove( const Key& k ) {
+        BPNode* node = m_root->findNode( k );
+        while( !node->isLeaf() ) {
+            node = node->findNode( k );
+        }
+        if ( node != 0 ) {
+            return node->remove( k );
+        }
+        else {
+            return false;
+        }
     }
     
     /**
