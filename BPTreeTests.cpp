@@ -18,6 +18,7 @@ void BPTreeTests::test() {
     testCopy();
     testLeftLinkage();//*/
     testRemove();
+    testRemoveOrder5();
     reportTestStatistics( "BPTree" );
 }
 
@@ -626,27 +627,115 @@ void BPTreeTests::testRemove() {
     found = test.toString();
     evaluateTest( expected , found , errorMessage );
     
+    //remove 11, causing the 11 non-leaf to be deleted and 8 to be demoted
     test.remove( 11 );
-    
     /* tree structure
                  [4]
          [3]               [7   ,    8]
      [2]     [3]       [6]     [7]       [10]
      */
+    expected = "[[4]\n";
+    expected +="[3], [7, 8]\n";
+    expected +="[2], [3], [6], [7], [10]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //remove 10, causing the [7, 8] node to shrink, but no merges are forced
     test.remove( 10 );
     /* tree structure
                  [4]
          [3]               [7]
      [2]     [3]       [6]     [7]
      */
+    expected = "[[4]\n";
+    expected +="[3], [7]\n";
+    expected +="[2], [3], [6], [7]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //remove 7, causing the 7 non-leaf node to be deleted, the 4 to be
+    //demoted, and the root to collapse into [3, 4]
     test.remove( 7 );
     /* tree structure
          [3    ,    4]
      [2]     [3]       [6]
      */
-    test.remove( 6 );
-    test.remove( 3 );
-    test.remove( 2 );
-    cout << test.toString() << endl;
+    expected = "[[3, 4]\n";
+    expected +="[2], [3], [6]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
     
+    //remove 6, causing the root to shrink, but no merges are forced
+    test.remove( 6 );
+    /* tree structure
+         [3]
+     [2]     [3]
+     */
+    expected = "[[3]\n";
+    expected +="[2], [3]]";
+    
+    //remove 3, causing the root to collapse and be replaced by just the 2
+    test.remove( 3 );
+    /* tree structure
+         [2]
+     */
+    expected = "[[2]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //remove the last element in the tree - straightforward
+    test.remove( 2 );
+    /* tree structure
+        []
+     */
+    expected = "[[]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+}
+
+void BPTreeTests::testRemoveOrder5() {
+    string expected;
+    string found;
+    string errorMessage = "BPTree remove() failed for order 5!";
+    BPTree< double , double > test( 5 );
+    for ( int i=0 ; i<10 ; i++ ) {
+        test.insert( i ,  i );
+    }
+    /* tree structure:
+                 [4,        6]
+     [0, 1, 2, 3]    [4, 5]     [6, 7, 8, 9]
+     */
+    
+    //remove up to first merge, resulting in demotion of the 4 in the root
+    test.remove( 0 );
+    test.remove( 1 );
+    /* tree structure:
+                [6]
+     [2, 3, 4, 5]  [6, 7, 8, 9]
+     */
+    expected = "[[6]\n";
+    expected+= "[2, 3, 4, 5], [6, 7, 8, 9]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //remove up to second merge, which is a redistribution
+    test.remove( 2 );
+    test.remove( 3 );
+    /* tree structure:
+                [7]
+     [4, 5, 6]      [7, 8, 9]
+     */
+    expected = "[[7]\n";
+    expected+= "[4, 5, 6], [7, 8, 9]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //remove up to third merge, resulting in root collapsing
+    test.remove( 4 );
+    /* tree structure
+       [5, 6, 7, 8, 9]
+     */
+    expected = "[[5, 6, 7, 8, 9]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
 }

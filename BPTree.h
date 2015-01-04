@@ -583,7 +583,7 @@ private:
             //transfer the right node's entries into the left node
             //if the right
             for ( int i=0 ; i<n2->m_numRecords ; i++ ) {
-                n1->m_entries[ n1->m_numRecords+i ] = n2->m_entries[ i ];
+                n1->m_entries[ n1->m_numRecords ] = n2->m_entries[ i ];
                 n1->m_numRecords++;
             }
             
@@ -657,6 +657,11 @@ private:
             //check for underflow
             if ( m_numRecords < (m_order+1)/2 ) {
                 
+                //the root is allowed to underflow
+                if ( m_parent == 0 ) {
+                    return 0;
+                }
+                
                 //try redistributing with the sibling that has the most number
                 //of records
                 BPNode* sibling;
@@ -685,7 +690,7 @@ private:
                 }
                 
                 //check if it is possible to redistribute
-                if ( sibling->m_numRecords + m_numRecords >= m_order ) {
+                if ((sibling->m_numRecords + m_numRecords)/2 >= (m_order+1)/2) {
                     if ( distributingWithLeftSibling ) {
                         Key middleKey;
                         if ( entryIdx == 0 ) {
@@ -812,14 +817,14 @@ private:
             //transfer the right node's entries into the left node
             //if the right
             for ( int i=0 ; i<n2->m_numRecords ; i++ ) {
-                n1->m_entries[ n1->m_numRecords+i ] = n2->m_entries[ i ];
+                n1->m_entries[ n1->m_numRecords ] = n2->m_entries[ i ];
                 n1->m_numRecords++;
             }
             
             //the right node and the shared parent entry
             //must also be deleted and removed from the tree
+            n2->m_splitFlag = true;
             delete n2;
-            //parent->m_entries[ parentEntryIdx ]->rightNode = 0;
             
             //since n2 is gone, n1 may not necessarily have a right sibling
             //anymore
@@ -905,7 +910,7 @@ private:
                 }
                 
                 //check if it is possible to distribute
-                if ( sibling->m_numRecords + m_numRecords >= m_order ) {
+                if ( (sibling->m_numRecords + m_numRecords)/2 >= (m_order+1)/2 ) {
                     if ( distributingWithLeftSibling ) {
                         Key middleKey;
                         if ( entryIdx == 0 ) {

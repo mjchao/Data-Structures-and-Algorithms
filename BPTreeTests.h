@@ -25,6 +25,7 @@ public:
     void testCopy();
     void testLeftLinkage();
     void testRemove();
+    void testRemoveOrder5();
 };
 
 #endif /* defined(__Data_Structures__BPTreeTests__) */
