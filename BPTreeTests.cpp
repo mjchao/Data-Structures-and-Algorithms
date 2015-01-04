@@ -490,7 +490,7 @@ void BPTreeTests::testRemove() {
     string expected;
     string found;
     string errorMessage = "BPTree remove() failed!";
-    BPTree< int , int > test( 2 );
+    BPTree< double , double > test( 2 );
     for ( int i=0 ; i<8 ; i++ ) {
         test.insert( i , i );
     }
@@ -593,9 +593,60 @@ void BPTreeTests::testRemove() {
     test.remove( 5 );
     test.insert( 8 , 8 );
     test.remove( 12 );
-    for ( int i=1 ; i<=7 ; i+=2 ) {
-        test.insert( i , i );
-    }
+    test.insert( 1 , 1 );
+    test.insert( 3 , 3 );
+    test.insert( 4.5 , 4.5 );
+    test.insert( 7 , 7 );
+    test.insert( 9 , 9 );
+    test.insert( 11 , 11 );
+    
+    /* tree structure
+                      [4          ,          8]
+               [2]               [5]               [10]
+         [0, 1]   [2, 3] [4, 4.5]   [6, 7]   [8, 9]    [10, 11]
+     */
+    
+    //remove every other leaf node and test multiple leaf node
+    //merges with siblings
+    test.remove( 0 );
+    test.remove( 1 );
+    test.remove( 4 );
+    test.remove( 4.5 );
+    test.remove( 9 );
+    test.remove( 8 );
+    
+    /* tree structure
+                        [4          ,          8]
+                [3]               [7]               [11]
+            [2]     [3]       [6]     [7]       [10]    [11]
+     */
+    expected = "[[4, 8]\n";
+    expected +="[3], [7], [11]\n";
+    expected +="[2], [3], [6], [7], [10], [11]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    test.remove( 11 );
+    
+    /* tree structure
+                 [4]
+         [3]               [7   ,    8]
+     [2]     [3]       [6]     [7]       [10]
+     */
+    test.remove( 10 );
+    /* tree structure
+                 [4]
+         [3]               [7]
+     [2]     [3]       [6]     [7]
+     */
+    test.remove( 7 );
+    /* tree structure
+         [3    ,    4]
+     [2]     [3]       [6]
+     */
+    test.remove( 6 );
+    test.remove( 3 );
+    test.remove( 2 );
     cout << test.toString() << endl;
     
 }

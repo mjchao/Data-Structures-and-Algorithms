@@ -523,6 +523,214 @@ private:
             return rtn;
         }
         
+        
+        void distributeNonLeafEntries( BPNode* n1 , BPNode* n2 ,
+                                      const Key& middleKey ) {
+            
+            //we will have to change the key to the parent of these two nodes
+            //as we are redistributing entries
+            //note that these nodes must have a parent, or they cannot be
+            //siblings
+            BPNode* parent = n1->m_parent;
+            int parentEntryIdx = locateIdx( parent->m_entries ,
+                                           parent->m_numRecords , middleKey );
+            BPEntry* parentEntry = parent->m_entries[ parentEntryIdx ];
+            
+            BPEntry* combinedEntries[ n1->m_numRecords + n2->m_numRecords ];
+            for ( int i=0 ; i<n1->m_numRecords ; i++ ) {
+                combinedEntries[ i ] = n1->m_entries[ i ];
+            }
+            for ( int i=0 ; i<n2->m_numRecords ; i++ ) {
+                combinedEntries[ n1->m_numRecords+i ] = n2->m_entries[ i ];
+            }
+            
+            int totalEntries = n1->m_numRecords + n2->m_numRecords;
+            
+            //add an additional 1 to favor the right node in case of odd
+            //number of entries
+            int middleIdx = (totalEntries + 1)/2;
+            
+            n1->m_numRecords = 0;
+            for ( int i=0 ; i<middleIdx ; i++ ) {
+                n1->m_entries[ i ] = combinedEntries[ i ];
+                n1->m_numRecords++;
+            }
+            
+            n2->m_numRecords = 0;
+            for ( int i=middleIdx ; i<totalEntries ; i++ ) {
+                n2->m_entries[ i-middleIdx ] = combinedEntries[ i ];
+                n2->m_numRecords++;
+            }
+            
+            //update their parent entry to have the correct indexing
+            parentEntry->key = n2->m_entries[ 0 ]->key;
+        }
+        
+        BPNode* mergeNonLeafNodes( BPNode* n1, BPNode* n2, const Key& middleKey ,
+                               BPNode* extraRightNode ) {
+            BPNode* parent = n1->m_parent;
+            int parentEntryIdx = locateIdx( parent->m_entries ,
+                                           parent->m_numRecords , middleKey );
+            BPEntry* leftEntry = 0;
+            if ( parentEntryIdx-1 >= 0 ) {
+                leftEntry = parent->m_entries[ parentEntryIdx-1 ];
+            }
+            BPEntry* rightEntry = 0;
+            if ( parentEntryIdx+1 < parent->m_numRecords ) {
+                rightEntry = parent->m_entries[ parentEntryIdx+1 ];
+            }
+            
+            //transfer the right node's entries into the left node
+            //if the right
+            for ( int i=0 ; i<n2->m_numRecords ; i++ ) {
+                n1->m_entries[ n1->m_numRecords+i ] = n2->m_entries[ i ];
+                n1->m_numRecords++;
+            }
+            
+            //the right node and the shared parent entry
+            //must also be deleted and removed from the tree
+            n2->m_splitFlag = true;
+            delete n2;
+            
+            //since n2 is gone, n1 may not necessarily have a right sibling
+            //anymore
+            n1->m_rightSibling = 0;
+            
+            //assign the parent's neighboring entries custody of the merged
+            //child
+            if ( leftEntry != 0 ) {
+                leftEntry->rightNode = n1;
+                leftEntry->leftNode->m_rightSibling = n1;
+                n1->m_leftSibling = leftEntry->leftNode;
+            }
+            if ( rightEntry != 0 ) {
+                rightEntry->leftNode = n1;
+                rightEntry->rightNode->m_leftSibling = n1;
+                n1->m_rightSibling = rightEntry->rightNode;
+            }
+            
+            //demote the parent's key to this node
+            Key deletedKey = parent->m_entries[ parentEntryIdx ]->key;
+            extraRightNode->m_parent = this;
+            BPEntry* mergedEntry = new BPEntry( deletedKey );
+            mergedEntry->leftNode = n1->m_entries[ n1->m_numRecords-1 ]->rightNode;
+            mergedEntry->rightNode = extraRightNode;
+            mergedEntry->leftNode->m_rightSibling = mergedEntry->rightNode;
+            mergedEntry->rightNode->m_leftSibling = mergedEntry->leftNode;
+            n1->m_entries[ n1->m_numRecords ] = mergedEntry;
+            extraRightNode->m_parent = n1;
+            n1->m_numRecords++;
+            
+            //remove the parent entry from the parent
+            return parent->removeNonLeafEntry( parentEntryIdx );
+        }
+        
+        BPNode* removeNonLeafEntry( int entryIdx ) {
+            BPEntry* entry = m_entries[ entryIdx ];
+            Key deletedKey = entry->key;
+            
+            //detach the entry from its children and delete it
+            BPNode* hangingLeftNode = entry->leftNode;
+            entry->leftNode = 0;
+            entry->rightNode = 0;
+            delete entry;
+            m_entries[ entryIdx ] = 0;
+            
+            //subsequent entries must be shifted down to take the deleted
+            //entry's place
+            for ( int i=entryIdx ; i<m_numRecords-1 ; i++ ) {
+                m_entries[ i ] = m_entries[ i+1 ];
+            }
+            
+            //since the last entry was shifted down by 1 index,
+            //the pointer at its previous location must be set to 0
+            m_entries[ m_numRecords-1 ] = 0;
+            m_numRecords--;
+            
+            //if the root underflowed, then we return the pointer to the
+            //new root
+            if ( m_parent == 0 && m_numRecords == 0 ) {
+                hangingLeftNode->m_parent = 0;
+                return hangingLeftNode;
+            }
+            
+            //check for underflow
+            if ( m_numRecords < (m_order+1)/2 ) {
+                
+                //try redistributing with the sibling that has the most number
+                //of records
+                BPNode* sibling;
+                bool distributingWithLeftSibling;
+                
+                //first we assume the left sibling has more records
+                if ( m_leftSibling != 0 &&
+                    m_leftSibling->m_parent == this->m_parent ) {
+                    sibling = m_leftSibling;
+                    distributingWithLeftSibling = true;
+                    
+                    //and if the right sibling actually has more records,
+                    //then we update to reflect that
+                    if ( m_rightSibling != 0 &&
+                        m_rightSibling->m_parent == this->m_parent ) {
+                        if ( m_rightSibling->m_numRecords >
+                            m_leftSibling->m_numRecords ) {
+                            sibling = m_rightSibling;
+                            distributingWithLeftSibling = false;
+                        }
+                    }
+                }
+                else {
+                    sibling = m_rightSibling;
+                    distributingWithLeftSibling = false;
+                }
+                
+                //check if it is possible to redistribute
+                if ( sibling->m_numRecords + m_numRecords >= m_order ) {
+                    if ( distributingWithLeftSibling ) {
+                        Key middleKey;
+                        if ( entryIdx == 0 ) {
+                            middleKey = deletedKey;
+                        }
+                        else {
+                            middleKey = m_entries[ 0 ]->key;
+                        }
+                        distributeNonLeafEntries( sibling , this , middleKey );
+                    }
+                    else {
+                        Key middleKey = sibling->m_entries[ 0 ]->key;
+                        distributeNonLeafEntries( this , sibling , middleKey );
+                    }
+                    return 0;
+                }
+                
+                //if it is not possible to distribute, then we will have
+                //to demote a parent key
+                sibling = 0;
+                bool mergingWithLeftSibling;
+                if ( m_leftSibling != 0 ) {
+                    if ( m_leftSibling->m_parent == this->m_parent ) {
+                        sibling = m_leftSibling;
+                        mergingWithLeftSibling = true;
+                    }
+                    else {
+                        sibling = m_rightSibling;
+                        mergingWithLeftSibling = false;
+                    }
+                }
+                else {
+                    sibling = m_rightSibling;
+                    mergingWithLeftSibling = false;
+                }
+                if ( mergingWithLeftSibling ) {
+                    return mergeNonLeafNodes( sibling , this , deletedKey , hangingLeftNode );
+                }
+                else {
+                    return mergeNonLeafNodes(this, sibling, sibling->m_entries[ 0 ]->key , hangingLeftNode );
+                }
+            }
+            return 0;
+        }
+        
         /**
          * Distributes the entries of two sibling leaf nodes evenly and modifies 
          * their parent node to have the correct indexing. The nodes must be
@@ -531,7 +739,8 @@ private:
          * @param n1                    the left node of the two nodes
          * @param n2                    the right node of the two nodes
          */
-        void distributeEntries( BPNode* n1, BPNode* n2, const Key& middleKey ) {
+        void distributeLeafEntries( BPNode* n1 , BPNode* n2 ,
+                                   const Key& middleKey ) {
             
             //we will have to change the key to the parent of these two nodes
             //as we are redistributing entries
@@ -547,7 +756,7 @@ private:
                 combinedEntries[ i ] = n1->m_entries[ i ];
             }
             for ( int i=0 ; i<n2->m_numRecords ; i++ ) {
-                combinedEntries[ m_numRecords+i ] = n2->m_entries[ i ];
+                combinedEntries[ n1->m_numRecords+i ] = n2->m_entries[ i ];
             }
         
             int totalEntries = n1->m_numRecords + n2->m_numRecords;
@@ -584,8 +793,10 @@ private:
          *                              the left node.
          * @param middleKey             the key to the first entry in the right
          *                              node
+         * @return                      a pointer to the new root of the tree if
+         *                              the root collapsed, or 0 otherwise
          */
-        void mergeLeafNodes( BPNode* n1 , BPNode* n2 , const Key& middleKey ) {
+        BPNode* mergeLeafNodes( BPNode* n1 , BPNode* n2 , const Key& middleKey ) {
             BPNode* parent = n1->m_parent;
             int parentEntryIdx = locateIdx( parent->m_entries ,
                                            parent->m_numRecords , middleKey );
@@ -593,7 +804,6 @@ private:
             if ( parentEntryIdx-1 >= 0 ) {
                 leftEntry = parent->m_entries[ parentEntryIdx-1 ];
             }
-            BPEntry* parentEntry = parent->m_entries[ parentEntryIdx ];
             BPEntry* rightEntry = 0;
             if ( parentEntryIdx+1 < parent->m_numRecords ) {
                 rightEntry = parent->m_entries[ parentEntryIdx+1 ];
@@ -609,21 +819,11 @@ private:
             //the right node and the shared parent entry
             //must also be deleted and removed from the tree
             delete n2;
+            //parent->m_entries[ parentEntryIdx ]->rightNode = 0;
             
             //since n2 is gone, n1 may not necessarily have a right sibling
             //anymore
             n1->m_rightSibling = 0;
-            
-            //detach the parent entry from its children and delete it
-            parentEntry->leftNode = 0;
-            parentEntry->rightNode = 0;
-            delete parentEntry;
-            parent->m_entries[ parentEntryIdx ] = 0;
-            for ( int i=parentEntryIdx ; i<parent->m_numRecords-1 ; i++ ) {
-                parent->m_entries[ i ] = parent->m_entries[ i+1 ];
-            }
-            parent->m_entries[ parent->m_numRecords-1 ] = 0;
-            parent->m_numRecords--;
             
             //assign the parent's neighboring entries custody of the merged
             //child
@@ -637,6 +837,9 @@ private:
                 rightEntry->rightNode->m_leftSibling = n1;
                 n1->m_rightSibling = rightEntry->rightNode;
             }
+            
+            //remove the parent entry from the parent
+            return parent->removeNonLeafEntry( parentEntryIdx );
         }
         
         /**
@@ -646,8 +849,10 @@ private:
          * work correctly.
          *
          * @param entryIdx              the index of the entry to remove
+         * @return                      a pointer to the new root of the tree
+         *                              if the root collapsed, or 0 otherwise
          */
-        void removeLeafEntry( int entryIdx ) {
+        BPNode* removeLeafEntry( int entryIdx ) {
             
             //keep a copy of the deleted key in case we need it for the tree's
             //indexing again
@@ -663,11 +868,14 @@ private:
             }
             m_entries[ m_numRecords-1 ] = 0;
             m_numRecords--;
-            
-            //change from lending to complete redistribution
 
             //check if we underflowed
             if ( m_numRecords < (m_order+1)/2 ) {
+                
+                //the root is allowed to underflow
+                if ( m_parent == 0 ) {
+                    return 0;
+                }
                 
                 //try redistributing with the sibling that has the most number
                 //of records
@@ -706,13 +914,13 @@ private:
                         else {
                             middleKey = m_entries[ 0 ]->key;
                         }
-                        distributeEntries( sibling , this , middleKey );
+                        distributeLeafEntries( sibling , this , middleKey );
                     }
                     else {
                         Key middleKey = sibling->m_entries[ 0 ]->key;
-                        distributeEntries( this , sibling , middleKey );
+                        distributeLeafEntries( this , sibling , middleKey );
                     }
-                    return;
+                    return 0;
                 }
                 
                 //if neither left nor right can lend, then merge with sibling.
@@ -736,12 +944,13 @@ private:
                     mergingWithLeftSibling = false;
                 }
                 if ( mergingWithLeftSibling ) {
-                    mergeLeafNodes( sibling , this , deletedKey );
+                    return mergeLeafNodes( sibling , this , deletedKey );
                 }
                 else {
-                    mergeLeafNodes(this, sibling, sibling->m_entries[ 0 ]->key);
+                    return mergeLeafNodes(this, sibling, sibling->m_entries[ 0 ]->key);
                 }
             }
+            return 0;
         }
         
     public:
@@ -1009,16 +1218,16 @@ private:
          * Removes the given key and the value associated with it from this node
          *
          * @param k                 the key to remove
-         * @return                  if the key was found and removed
+         * @return                  a pointer to the new root, if the root
+         *                          collapsed, or 0 otherwise
          */
-        bool remove( const Key& k ) {
+        BPNode* remove( const Key& k ) {
             int idxToRemove = locateIdx( m_entries , m_numRecords , k );
             if ( compare( m_entries[ idxToRemove ]->key , k ) == 0 ) {
-                removeLeafEntry( idxToRemove );
-                return true;
+                return removeLeafEntry( idxToRemove );
             }
             else {
-                return false;
+                return 0;
             }
         }
         
@@ -1218,16 +1427,19 @@ public:
      * @return                      if the key was found and removed
      */
     bool remove( const Key& k ) {
-        BPNode* node = m_root->findNode( k );
+        if ( !contains( k ) ) {
+            return false;
+        }
+        BPNode* node = m_root;
         while( !node->isLeaf() ) {
             node = node->findNode( k );
         }
-        if ( node != 0 ) {
-            return node->remove( k );
+        BPNode* newRoot = node->remove( k );
+        if ( newRoot != 0 ) {
+            delete m_root;
+            m_root = newRoot;
         }
-        else {
-            return false;
-        }
+        return true;
     }
     
     /**
