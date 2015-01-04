@@ -268,6 +268,9 @@ private:
                 if ( compare( entries[ guess ]->key , k ) < 0 ) {
                     low = guess+1;
                 }
+                else if ( compare( entries[ guess ]->key , k ) == 0 ) {
+                    return guess;
+                }
                 else {
                     high = guess-1;
                 }
@@ -579,9 +582,28 @@ private:
             if ( parentEntryIdx+1 < parent->m_numRecords ) {
                 rightEntry = parent->m_entries[ parentEntryIdx+1 ];
             }
+            BPNode* newRightNode = n2->m_rightSibling;
             
-            //transfer the right node's entries into the left node
-            //if the right
+            //first, demote the parent's key to this node
+            //demote the parent's key to this node
+            Key deletedKey = parent->m_entries[ parentEntryIdx ]->key;
+            extraRightNode->m_parent = this;
+            BPEntry* mergedEntry = new BPEntry( deletedKey );
+            
+            mergedEntry->leftNode = n1->m_entries[ n1->m_numRecords-1 ]->rightNode;
+            if ( n2->m_numRecords > 0 ) {
+                mergedEntry->rightNode = n2->m_entries[ 0 ]->leftNode;
+            }
+            else {
+                mergedEntry->rightNode = extraRightNode;
+            }
+            mergedEntry->leftNode->m_rightSibling = mergedEntry->rightNode;
+            mergedEntry->rightNode->m_leftSibling = mergedEntry->leftNode;
+            n1->m_entries[ n1->m_numRecords ] = mergedEntry;
+            extraRightNode->m_parent = n1;
+            n1->m_numRecords++;
+            
+            //then transfer the right node's entries into the left node
             for ( int i=0 ; i<n2->m_numRecords ; i++ ) {
                 n1->m_entries[ n1->m_numRecords ] = n2->m_entries[ i ];
                 n1->m_numRecords++;
@@ -601,25 +623,12 @@ private:
             if ( leftEntry != 0 ) {
                 leftEntry->rightNode = n1;
                 leftEntry->leftNode->m_rightSibling = n1;
-                n1->m_leftSibling = leftEntry->leftNode;
             }
             if ( rightEntry != 0 ) {
                 rightEntry->leftNode = n1;
                 rightEntry->rightNode->m_leftSibling = n1;
-                n1->m_rightSibling = rightEntry->rightNode;
             }
-            
-            //demote the parent's key to this node
-            Key deletedKey = parent->m_entries[ parentEntryIdx ]->key;
-            extraRightNode->m_parent = this;
-            BPEntry* mergedEntry = new BPEntry( deletedKey );
-            mergedEntry->leftNode = n1->m_entries[ n1->m_numRecords-1 ]->rightNode;
-            mergedEntry->rightNode = extraRightNode;
-            mergedEntry->leftNode->m_rightSibling = mergedEntry->rightNode;
-            mergedEntry->rightNode->m_leftSibling = mergedEntry->leftNode;
-            n1->m_entries[ n1->m_numRecords ] = mergedEntry;
-            extraRightNode->m_parent = n1;
-            n1->m_numRecords++;
+            n1->m_rightSibling = newRightNode;
             
             //remove the parent entry from the parent
             return parent->removeNonLeafEntry( parentEntryIdx );
@@ -631,6 +640,9 @@ private:
             
             //detach the entry from its children and delete it
             BPNode* hangingLeftNode = entry->leftNode;
+            if ( hangingLeftNode->m_rightSibling != 0 ) {
+                hangingLeftNode = 0;
+            }
             entry->leftNode = 0;
             entry->rightNode = 0;
             delete entry;
@@ -814,6 +826,10 @@ private:
                 rightEntry = parent->m_entries[ parentEntryIdx+1 ];
             }
             
+            //the right node that will be deleted may have a pointer
+            //to a sibling in another branch that we will need later
+            BPNode* newRightNode = n2->m_rightSibling;
+            
             //transfer the right node's entries into the left node
             //if the right
             for ( int i=0 ; i<n2->m_numRecords ; i++ ) {
@@ -835,13 +851,15 @@ private:
             if ( leftEntry != 0 ) {
                 leftEntry->rightNode = n1;
                 leftEntry->leftNode->m_rightSibling = n1;
-                n1->m_leftSibling = leftEntry->leftNode;
             }
             if ( rightEntry != 0 ) {
                 rightEntry->leftNode = n1;
                 rightEntry->rightNode->m_leftSibling = n1;
-                n1->m_rightSibling = rightEntry->rightNode;
             }
+            
+            //since the right node was deleted, the left node might have
+            //a new right sibling
+            n1->m_rightSibling = newRightNode;
             
             //remove the parent entry from the parent
             return parent->removeNonLeafEntry( parentEntryIdx );
@@ -1329,8 +1347,9 @@ public:
                                     m_root( new BPNode( m_order ) ) {
     }
     
-    BPTree( Comparator< Key > comparator ) : m_order( DEFAULT_ORDER ) ,
+    BPTree( Comparator< Key >* comparator ) : m_order( DEFAULT_ORDER ) ,
                 m_comparator( comparator ) , m_root( new BPNode( m_order ) ) {
+        m_root = new BPNode( m_comparator , m_order );
     }
     
     BPTree( int order ) : m_order( order ) , m_comparator( 0 ) ,
@@ -1338,9 +1357,9 @@ public:
         checkIfOrderValid();
     }
     
-    BPTree( int order , Comparator< Key > comparator ) : m_order( order ) ,
-                m_comparator( comparator ) , m_root( new BPNode( m_order ) ) {
+    BPTree( int order , Comparator< Key >* comparator ) : m_order( order ) , m_comparator ( comparator ) {
         checkIfOrderValid();
+        m_root = new BPNode( m_comparator , m_order );
     }
     
     BPTree( const BPTree& other ) {

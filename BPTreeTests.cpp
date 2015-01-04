@@ -8,6 +8,8 @@
 
 #include "BPTreeTests.h"
 #include "BPTree.h"
+#include "Comparator.h"
+#include <cmath>
 
 void BPTreeTests::test() {
     /*testNodeInsertKey();
@@ -19,6 +21,7 @@ void BPTreeTests::test() {
     testLeftLinkage();//*/
     testRemove();
     testRemoveOrder5();
+    testRemoveInsertTestCase();
     reportTestStatistics( "BPTree" );
 }
 
@@ -201,8 +204,8 @@ void BPTreeTests::testInsert() {
     
     expected = "[[26]\n";
     expected += "[13, 18, 23, 25.1], [33, 48]\n";
-    expected += "[10, 11, 12], [13, 14, 15], [18, 20, 21], [23, 24, 25], [25.1, 25.2, 25.3], ";
-    expected +=                     "[26, 30, 31], [33, 45, 47], [48, 50, 52]]";
+    expected += "[10, 11, 12], [13, 14, 15], [18, 20, 21], [23, 24, 25], ";
+    expected += "[25.1, 25.2, 25.3], [26, 30, 31], [33, 45, 47], [48, 50, 52]]";
     found = test.toString();
     evaluateTest( expected , found , errorMessage );
     
@@ -737,5 +740,123 @@ void BPTreeTests::testRemoveOrder5() {
      */
     expected = "[[5, 6, 7, 8, 9]]";
     found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //remove the rest, ensuring that no errors occur
+    for ( int i=0 ; i<=9 ; i++ ) {
+        test.remove( i );
+    }
+    expected = "[[]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+}
+
+class DoubleComparator : public Comparator< double > {
+    
+public:
+    DoubleComparator() {
+        
+    }
+    
+    virtual int compare( const double& v1 , const double& v2 ) const {
+        if ( std::abs( v2-v1 ) < 0.00001 ) {
+            return 0;
+        }
+        else {
+            if ( v1-v2 < 0 ) {
+                return -1;
+            }
+            else {
+                return 1;
+            }
+        }
+    }
+};
+
+void BPTreeTests::testRemoveInsertTestCase() {
+    DoubleComparator comparator;
+    string expected;
+    string found;
+    string errorMessage = "BPTree remove() failed for insert test case!";
+    BPTree< double , double > test( 5 , &comparator );
+    
+    //use the insert test case data, except we remove everything now
+    test.insert( 10  , 10 );
+    test.insert( 12 , 12 );
+    test.insert( 23 , 23 );
+    test.insert( 33 , 33 );
+    test.insert( 48 , 48 );
+    test.insert( 50 , 50 );
+    test.insert( 15 , 15 );
+    test.insert( 18 , 18 );
+    test.insert( 20 , 20 );
+    test.insert( 21 , 21 );
+    test.insert( 31 , 31 );
+    test.insert( 45 , 45 );
+    test.insert( 47 , 47 );
+    test.insert( 52 , 52 );
+    test.insert( 30 , 30 );
+    test.insert( 24 , 24 );
+    test.insert( 25 , 25 );
+    test.insert( 26 , 26 );
+    test.insert( 11 , 11 );
+    test.insert( 13 , 13 );
+    test.insert( 14 , 14 );
+    test.insert( 25.1 , 25.1 );
+    test.insert( 25.2 , 25.2 );
+    test.insert( 25.3 , 25.3 );
+    /* tree structure
+                                                                  [26]
+           [13     ,    18    ,     23     ,    25.1                ]         [33 ,         48]
+ [10,11,12]   [13,14,15]  [18,20,21]  [23,24,25]    [25.1,25.2,25.3] [26,30,31]  [33, 45, 47]  [48,50,52]
+     
+     */
+    
+    //try removing 25.1, which will cause the [25.1,25.2,25.3] node to merge
+    //with the [23,24,25] node
+    test.remove( 25.1 );
+    
+    /* tree structure
+                                                         [26]
+            [13     ,    18    ,     23]                              [33 ,         48]
+  [10,11,12]   [13,14,15]  [18,20,21]  [23,24,25,25.2,25.3] [26,30,31]  [33, 45, 47]  [48,50,52]
+     
+     */
+    expected = "[[26]\n";
+    expected +="[13, 18, 23], [33, 48]\n";
+    expected +="[10, 11, 12], [13, 14, 15], [18, 20, 21], [23, 24, 25, 25.2, 25.3], ";
+    expected +="[26, 30, 31], [33, 45, 47], [48, 50, 52]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //try removing 25.2 and 25.3 which will not cause any underflowing
+    test.remove( 25.2 );
+    test.remove( 25.3 );
+    /* tree structure
+                                                [26]
+             [13     ,    18    ,     23]                   [33 ,         48]
+   [10,11,12]   [13,14,15]  [18,20,21]  [23,24,25] [26,30,31]  [33, 45, 47]  [48,50,52]
+     
+     */
+    
+    //try removing 52, which will cause the [48, 50, 52] to underflow
+    //the remaining [48, 50] will have to merge with [33, 45, 47]
+    //the parent node [33, 48] will lose its 48 key and have to collapse the
+    //root and with [13, 18, 23] to become [13, 18, 23, 26, 33]
+    test.remove( 52 );
+    /* tree structure
+               [13     ,    18    ,     23     ,    26    ,   33]
+     [10,11,12]   [13,14,15]  [18,20,21]  [23,24,25] [26,30,31]  [33,45,47,48,50]
+     */
+    expected = "[[13, 18, 23, 26, 33]\n";
+    expected +="[10, 11, 12], [13, 14, 15], [18, 20, 21], [23, 24, 25], ";
+    expected +="[26, 30, 31], [33, 45, 47, 48, 50]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    expected = "[[33, 26, 23, 18, 13]\n";
+    expected +="[50, 48, 47, 45, 33], [31, 30, 26], [25, 24, 23], [21, 20, 18], ";
+    expected +="[15, 14, 13], [12, 11, 10]]";
+    found = test.toStringLeft();
     evaluateTest( expected , found , errorMessage );
 }
