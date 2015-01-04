@@ -599,6 +599,8 @@ private:
             }
             mergedEntry->leftNode->m_rightSibling = mergedEntry->rightNode;
             mergedEntry->rightNode->m_leftSibling = mergedEntry->leftNode;
+            mergedEntry->leftNode->m_parent = n1;
+            mergedEntry->rightNode->m_parent = n1;
             n1->m_entries[ n1->m_numRecords ] = mergedEntry;
             extraRightNode->m_parent = n1;
             n1->m_numRecords++;
@@ -606,6 +608,8 @@ private:
             //then transfer the right node's entries into the left node
             for ( int i=0 ; i<n2->m_numRecords ; i++ ) {
                 n1->m_entries[ n1->m_numRecords ] = n2->m_entries[ i ];
+                n1->m_entries[ n1->m_numRecords ]->leftNode->m_parent = n1;
+                n1->m_entries[ n1->m_numRecords ]->rightNode->m_parent = n1;
                 n1->m_numRecords++;
             }
             

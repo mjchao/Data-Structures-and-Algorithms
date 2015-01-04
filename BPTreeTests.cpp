@@ -854,9 +854,102 @@ void BPTreeTests::testRemoveInsertTestCase() {
     found = test.toString();
     evaluateTest( expected , found , errorMessage );
     
+    //check that the left linkage is still correct
     expected = "[[33, 26, 23, 18, 13]\n";
     expected +="[50, 48, 47, 45, 33], [31, 30, 26], [25, 24, 23], [21, 20, 18], ";
     expected +="[15, 14, 13], [12, 11, 10]]";
     found = test.toStringLeft();
+    evaluateTest( expected , found , errorMessage );
+    
+    //try removing 31, which should cause a simple redistribution between
+    //[26, 30, 31] and [33, 45, 47, 48, 50]
+    test.remove( 31 );
+    /* tree structure
+               [13     ,    18    ,     23     ,    26     ,     47]
+     [10,11,12]   [13,14,15]  [18,20,21]  [23,24,25] [26,30,33,45]  [47,48,50]
+     */
+    expected = "[[13, 18, 23, 26, 47]\n";
+    expected +="[10, 11, 12], [13, 14, 15], [18, 20, 21], [23, 24, 25], ";
+    expected +="[26, 30, 33, 45], [47, 48, 50]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //try removing 10, which should cause a merge of [11, 12] with [13, 14, 15]
+    //and cause 13 to be removed
+    test.remove( 10 );
+    /* tree structure
+                    [ 18    ,     23     ,    26     ,     47]
+     [11,12,13,14,15]  [18,20,21]  [23,24,25] [26,30,33,45]  [47,48,50]
+     */
+    expected = "[[18, 23, 26, 47]\n";
+    expected +="[11, 12, 13, 14, 15], [18, 20, 21], [23, 24, 25], ";
+    expected +="[26, 30, 33, 45], [47, 48, 50]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+
+    //try removing 25, which should cause a redistribution between
+    //[23, 24, 25] and [26, 30, 33, 45]
+    test.remove( 25 );
+    /* tree structure
+                    [18    ,     23     ,    30     ,   47]
+     [11,12,13,14,15]  [18,20,21]  [23,24,26] [30,33,45]  [47,48,50]
+     */
+    expected = "[[18, 23, 30, 47]\n";
+    expected +="[11, 12, 13, 14, 15], [18, 20, 21], [23, 24, 26], [30, 33, 45], ";
+    expected +="[47, 48, 50]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //remove from [11, 12, 13, 14, 15] until it has 3 elements left
+    //thus, any further removals will force the tree to rearrange
+    test.remove( 11 );
+    test.remove( 12 );
+    
+    //try removing 18. this will cause another merge and demotion
+    test.remove( 18 );
+    /* tree structure
+                    [23     ,    30     ,   47]
+     [13,14,15,20,21]  [23,24,26] [30,33,45]  [47,48,50]
+     */
+    expected = "[[23, 30, 47]\n";
+    expected +="[13, 14, 15, 20, 21], [23, 24, 26], [30, 33, 45], [47, 48, 50]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //13-20 and 47-50
+    for ( int i=13 ; i<=20 ; i++ ) {
+        test.remove( i );
+    }
+    for ( int i=47 ; i<=50 ; i++ ) {
+        test.remove( i );
+    }
+    /* tree structure
+                    [30]
+            [21, 23,24,26] [30,33,45]
+     */
+    expected = "[[30]\n";
+    expected +="[21, 23, 24, 26], [30, 33, 45]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //try removing 30 and check that the single entry in the root will be
+    //modified after the redistribution
+    test.remove( 30 );
+    expected = "[[26]\n";
+    expected +="[21, 23, 24], [26, 33, 45]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //remove all but 45
+    for ( int i=21 ; i<45 ; i++ ) {
+        test.remove( i );
+    }
+    expected = "[[45]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    test.remove( 45 );
+    expected = "[[]]";
+    found = test.toString();
     evaluateTest( expected , found , errorMessage );
 }
