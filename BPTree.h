@@ -330,32 +330,85 @@ private:
             entries[ insertIdx ] = toInsert;
             
             //and update the neighbors and their siblings
-            if ( insertIdx-1 >= 0 ) {
-                entries[ insertIdx-1 ]->rightNode = toInsert->leftNode;
-                if ( entries[ insertIdx-1 ]->rightNode != 0 ) {
-                    
-                    //TODO explain why would code fail without this line?
-                    entries[ insertIdx-1 ]->leftNode->m_rightSibling =
-                                            entries[ insertIdx-1 ]->rightNode;
-                    entries[ insertIdx-1 ]->rightNode->m_rightSibling =
-                                                            toInsert->rightNode;
-                    toInsert->rightNode->m_leftSibling =
-                                                            toInsert->leftNode;
-                    toInsert->leftNode->m_leftSibling =
-                                            entries[ insertIdx-1 ]->leftNode;
+            
+            //first, we have to remember to link the children's left and right
+            //siblings
+            BPNode* leftChildLeftSibling = 0;
+            BPNode* rightChildRightSibling = 0;
+            
+            //make sure that the node to insert isn't a leaf node
+            //if it is a leaf node (i.e. its left and right child nodes are 0),
+            //then it can't have children, so we don't care about
+            //linking the children's siblings together anymore
+            if ( toInsert->rightNode != 0 ) {
+                if ( insertIdx == 0 ) {
+                    if ( entriesSize > 1 ) {
+                        leftChildLeftSibling =
+                                        entries[ 1 ]->leftNode->m_leftSibling;
+                        rightChildRightSibling = entries[ 1 ]->rightNode;
+                    }
+                }
+                else if ( insertIdx >= entriesSize-1 ) {
+                    leftChildLeftSibling = entries[ insertIdx-1 ]->leftNode;
+                    rightChildRightSibling =
+                            entries[ insertIdx-1 ]->rightNode->m_rightSibling;
+                }
+                else {
+                    leftChildLeftSibling = entries[ insertIdx-1 ]->leftNode;
+                    rightChildRightSibling = entries[ insertIdx+1 ]->rightNode;
                 }
             }
-            if ( insertIdx+1 < entriesSize+1 ) {
-                if ( entries[ insertIdx+1 ] != 0 ) {
-                    entries[ insertIdx+1 ]->leftNode = toInsert->rightNode;
-                    if ( toInsert->rightNode != 0 ) {
-                        toInsert->leftNode->m_rightSibling =
-                                                    toInsert->rightNode;
-                        toInsert->rightNode->m_rightSibling =
-                                        entries[ insertIdx+1 ]->rightNode;
-                        entries[ insertIdx+1 ]->leftNode->m_leftSibling = toInsert->leftNode;
-                        entries[ insertIdx+1 ]->rightNode->m_leftSibling = toInsert->rightNode;
+            
+            //start with left neighbor
+            if ( insertIdx-1 >= 0 ) {
+                
+                //first set up the node to insert's relationship with its left
+                //neighbor
+                if ( toInsert->rightNode != 0 ) {
+                    toInsert->rightNode->m_rightSibling = rightChildRightSibling;
+                    if ( rightChildRightSibling != 0 ) {
+                        rightChildRightSibling->m_leftSibling =
+                                                            toInsert->rightNode;
                     }
+                    
+                    toInsert->leftNode->m_leftSibling = leftChildLeftSibling;
+                    toInsert->rightNode->m_leftSibling = toInsert->leftNode;
+                }
+                
+                //then modify the left neighbor that was displaced
+                //and update its relationship with the node we inserted
+                entries[ insertIdx-1 ]->rightNode = toInsert->leftNode;
+                if ( entries[ insertIdx-1 ]->rightNode != 0 ) {
+                    entries[ insertIdx-1 ]->leftNode->m_rightSibling =
+                                                            toInsert->leftNode;
+                    entries[ insertIdx-1 ]->rightNode->m_rightSibling =
+                                                            toInsert->rightNode;
+                }
+            }
+            
+            //now go to the right neighbor
+            if ( insertIdx+1 < entriesSize+1 && entries[ insertIdx+1 ] != 0 ) {
+                
+                //set up the node to insert's relationship with its right
+                //neighbor
+                if ( toInsert->rightNode != 0 ) {
+                    toInsert->leftNode->m_leftSibling = leftChildLeftSibling;
+                    if ( leftChildLeftSibling != 0 ) {
+                        leftChildLeftSibling->m_rightSibling = toInsert->leftNode;
+                    }
+                    
+                    toInsert->rightNode->m_rightSibling = rightChildRightSibling;
+                    toInsert->rightNode->m_leftSibling = toInsert->leftNode;
+                }
+                
+                //then modify the right neighbor that was displaced
+                //and update its relationship with the node we inserted
+                entries[ insertIdx+1 ]->leftNode = toInsert->rightNode;
+                if ( toInsert->rightNode != 0 ) {
+                    entries[ insertIdx+1 ]->leftNode->m_leftSibling =
+                    toInsert->leftNode;
+                    entries[ insertIdx+1 ]->rightNode->m_leftSibling =
+                    toInsert->rightNode;
                 }
             }
         }
@@ -478,7 +531,7 @@ private:
          * @param n1                    the left node of the two nodes
          * @param n2                    the right node of the two nodes
          */
-        void distributeEntries( BPNode* n1 , BPNode* n2 , Key middleKey ) {
+        void distributeEntries( BPNode* n1, BPNode* n2, const Key& middleKey ) {
             
             //we will have to change the key to the parent of these two nodes
             //as we are redistributing entries
@@ -517,6 +570,73 @@ private:
             
             //update their parent entry to have the correct indexing
             parentEntry->key = n2->m_entries[ 0 ]->key;
+        }
+        
+        /**
+         * Merges the entries of the two leaf nodes together and modifies their
+         * parent to correctly index to the the combined node. The nodes must be
+         * siblings and leaves and the order in which the nodes are passed to 
+         * the function must be left to right or this function will not work
+         * properly.
+         *
+         * @param n1                    the left node
+         * @param n2                    the right node that will be merged into
+         *                              the left node.
+         * @param middleKey             the key to the first entry in the right
+         *                              node
+         */
+        void mergeLeafNodes( BPNode* n1 , BPNode* n2 , const Key& middleKey ) {
+            BPNode* parent = n1->m_parent;
+            int parentEntryIdx = locateIdx( parent->m_entries ,
+                                           parent->m_numRecords , middleKey );
+            BPEntry* leftEntry = 0;
+            if ( parentEntryIdx-1 >= 0 ) {
+                leftEntry = parent->m_entries[ parentEntryIdx-1 ];
+            }
+            BPEntry* parentEntry = parent->m_entries[ parentEntryIdx ];
+            BPEntry* rightEntry = 0;
+            if ( parentEntryIdx+1 < parent->m_numRecords ) {
+                rightEntry = parent->m_entries[ parentEntryIdx+1 ];
+            }
+            
+            //transfer the right node's entries into the left node
+            //if the right
+            for ( int i=0 ; i<n2->m_numRecords ; i++ ) {
+                n1->m_entries[ n1->m_numRecords+i ] = n2->m_entries[ i ];
+                n1->m_numRecords++;
+            }
+            
+            //the right node and the shared parent entry
+            //must also be deleted and removed from the tree
+            delete n2;
+            
+            //since n2 is gone, n1 may not necessarily have a right sibling
+            //anymore
+            n1->m_rightSibling = 0;
+            
+            //detach the parent entry from its children and delete it
+            parentEntry->leftNode = 0;
+            parentEntry->rightNode = 0;
+            delete parentEntry;
+            parent->m_entries[ parentEntryIdx ] = 0;
+            for ( int i=parentEntryIdx ; i<parent->m_numRecords-1 ; i++ ) {
+                parent->m_entries[ i ] = parent->m_entries[ i+1 ];
+            }
+            parent->m_entries[ parent->m_numRecords-1 ] = 0;
+            parent->m_numRecords--;
+            
+            //assign the parent's neighboring entries custody of the merged
+            //child
+            if ( leftEntry != 0 ) {
+                leftEntry->rightNode = n1;
+                leftEntry->leftNode->m_rightSibling = n1;
+                n1->m_leftSibling = leftEntry->leftNode;
+            }
+            if ( rightEntry != 0 ) {
+                rightEntry->leftNode = n1;
+                rightEntry->rightNode->m_leftSibling = n1;
+                n1->m_rightSibling = rightEntry->rightNode;
+            }
         }
         
         /**
@@ -595,12 +715,32 @@ private:
                     return;
                 }
                 
-                //if neither left nor right can lend, then merge with left.
-                //we can merge for certain because the left node
-                //could not lend us an entry so it was exactly half full,
+                //if neither left nor right can lend, then merge with sibling.
+                //we can merge for certain because the siblings
+                //could not lend us an entry so they were exactly half full,
                 //and this node is less than half full
-                
-                //TODO
+                sibling = 0;
+                bool mergingWithLeftSibling;
+                if ( m_leftSibling != 0 ) {
+                    if ( m_leftSibling->m_parent == this->m_parent ) {
+                        sibling = m_leftSibling;
+                        mergingWithLeftSibling = true;
+                    }
+                    else {
+                        sibling = m_rightSibling;
+                        mergingWithLeftSibling = false;
+                    }
+                }
+                else {
+                    sibling = m_rightSibling;
+                    mergingWithLeftSibling = false;
+                }
+                if ( mergingWithLeftSibling ) {
+                    mergeLeafNodes( sibling , this , deletedKey );
+                }
+                else {
+                    mergeLeafNodes(this, sibling, sibling->m_entries[ 0 ]->key);
+                }
             }
         }
         

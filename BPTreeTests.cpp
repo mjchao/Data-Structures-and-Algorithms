@@ -10,10 +10,10 @@
 #include "BPTree.h"
 
 void BPTreeTests::test() {
-    testNodeInsertKey();
-    testNodeInsertKeyMemory();
+    /*testNodeInsertKey();
+    //testNodeInsertKeyMemory();
     testInsert();
-    testMemoryManagement();
+    //testMemoryManagement();
     testRange();
     testCopy();
     testLeftLinkage();//*/
@@ -141,7 +141,7 @@ void BPTreeTests::testInsert() {
     string expected;
     string found;
     string errorMessage = "BPTree insert() failed!";
-    BPTree< int , int > test( 5 );
+    BPTree< double , double > test( 5 );
     
     //test unique inserts
     test.insert( 10  , 10 );
@@ -189,6 +189,18 @@ void BPTreeTests::testInsert() {
     expected = "[[26]\n";
     expected += "[13, 18, 23], [33, 48]\n";
     expected += "[10, 11, 12], [13, 14, 15], [18, 20, 21], [23, 24, 25], ";
+    expected +=                     "[26, 30, 31], [33, 45, 47], [48, 50, 52]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //test adding to the end of a node and see if linkage still holds
+    test.insert( 25.1 , 25.1 );
+    test.insert( 25.2 , 25.2 );
+    test.insert( 25.3 , 25.3 );
+    
+    expected = "[[26]\n";
+    expected += "[13, 18, 23, 25.1], [33, 48]\n";
+    expected += "[10, 11, 12], [13, 14, 15], [18, 20, 21], [23, 24, 25], [25.1, 25.2, 25.3], ";
     expected +=                     "[26, 30, 31], [33, 45, 47], [48, 50, 52]]";
     found = test.toString();
     evaluateTest( expected , found , errorMessage );
@@ -379,7 +391,7 @@ void BPTreeTests::testLeftLinkage() {
     string found;
     string errorMessage = "BPTree left linkage failed!";
     
-    BPTree< int , int > test( 5 );
+    BPTree< double , double > test( 5 );
     test.insert( 10 , 10 );
     test.insert( 12 , 12 );
     test.insert( 23 , 23 );
@@ -410,7 +422,7 @@ void BPTreeTests::testLeftLinkage() {
     found = test.toStringLeft();
     evaluateTest( expected , found , errorMessage );
     
-    test = BPTree< int , int >( 2 );
+    test = BPTree< double , double >( 2 );
     test.insert( 10 , 10 );
     test.insert( 12 , 12 );
     test.insert( 23 , 23 );
@@ -433,11 +445,45 @@ void BPTreeTests::testLeftLinkage() {
     found = test.toStringLeft();
     evaluateTest( expected , found , errorMessage );
     
-    BPTree< int , int >* testCopy = new BPTree< int , int >( test );
+    BPTree< double , double >* testCopy = new BPTree< double , double >( test );
     string copyLeftRep = testCopy->toStringLeft();
     evaluateTest( copyLeftRep , test.toStringLeft(), errorMessage );
     delete testCopy;
     evaluateTest( copyLeftRep , test.toStringLeft() , errorMessage );
+    
+    //repeat the testInsertion() tests, but make sure that the left linkage is
+    //correct
+    test = BPTree< double , double >( 5 );
+    test.insert( 10  , 10 );
+    test.insert( 12 , 12 );
+    test.insert( 23 , 23 );
+    test.insert( 33 , 33 );
+    test.insert( 48 , 48 );
+    test.insert( 50 , 50 );
+    test.insert( 15 , 15 );
+    test.insert( 18 , 18 );
+    test.insert( 20 , 20 );
+    test.insert( 21 , 21 );
+    test.insert( 31 , 31 );
+    test.insert( 45 , 45 );
+    test.insert( 47 , 47 );
+    test.insert( 52 , 52 );
+    test.insert( 30 , 30 );
+    test.insert( 24 , 24 );
+    test.insert( 25 , 25 );
+    test.insert( 26 , 26 );
+    test.insert( 11 , 11 );
+    test.insert( 13 , 13 );
+    test.insert( 14 , 14 );
+    test.insert( 25.1 , 25.1 );
+    test.insert( 25.2 , 25.2 );
+    test.insert( 25.3 , 25.3 );
+    expected = "[[26]\n";
+    expected +="[48, 33], [25.1, 23, 18, 13]\n";
+    expected +="[52, 50, 48], [47, 45, 33], [31, 30, 26], [25.3, 25.2, 25.1], ";
+    expected +="[25, 24, 23], [21, 20, 18], [15, 14, 13], [12, 11, 10]]";
+    found = test.toStringLeft();
+    evaluateTest( expected , found , errorMessage );
 }
 
 void BPTreeTests::testRemove() {
@@ -498,9 +544,58 @@ void BPTreeTests::testRemove() {
     //test borrowing without underflow
     //removing 14 should not cause any borrowing or merging
     test.remove( 14 );
+    
+    /* tree structure:
+               [4       ,     8]
+         [2]           [5]         [10  , 12]
+     [0]     [2]   [4]     [5]   [8]  [10]   [12]
+     */
     expected = "[[4, 8]\n";
     expected+= "[2], [5], [10, 12]\n";
     expected+= "[0], [2], [4], [5], [8], [10], [12]]";
     found = test.toString();
     evaluateTest( expected , found , errorMessage );
+    
+    //test 1 level merging with left sibling by removing 12:
+    //removing 12 should cause both 12s in the tree to be removed
+    test.remove( 12 );
+    
+    /* tree structure:
+              [4       ,      8]
+        [2]            [5]           [10]
+     [0]     [2]   [4]     [5]   [8]      [10]
+     */
+    expected = "[[4, 8]\n";
+    expected+= "[2], [5], [10]\n";
+    expected+= "[0], [2], [4], [5], [8], [10]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //put 12 back in and then test 1 level merging with right sibling by
+    //removing 8
+    //removing 8 should cause the 8 and the 10 to be removed
+    test.insert( 12 , 12 );
+    test.remove( 8 );
+    
+    /* tree structure:
+                [4       ,      8]
+         [2]            [5]           [12]
+     [0]     [2]   [4]     [5]   [10]      [12]
+     */
+    expected = "[[4, 8]\n";
+    expected+= "[2], [5], [12]\n";
+    expected+= "[0], [2], [4], [5], [10], [12]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //make all leaf nodes have two entries
+    test.insert( 6 , 6 );
+    test.remove( 5 );
+    test.insert( 8 , 8 );
+    test.remove( 12 );
+    for ( int i=1 ; i<=7 ; i+=2 ) {
+        test.insert( i , i );
+    }
+    cout << test.toString() << endl;
+    
 }
