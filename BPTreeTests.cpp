@@ -12,16 +12,18 @@
 #include <cmath>
 
 void BPTreeTests::test() {
-    /*testNodeInsertKey();
+    testNodeInsertKey();
     //testNodeInsertKeyMemory();
     testInsert();
     //testMemoryManagement();
     testRange();
     testCopy();
-    testLeftLinkage();//*/
+    testLeftLinkage();//
     testRemove();
     testRemoveOrder5();
     testRemoveInsertTestCase();
+    testRemoveDistribution();
+    //testSystem();
     reportTestStatistics( "BPTree" );
 }
 
@@ -924,7 +926,7 @@ void BPTreeTests::testRemoveInsertTestCase() {
         test.remove( i );
     }
     /* tree structure
-                    [30]
+                         [30]
             [21, 23,24,26] [30,33,45]
      */
     expected = "[[30]\n";
@@ -952,4 +954,229 @@ void BPTreeTests::testRemoveInsertTestCase() {
     expected = "[[]]";
     found = test.toString();
     evaluateTest( expected , found , errorMessage );
+}
+
+void BPTreeTests::testRemoveDistribution() {
+    DoubleComparator comparator;
+    string expected;
+    string found;
+    string errorMessage = "BPTree remove() non-leaf distribution failed!";
+    BPTree< double , double > test( 6 );
+    
+    //insert all multiples of 2 from 0 to 100
+    for ( int i=100 ; i>=0 ; i-=2 ) {
+        test.insert( i , i );
+    }
+    
+    //then remove all the multiples of 4, so we should only have
+    //multiples of 2 that are not multiples of 4.
+    for ( int i=0 ; i<=96 ; i+=4 ) {
+        test.remove( i );
+    }
+    test.remove( 100 );
+    /* tree structure
+                                             [50]
+            [14,        26,       38]                         [70,        82,        94]
+     [2,6,10] [14,18,22] [26,30,34] [48,42,46] [50,54,58,62,66] [70,74,78] [82,86,90] [94,98,100]
+     */
+    //removing 100 should cause a leaf distribution between [94, 98] and
+    //[82, 86, 90]. This is a left sibling giving to a right sibling
+    test.remove( 100 );
+    expected = "[[14, 26, 38, 50, 70, 82]\n";
+    expected +="[2, 6, 10], [14, 18, 22], [26, 30, 34], [38, 42, 46], ";
+    expected +="[50, 54, 58, 62, 66], [70, 74, 78], [82, 86, 90, 94, 98]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //test distributing non-leaf entries with the right giving entries and the
+    //left receives them
+    test = BPTree< double , double >( 4 );
+    
+    //add all multiples of 5 from 0 to 75
+    for ( int i=0 ; i<=80 ; i+= 5 ) {
+        test.insert( i , i );
+    }
+    /* tree structure
+                      [30]
+     [10   ,  20]              [40   ,   50    ,   60   ,   70  ]
+[0, 5] [10, 15] [20, 25] [30, 35] [40, 45] [50, 55] [60, 65] [70, 75, 80]
+     */
+    
+    //now, removing 5 will cause [0] to merge with [10, 15]. this deletes the
+    //10 in [10, 20]. Since [20] is underflowing, it will be combined with
+    //[40, 50, 60, 70] to make [20, 40, 50, 60, 70]. Then, the
+    //entries will be redistributed has [20, 40, 50] and [60, 70]; however,
+    //reindexing the keys will need to give us [20, 30, 40] and [60, 70],
+    //as follows
+    test.remove( 5 );
+    
+    /* tree structure
+                                           [50]
+              [20   ,    30    ,  40]                [60   ,  70]
+     [0, 10, 15] [20, 25] [30, 35]  [40, 45]  [50, 55] [60, 65] [70, 75 80]
+     */
+    expected = "[[50]\n";
+    expected +="[20, 30, 40], [60, 70]\n";
+    expected +="[0, 10, 15], [20, 25], [30, 35], [40, 45], [50, 55], [60, 65], ";
+    expected +="[70, 75, 80]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //test distributing non-leaf entries with the left giving entries to the
+    //right
+    
+    //now, removing 60 will cause the remaining [65] to merge with [50, 55].
+    //this deletes [60] from the [60, 70] parent node. The remaining [70] will
+    //gain a [40] from its left sibling, as follows
+    test.remove( 50 );
+    
+    /* tree structure
+                                 [40]
+               [20  ,   30]               [50     ,     70]
+     [0, 10, 15] [20, 25] [30, 35] [40, 45] [55, 60, 65], [70, 75, 80]
+     */
+    expected = "[[40]\n";
+    expected +="[20, 30], [50, 70]\n";
+    expected +="[0, 10, 15], [20, 25], [30, 35], [40, 45], [55, 60, 65], [70, 75, 80]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    test = BPTree< double , double >( 5 );
+    for ( int i=0 ; i<=80 ; i+=5 ) {
+        test.insert( i , i );
+    }
+    test.insert( 1 , 1 );
+    test.insert( 2 , 2 );
+    test.insert( 3 , 3 );
+    test.insert( 4 , 4 );
+    test.insert( 6 , 6 );
+    test.insert( 7 , 7 );
+    test.insert( 8 , 8 );
+    test.insert( 9 , 9 );
+    test.insert( 11 , 11 );
+    test.insert( 12 , 12 );
+    test.insert( 13 , 13 );
+    test.insert( 14 , 14 );
+    /* tree structure
+                                                     [30]
+      [3   ,   6   ,   9    ,    12    ,    15]                  [45    ,    60]
+[0,1,2] [3,4,5] [6,7,8] [9,10,11] [12,13,14] [15,20,25] [30,35,40] [45,50,55] [60,65,70,75,80]
+     */
+    //now, removing 30 will cause the node [35, 40] to merge with [45, 50, 55]
+    //and this in turn will cause 45 to be removed from the parent [45, 60]
+    //since [60] is underflowing, we get redistribution from [3,6,9,12,15],
+    //which lends [12,15] to its sibling. The [12, 15] will be re-indexed to
+    //15 and 30, and the parent will be re-indexed to 12, as can be seen below:
+    test.remove( 30 );
+    /* tree structure
+                               [12]
+     [3   ,   6   ,   9 ]                  [15   ,    30       ,        60]
+[0,1,2] [3,4,5] [6,7,8] [9,10,11] [12,13,14] [15,20,25] [35,40,45,50,55] [60,65,70,75,80]
+     */
+    expected = "[[12]\n";
+    expected +="[3, 6, 9], [15, 30, 60]\n";
+    expected +="[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11], [12, 13, 14], ";
+    expected +="[15, 20, 25], [35, 40, 45, 50, 55], [60, 65, 70, 75, 80]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //test redistribution where the underflowing node has both a left and
+    //right sibling, but chooses to redistribute with right because it has
+    //more entries
+    test = BPTree< double , double >( 2 );
+    for ( int i=0 ; i<16 ; i++ ) {
+        test.insert( i , i );
+    }
+    /* tree structure
+                   [4       ,       8]
+           [2]             [6]             [10  ,   13]
+       [1]     [3]     [5]     [7]     [9]     [11]      [13 , 14]
+     [0] [1] [2] [3] [4] [5] [6] [7] [8] [9] [10] [11] [12] [13] [14,15]
+     */
+    //now, removing 11 will cause it to merge with its leaf sibling [10].
+    //this deletes the [11] parent node, which underflows. It has a choice
+    //to try and redistribute with the left or the right. it chooses the
+    //right because it has more entries, and the new redistribution is
+    //shown below:
+    
+    test.remove( 11 );
+    /* tree structure
+                   [4       ,       8]
+           [2]             [6]             [10  ,   13]
+       [1]     [3]     [5]     [7]     [9]     [12]      [14]
+     [0] [1] [2] [3] [4] [5] [6] [7] [8] [9] [10] [12] [13] [14,15]
+     */
+    expected = "[[4, 8]\n";
+    expected +="[2], [6], [10, 13]\n";
+    expected +="[1], [3], [5], [7], [9], [12], [14]\n";
+    expected +="[0], [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [12], [13], [14, 15]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //now, removing 9 will cause the [9] non-leaf node to underflow.
+    //it will have the choice of merging either left or right, but it must
+    //choose right because the left node does not share the same parent
+    test.remove( 9 );
+    /* tree structure
+                   [4       ,       8]
+           [2]             [6]                 [13]
+       [1]     [3]     [5]     [7]      [10, 12]      [14]
+     [0] [1] [2] [3] [4] [5] [6] [7] [8]  [10] [12] [13] [14,15]
+     */
+    expected = "[[4, 8]\n";
+    expected +="[2], [6], [13]\n";
+    expected +="[1], [3], [5], [7], [10, 12], [14]\n";
+    expected +="[0], [1], [2], [3], [4], [5], [6], [7], [8], [10], [12], [13], [14, 15]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    test = BPTree< double , double >( 4 );
+    for ( int i=0 ; i<13 ; i++ ) {
+        test.insert( i , i );
+    }
+    for ( int i=0 ; i<6 ; i++ ) {
+        double toInsert = static_cast<double>(i) * 0.1;
+        test.insert( toInsert , toInsert );
+    }
+    test.remove( 10 );
+    /* tree structure
+                                                   [6]
+           [0.2   ,    0.4      ,    2    , 4]           [8   ,   10 ]
+     [0, 0.1] [0.2, 0.3] [0.4, 0.5, 1] [2, 3] [4, 5] [6, 7] [8, 9], [11, 12]
+     */
+    //removing 11 will cause a redistribution, but the node underflowed due to
+    //the removal of a non-leading entry, 10.
+    test.remove( 11 );
+    /* tree structure
+                                            [4]
+            [0.2   ,    0.4      ,    2 ]          [6   ,  8]
+     [0, 0.1] [0.2, 0.3] [0.4, 0.5, 1] [2, 3] [4, 5] [6, 7] [8, 9, 12]
+     */
+    expected = "[[4]\n";
+    expected +="[0.2, 0.4, 2], [6, 8]\n";
+    expected +="[0, 0.1], [0.2, 0.3], [0.4, 0.5, 1], [2, 3], [4, 5], [6, 7], [8, 9, 12]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+}
+
+void BPTreeTests::testSystem() {
+    vector< double > expectedValues;
+    vector< double > foundValues;
+    string errorMessage = "BPTree system test failed!";
+    DoubleComparator comparator;
+    BPTree< double , double > test ( 5 , &comparator );
+    
+    //insert 1 to 100
+    for ( int i=1 ; i<=100 ; i++ ) {
+        test.insert( i , i );
+    }
+    
+    //remove all but the multiples of 7
+    for ( int i=1 ; i<=100 ; i++ ) {
+        if ( i%7 == 0 ) {
+            continue;
+        }
+        test.remove( i );
+    }
+    
 }

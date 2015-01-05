@@ -27,6 +27,8 @@ public:
     void testRemove();
     void testRemoveOrder5();
     void testRemoveInsertTestCase();
+    void testRemoveDistribution();
+    void testSystem();
 };
 
 #endif /* defined(__Data_Structures__BPTreeTests__) */

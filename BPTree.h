@@ -345,7 +345,7 @@ private:
             //linking the children's siblings together anymore
             if ( toInsert->rightNode != 0 ) {
                 if ( insertIdx == 0 ) {
-                    if ( entriesSize > 1 ) {
+                    if ( entriesSize >= 1 ) {
                         leftChildLeftSibling =
                                         entries[ 1 ]->leftNode->m_leftSibling;
                         rightChildRightSibling = entries[ 1 ]->rightNode;
@@ -528,7 +528,7 @@ private:
         
         
         void distributeNonLeafEntries( BPNode* n1 , BPNode* n2 ,
-                                      const Key& middleKey ) {
+                            const Key& middleKey , BPNode* hangingLeftNode ) {
             
             //we will have to change the key to the parent of these two nodes
             //as we are redistributing entries
@@ -537,6 +537,10 @@ private:
             BPNode* parent = n1->m_parent;
             int parentEntryIdx = locateIdx( parent->m_entries ,
                                            parent->m_numRecords , middleKey );
+            if ( compare( parent->m_entries[ parentEntryIdx ]->key , n2->m_entries[ 0 ]->key ) > 0 ) {
+                parentEntryIdx--;
+            }
+            
             BPEntry* parentEntry = parent->m_entries[ parentEntryIdx ];
             
             BPEntry* combinedEntries[ n1->m_numRecords + n2->m_numRecords ];
@@ -547,6 +551,8 @@ private:
                 combinedEntries[ n1->m_numRecords+i ] = n2->m_entries[ i ];
             }
             
+            int originalN1Records = n1->m_numRecords;
+            int originalN2Records = n2->m_numRecords;
             int totalEntries = n1->m_numRecords + n2->m_numRecords;
             
             //add an additional 1 to favor the right node in case of odd
@@ -565,15 +571,77 @@ private:
                 n2->m_numRecords++;
             }
             
-            //update their parent entry to have the correct indexing
-            parentEntry->key = n2->m_entries[ 0 ]->key;
+            //left node gave off entries
+            if ( originalN1Records > n1->m_numRecords ) {
+                
+                int receivedEntries = n2->m_numRecords - originalN2Records;
+                
+                //the parent's key will be demoted
+                Key demotedKey = parentEntry->key;
+                Key promotedKey = n1->m_entries[ originalN1Records-receivedEntries ]->key;
+                
+                //all the received entries "slide up" 1 pair of children
+                //in the right node
+                for ( int i=0 ; i<receivedEntries ; i++ ) {
+                    n2->m_entries[ i ]->rightNode = n2->m_entries[ i ]->rightNode->m_rightSibling;
+                    n2->m_entries[ i ]->rightNode->m_parent = n2;
+                    n2->m_entries[ i ]->leftNode = n2->m_entries[ i ]->leftNode->m_rightSibling;
+                    n2->m_entries[ i ]->leftNode->m_parent = n2;
+                    n2->m_entries[ i ]->key = n2->m_entries[ i+1 ]->key;
+                }
+                
+                //the received entry with highest key gets its key updated
+                //to the demoted parent's key
+                n2->m_entries[ receivedEntries-1 ]->key = demotedKey;
+                
+                //the parent is updated with the lowest key that was moved to
+                //the right
+                parentEntry->key = promotedKey;
+            }
+            
+            //left node received entries
+            else {
+                
+                //the parent key will need to change because entries from the
+                //right have now gone to the left
+                
+                //the parent's key value will be demoted
+                Key demotedKey = parentEntry->key;
+                
+                //but the last entry shifted to the left will get its key
+                //promoted into the parent
+                Key promotedKey = n1->m_entries[ n1->m_numRecords-1 ]->key;
+                
+                
+                //all the received entries "slide down" 1 pair of
+                //children in the left node
+                for ( int i=n1->m_numRecords-1 ; i>=originalN1Records ; i-- ) {
+                    n1->m_entries[ i ]->leftNode = n1->m_entries[ i ]->leftNode->m_leftSibling;
+                    n1->m_entries[ i ]->leftNode->m_parent = n1;
+                    n1->m_entries[ i ]->rightNode = n1->m_entries[ i ]->rightNode->m_leftSibling;
+                    n1->m_entries[ i ]->rightNode->m_parent = n1;
+                    if ( i-1 >= 0 ) {
+                        n1->m_entries[ i ]->key = n1->m_entries[ i-1 ]->key;
+                    }
+                }
+                
+                //the last node receives the demoted parent's key
+                n1->m_entries[ originalN1Records ]->key = demotedKey;
+                parentEntry->key = promotedKey;
+            }
         }
         
         BPNode* mergeNonLeafNodes( BPNode* n1, BPNode* n2, const Key& middleKey ,
-                               BPNode* extraRightNode ) {
+                               BPNode* hangingNode ) {
             BPNode* parent = n1->m_parent;
             int parentEntryIdx = locateIdx( parent->m_entries ,
                                            parent->m_numRecords , middleKey );
+            //if the middle key wasn't an exact entry in the parent node, then
+            //the binary search may be off by 1 in the right direction
+            if ( compare( parent->m_entries[ parentEntryIdx ]->key , middleKey ) > 0 ) {
+                parentEntryIdx--;
+            }
+            
             BPEntry* leftEntry = 0;
             if ( parentEntryIdx-1 >= 0 ) {
                 leftEntry = parent->m_entries[ parentEntryIdx-1 ];
@@ -587,22 +655,31 @@ private:
             //first, demote the parent's key to this node
             //demote the parent's key to this node
             Key deletedKey = parent->m_entries[ parentEntryIdx ]->key;
-            extraRightNode->m_parent = this;
             BPEntry* mergedEntry = new BPEntry( deletedKey );
             
-            mergedEntry->leftNode = n1->m_entries[ n1->m_numRecords-1 ]->rightNode;
+            if ( n1->m_numRecords > 0 ) {
+                mergedEntry->leftNode = n1->m_entries[ n1->m_numRecords-1 ]->rightNode;
+            }
+            else {
+                mergedEntry->leftNode = hangingNode;
+            }
             if ( n2->m_numRecords > 0 ) {
                 mergedEntry->rightNode = n2->m_entries[ 0 ]->leftNode;
             }
             else {
-                mergedEntry->rightNode = extraRightNode;
+                mergedEntry->rightNode = hangingNode;
             }
+            
+            //the demoted key's indexing value wil have to be updated
+            //mergedEntry->key = mergedEntry->rightNode->m_entries[ 0 ]->key;
             mergedEntry->leftNode->m_rightSibling = mergedEntry->rightNode;
             mergedEntry->rightNode->m_leftSibling = mergedEntry->leftNode;
             mergedEntry->leftNode->m_parent = n1;
             mergedEntry->rightNode->m_parent = n1;
             n1->m_entries[ n1->m_numRecords ] = mergedEntry;
-            extraRightNode->m_parent = n1;
+            if ( hangingNode != 0 ) {
+                hangingNode->m_parent = n1;
+            }
             n1->m_numRecords++;
             
             //then transfer the right node's entries into the left node
@@ -642,11 +719,20 @@ private:
             BPEntry* entry = m_entries[ entryIdx ];
             Key deletedKey = entry->key;
             
-            //detach the entry from its children and delete it
-            BPNode* hangingLeftNode = entry->leftNode;
-            if ( hangingLeftNode->m_rightSibling != 0 ) {
-                hangingLeftNode = 0;
+            //if we are removing the first element in a node, then
+            //its leftmost child would be leaked afterwards, as there are
+            //no other pointers to that child. We must
+            //then notify subsequent function calls of this
+            BPNode* hangingLeftNode = 0;
+            if ( entryIdx == 0 ) {
+                hangingLeftNode = entry->leftNode;
             }
+            
+            //there will never be a hanging right node though, because
+            //everytime we merge and delete an entry, the right node is deleted
+            //and everything is merged into the left node
+            
+            //detach the entry from its children and delete it
             entry->leftNode = 0;
             entry->rightNode = 0;
             delete entry;
@@ -715,11 +801,11 @@ private:
                         else {
                             middleKey = m_entries[ 0 ]->key;
                         }
-                        distributeNonLeafEntries( sibling , this , middleKey );
+                        distributeNonLeafEntries( sibling , this , middleKey , hangingLeftNode );
                     }
                     else {
                         Key middleKey = sibling->m_entries[ 0 ]->key;
-                        distributeNonLeafEntries( this , sibling , middleKey );
+                        distributeNonLeafEntries( this , sibling , middleKey , hangingLeftNode );
                     }
                     return 0;
                 }
@@ -743,10 +829,12 @@ private:
                     mergingWithLeftSibling = false;
                 }
                 if ( mergingWithLeftSibling ) {
-                    return mergeNonLeafNodes( sibling , this , deletedKey , hangingLeftNode );
+                    return mergeNonLeafNodes( sibling , this ,
+                                                deletedKey , hangingLeftNode );
                 }
                 else {
-                    return mergeNonLeafNodes(this, sibling, sibling->m_entries[ 0 ]->key , hangingLeftNode );
+                    return mergeNonLeafNodes(this, sibling,
+                            sibling->m_entries[ 0 ]->key , hangingLeftNode );
                 }
             }
             return 0;
@@ -821,6 +909,14 @@ private:
             BPNode* parent = n1->m_parent;
             int parentEntryIdx = locateIdx( parent->m_entries ,
                                            parent->m_numRecords , middleKey );
+            
+            //if the middle key wasn't an exact entry in the parent node, then
+            //the binary search may be off by 1 in the right direction
+            if ( compare( parent->m_entries[ parentEntryIdx ]->key , middleKey ) > 0 ) {
+                if ( parentEntryIdx > 0 ) {
+                    parentEntryIdx--;
+                }
+            }
             BPEntry* leftEntry = 0;
             if ( parentEntryIdx-1 >= 0 ) {
                 leftEntry = parent->m_entries[ parentEntryIdx-1 ];
@@ -829,10 +925,6 @@ private:
             if ( parentEntryIdx+1 < parent->m_numRecords ) {
                 rightEntry = parent->m_entries[ parentEntryIdx+1 ];
             }
-            
-            //the right node that will be deleted may have a pointer
-            //to a sibling in another branch that we will need later
-            BPNode* newRightNode = n2->m_rightSibling;
             
             //transfer the right node's entries into the left node
             //if the right
@@ -843,27 +935,27 @@ private:
             
             //the right node and the shared parent entry
             //must also be deleted and removed from the tree
+            
+            //first, link together its siblings
+            if ( n2->m_leftSibling != 0 ) {
+                n2->m_leftSibling->m_rightSibling = n2->m_rightSibling;
+            }
+            if ( n2->m_rightSibling != 0 ) {
+                n2->m_rightSibling->m_leftSibling = n2->m_leftSibling;
+            }
+            
+            //then the node can be deleted
             n2->m_splitFlag = true;
             delete n2;
-            
-            //since n2 is gone, n1 may not necessarily have a right sibling
-            //anymore
-            n1->m_rightSibling = 0;
             
             //assign the parent's neighboring entries custody of the merged
             //child
             if ( leftEntry != 0 ) {
                 leftEntry->rightNode = n1;
-                leftEntry->leftNode->m_rightSibling = n1;
             }
             if ( rightEntry != 0 ) {
                 rightEntry->leftNode = n1;
-                rightEntry->rightNode->m_leftSibling = n1;
             }
-            
-            //since the right node was deleted, the left node might have
-            //a new right sibling
-            n1->m_rightSibling = newRightNode;
             
             //remove the parent entry from the parent
             return parent->removeNonLeafEntry( parentEntryIdx );
