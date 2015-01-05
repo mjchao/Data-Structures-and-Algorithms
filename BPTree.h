@@ -526,9 +526,26 @@ private:
             return rtn;
         }
         
-        
+        /**
+         * Distributes entries between two non-leaf node siblings evenly. 
+         * The nodes must be non-leaf and siblings in order for the function to
+         * work correctly. Redistribution works as follows:
+         *
+         * 1) The entries to be transfered are "slid" towards the destination
+         *    node, and their child nodes and keys change as they "slide"
+         * 2) The parent entry's key is demoted to take the place of the key
+         *    of the first entry to "slide" into place
+         * 3) The last entry to slide into place gets its old key promoted to 
+         *    the parent
+         *
+         * @param n1                    the left sibling
+         * @param n2                    the right sibling
+         * @param                       the key index in between the left and
+         *                              right sibling, which is used to find
+         *                              the parent entry
+         */
         void distributeNonLeafEntries( BPNode* n1 , BPNode* n2 ,
-                            const Key& middleKey , BPNode* hangingLeftNode ) {
+                            const Key& middleKey ) {
             
             //we will have to change the key to the parent of these two nodes
             //as we are redistributing entries
@@ -537,7 +554,8 @@ private:
             BPNode* parent = n1->m_parent;
             int parentEntryIdx = locateIdx( parent->m_entries ,
                                            parent->m_numRecords , middleKey );
-            if ( compare( parent->m_entries[ parentEntryIdx ]->key , n2->m_entries[ 0 ]->key ) > 0 ) {
+            if ( compare( parent->m_entries[ parentEntryIdx ]->key ,
+                                            n2->m_entries[ 0 ]->key ) > 0 ) {
                 parentEntryIdx--;
             }
             
@@ -578,14 +596,17 @@ private:
                 
                 //the parent's key will be demoted
                 Key demotedKey = parentEntry->key;
-                Key promotedKey = n1->m_entries[ originalN1Records-receivedEntries ]->key;
+                Key promotedKey =
+                        n1->m_entries[ originalN1Records-receivedEntries ]->key;
                 
                 //all the received entries "slide up" 1 pair of children
                 //in the right node
                 for ( int i=0 ; i<receivedEntries ; i++ ) {
-                    n2->m_entries[ i ]->rightNode = n2->m_entries[ i ]->rightNode->m_rightSibling;
+                    n2->m_entries[ i ]->rightNode =
+                                n2->m_entries[ i ]->rightNode->m_rightSibling;
                     n2->m_entries[ i ]->rightNode->m_parent = n2;
-                    n2->m_entries[ i ]->leftNode = n2->m_entries[ i ]->leftNode->m_rightSibling;
+                    n2->m_entries[ i ]->leftNode =
+                                n2->m_entries[ i ]->leftNode->m_rightSibling;
                     n2->m_entries[ i ]->leftNode->m_parent = n2;
                     n2->m_entries[ i ]->key = n2->m_entries[ i+1 ]->key;
                 }
@@ -616,9 +637,11 @@ private:
                 //all the received entries "slide down" 1 pair of
                 //children in the left node
                 for ( int i=n1->m_numRecords-1 ; i>=originalN1Records ; i-- ) {
-                    n1->m_entries[ i ]->leftNode = n1->m_entries[ i ]->leftNode->m_leftSibling;
+                    n1->m_entries[ i ]->leftNode =
+                                    n1->m_entries[ i ]->leftNode->m_leftSibling;
                     n1->m_entries[ i ]->leftNode->m_parent = n1;
-                    n1->m_entries[ i ]->rightNode = n1->m_entries[ i ]->rightNode->m_leftSibling;
+                    n1->m_entries[ i ]->rightNode =
+                                   n1->m_entries[ i ]->rightNode->m_leftSibling;
                     n1->m_entries[ i ]->rightNode->m_parent = n1;
                     if ( i-1 >= 0 ) {
                         n1->m_entries[ i ]->key = n1->m_entries[ i-1 ]->key;
@@ -631,15 +654,34 @@ private:
             }
         }
         
-        BPNode* mergeNonLeafNodes( BPNode* n1, BPNode* n2, const Key& middleKey ,
+        /**
+         * Merges together two non-leaf nodes that are siblings. The nodes
+         * must be non-leaf nodes and sibling, or else the function will not
+         * work correctly. Merges work by first combining the entries of
+         * both nodes into the left sibling. The right sibling is then deleted.
+         * Since the left sibling has one too many children to handle from the
+         * merge, the parent entry's key will have to be demoted to this node
+         * to be used as indexing for that extra child.
+         *
+         * @param n1                    the left sibling
+         * @param n2                    the right sibling
+         * @param middleKey             the middle key that separates the
+         *                              left and right siblings, which is used
+         *                              to locate the parent entry of the nodes
+         */
+        BPNode* mergeNonLeafNodes( BPNode* n1, BPNode* n2, const Key& middleKey,
                                BPNode* hangingNode ) {
             BPNode* parent = n1->m_parent;
             int parentEntryIdx = locateIdx( parent->m_entries ,
                                            parent->m_numRecords , middleKey );
+            
             //if the middle key wasn't an exact entry in the parent node, then
             //the binary search may be off by 1 in the right direction
-            if ( compare( parent->m_entries[ parentEntryIdx ]->key , middleKey ) > 0 ) {
-                parentEntryIdx--;
+            if ( compare( parent->m_entries[ parentEntryIdx ]->key ,
+                                                            middleKey ) > 0 ) {
+                if ( parentEntryIdx > 0 ) {
+                    parentEntryIdx--;
+                }
             }
             
             BPEntry* leftEntry = 0;
@@ -658,7 +700,8 @@ private:
             BPEntry* mergedEntry = new BPEntry( deletedKey );
             
             if ( n1->m_numRecords > 0 ) {
-                mergedEntry->leftNode = n1->m_entries[ n1->m_numRecords-1 ]->rightNode;
+                mergedEntry->leftNode =
+                                n1->m_entries[ n1->m_numRecords-1 ]->rightNode;
             }
             else {
                 mergedEntry->leftNode = hangingNode;
@@ -715,6 +758,16 @@ private:
             return parent->removeNonLeafEntry( parentEntryIdx );
         }
         
+        /**
+         * Removes an entry from this node. This node must be a non-leaf node
+         * or else the function will not work correctly. This function works by
+         * first removing the entry, then checking for underflow. If this is not 
+         * the root node and if underflow occurs, then it tries to obtain some 
+         * entries (redistribution) from a sibling. If that fails, then it 
+         * merges with a sibling.
+         *
+         * @param entryIdx                  the index of the entry to remove
+         */
         BPNode* removeNonLeafEntry( int entryIdx ) {
             BPEntry* entry = m_entries[ entryIdx ];
             Key deletedKey = entry->key;
@@ -801,11 +854,11 @@ private:
                         else {
                             middleKey = m_entries[ 0 ]->key;
                         }
-                        distributeNonLeafEntries( sibling , this , middleKey , hangingLeftNode );
+                        distributeNonLeafEntries( sibling , this , middleKey );
                     }
                     else {
                         Key middleKey = sibling->m_entries[ 0 ]->key;
-                        distributeNonLeafEntries( this , sibling , middleKey , hangingLeftNode );
+                        distributeNonLeafEntries( this , sibling , middleKey );
                     }
                     return 0;
                 }
@@ -905,14 +958,15 @@ private:
          * @return                      a pointer to the new root of the tree if
          *                              the root collapsed, or 0 otherwise
          */
-        BPNode* mergeLeafNodes( BPNode* n1 , BPNode* n2 , const Key& middleKey ) {
+        BPNode* mergeLeafNodes( BPNode* n1, BPNode* n2, const Key& middleKey ) {
             BPNode* parent = n1->m_parent;
             int parentEntryIdx = locateIdx( parent->m_entries ,
                                            parent->m_numRecords , middleKey );
             
             //if the middle key wasn't an exact entry in the parent node, then
             //the binary search may be off by 1 in the right direction
-            if ( compare( parent->m_entries[ parentEntryIdx ]->key , middleKey ) > 0 ) {
+            if ( compare( parent->m_entries[ parentEntryIdx ]->key ,
+                                                            middleKey ) > 0 ) {
                 if ( parentEntryIdx > 0 ) {
                     parentEntryIdx--;
                 }
@@ -1024,7 +1078,8 @@ private:
                 }
                 
                 //check if it is possible to distribute
-                if ( (sibling->m_numRecords + m_numRecords)/2 >= (m_order+1)/2 ) {
+                if ( (sibling->m_numRecords + m_numRecords)/2 >=
+                                                               (m_order+1)/2 ) {
                     if ( distributingWithLeftSibling ) {
                         Key middleKey;
                         if ( entryIdx == 0 ) {
@@ -1066,7 +1121,8 @@ private:
                     return mergeLeafNodes( sibling , this , deletedKey );
                 }
                 else {
-                    return mergeLeafNodes(this, sibling, sibling->m_entries[ 0 ]->key);
+                    return mergeLeafNodes(this, sibling,
+                                                sibling->m_entries[ 0 ]->key);
                 }
             }
             return 0;
@@ -1453,7 +1509,8 @@ public:
         checkIfOrderValid();
     }
     
-    BPTree( int order , Comparator< Key >* comparator ) : m_order( order ) , m_comparator ( comparator ) {
+    BPTree( int order , Comparator< Key >* comparator ) : m_order( order ) ,
+                                                   m_comparator ( comparator ) {
         checkIfOrderValid();
         m_root = new BPNode( m_comparator , m_order );
     }
