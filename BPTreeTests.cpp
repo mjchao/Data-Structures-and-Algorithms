@@ -12,7 +12,7 @@
 #include <cmath>
 
 void BPTreeTests::test() {
-    testNodeInsertKey();
+    /*testNodeInsertKey();
     //testNodeInsertKeyMemory();
     testInsert();
     //testMemoryManagement();
@@ -22,8 +22,8 @@ void BPTreeTests::test() {
     testRemove();
     testRemoveOrder5();
     testRemoveInsertTestCase();
-    testRemoveDistribution();
-    //testSystem();
+    testRemoveDistribution();//*/
+    testSystem();
     reportTestStatistics( "BPTree" );
 }
 
@@ -1160,6 +1160,8 @@ void BPTreeTests::testRemoveDistribution() {
 }
 
 void BPTreeTests::testSystem() {
+    string expected;
+    string found;
     vector< double > expectedValues;
     vector< double > foundValues;
     string errorMessage = "BPTree system test failed!";
@@ -1179,4 +1181,99 @@ void BPTreeTests::testSystem() {
         test.remove( i );
     }
     
+    for ( int i=1 ; i<=14 ; i++ ) {
+        expectedValues.push_back( i*7 );
+    }
+    foundValues = test.range( 0 , 100 );
+    evaluateTest( expectedValues , foundValues , errorMessage );
+    
+    /* tree structure
+             [28    ,    49    ,    70]
+     [7,14,21] [28,35,42] [49,56,63] [70,77,84,91,98]
+     */
+    //remove a 14 and watch the tree merge
+    test.remove( 14 );
+    expectedValues.erase( expectedValues.begin()+1 );
+    foundValues = test.range( 0 , 100 );
+    evaluateTest( expectedValues , foundValues , errorMessage );
+    
+    /* tree structure
+                   [49    ,   70]
+     [7,21,28,35,42] [49,56,63] [70,77,84,91,98]
+     */
+    
+    //remove a 56 and watch the tree redistribute
+    test.remove( 56 );
+    expectedValues.erase( expectedValues.begin()+6 );
+    foundValues = test.range( 0 , 100 );
+    evaluateTest( expectedValues , foundValues , errorMessage );
+    
+    /* tree structure
+                [42    ,   70]
+     [7,21,28,35] [42,49,63] [70,77,84,91,98]
+     */
+    
+    test.remove( 49 );
+    test.remove( 63 );
+    /* tree structure
+                [42    ,      84]
+     [7,21,28,35] [42,70,77] [84,91,98]
+     */
+    expected = "[[42, 84]\n";
+    expected +="[7, 21, 28, 35], [42, 70, 77], [84, 91, 98]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //watch tree merge
+    test.remove( 70 );
+    test.remove( 42 );
+    expected = "[[84]\n";
+    expected +="[7, 21, 28, 35, 77], [84, 91, 98]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    expectedValues = vector< double >();
+    expectedValues.push_back( 77 );
+    expectedValues.push_back( 84 );
+    foundValues = test.range( 70 , 85 );
+    evaluateTest( expectedValues , foundValues , errorMessage );
+    
+    
+    //cause a insertion split again
+    test.insert( 6 , 6 );
+    expected = "[[28, 84]\n";
+    expected +="[6, 7, 21], [28, 35, 77], [84, 91, 98]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //repeatedly merge then split then merge then split...
+    //nothing should have changed
+    for ( int i=0 ; i<10 ; i++ ) {
+        test.remove( 6 );
+        test.insert( 6 ,  6);
+    }
+    for ( int i=0 ; i<10 ; i++ ) {
+        test.remove( 21 );
+        test.insert( 21 , 21 );
+    }
+    for ( int i=0 ; i<10 ; i++ ) {
+        test.remove( 6 );
+        test.remove( 7 );
+        test.remove( 21 );
+        test.insert( 7 , 7 );
+        test.insert( 21 , 21 );
+        test.insert( 6 , 6 );
+    }
+    evaluateTest( expected , found , errorMessage );
+    
+    //test tree structure similar to the 2-3 tree
+    test = BPTree< double , double >( 2 );
+    
+    //test empty tree representation
+    expected = "[[]]";
+    found = test.toString();
+    evaluateTest( expected , found , errorMessage );
+    
+    //cout << test.toString() << endl;
+    //cout << test.toStringLeft() << endl;
 }

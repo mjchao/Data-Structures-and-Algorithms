@@ -21,10 +21,9 @@ using std::runtime_error;
 
 #include "Message.h"
 
-
 /**
- * A B+ Tree which maintains that each node is at least half full, except the
- * root. The order of the B+ Tree, m, defines the number of entries permitted
+ * A B+ Tree which maintains that each leaf node is at least half full.
+ * The order of the B+ Tree, m, defines the number of entries permitted
  * in each node.
  *
  * The tree is balanced, and given that there are n entries total, the height of
@@ -863,27 +862,32 @@ private:
                     return 0;
                 }
                 
-                //if it is not possible to distribute, then we will have
-                //to demote a parent key
+                //if it is not possible to distribute, then we can
+                //merge with a sibling and demote a parent key
                 sibling = 0;
                 bool mergingWithLeftSibling;
-                if ( m_leftSibling != 0 ) {
-                    if ( m_leftSibling->m_parent == this->m_parent ) {
-                        sibling = m_leftSibling;
-                        mergingWithLeftSibling = true;
-                    }
-                    else {
+                
+                //try merging with the left sibling, and if it doesn't work,
+                //try merging with the right sibling
+                sibling = m_leftSibling;
+                mergingWithLeftSibling = true;
+                
+                if ( sibling == 0 || sibling->m_parent != this->m_parent ||
+                    m_numRecords + sibling->m_numRecords + 1 > m_order ) {
+                    if ( m_rightSibling != 0 &&
+                        m_rightSibling->m_parent == this->m_parent &&
+                        m_numRecords + m_rightSibling->m_numRecords + 1 <= m_order ) {
                         sibling = m_rightSibling;
                         mergingWithLeftSibling = false;
                     }
+                    else {
+                        return 0;
+                    }
                 }
-                else {
-                    sibling = m_rightSibling;
-                    mergingWithLeftSibling = false;
-                }
+                
                 if ( mergingWithLeftSibling ) {
                     return mergeNonLeafNodes( sibling , this ,
-                                                deletedKey , hangingLeftNode );
+                                             deletedKey , hangingLeftNode );
                 }
                 else {
                     return mergeNonLeafNodes(this, sibling,
