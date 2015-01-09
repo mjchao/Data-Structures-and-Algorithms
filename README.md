@@ -10,8 +10,9 @@ Currently Completed:
 3. AbstractQueue, LinkedQueue, ArrayQueue, PriorityQueue
 4. AbstractStack, LinkedStack
 5. AbstractMap, Hasher, Memory address hash function (DefaultHasher), HashMap
+6. B+ Tree
 
 Coming in the future:
 
-1. B+ Tree, AVL Tree
+1. AVL Tree
 2. Standard Sorting
