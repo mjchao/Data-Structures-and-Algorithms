@@ -13,8 +13,14 @@ class Vector {
 
 public:
 
-  Vector(int size) {
-    int arr_size = NextPowerOf2(size);
+  Vector(int init_size) {
+    if (init_size <= 0) {
+      init_size = 8;
+    }
+    
+    int arr_size = IsPowerOf2(init_size) ?
+      init_size :
+      NextPowerOf2(init_size);
     arr_ = new T[arr_size];
   }
 
