@@ -19,10 +19,7 @@ void ProfileConstructor(int min_size, int max_size, int N) {
   }
   stop = Clock::Now();
   std::cout << "dsalgo Vector" << std::endl;
-  std::cout << "\tTotal Time: " << stop - start << std::endl;
-  std::cout << "\tTotal Calls:" << N << std::endl;
-  std::cout << "\tns/call: " << ComputeTimePerCall(stop - start, N)
-    << std::endl;
+  PrintStats(stop - start, N, "\t");
   
   //rand_sizes = RandN(min_size, max_size, N);
   start = Clock::Now();
@@ -31,11 +28,9 @@ void ProfileConstructor(int min_size, int max_size, int N) {
   }
   stop = Clock::Now();
   std::cout << "std::vector" << std::endl;
-  std::cout << "\tTotal Time: " << stop - start << std::endl;
-  std::cout << "\tTotal Calls:" << N << std::endl;
-  std::cout << "\tns/call: " << ComputeTimePerCall(stop - start, N)
-    << std::endl;
+  PrintStats(stop - start, N, "\t");
 }
+
 
 void ProfileConstructorLarge() {
 	std::cout << "=== Profiling Vector Constructor Large Size ===" << std::endl;
@@ -45,6 +40,7 @@ void ProfileConstructorLarge() {
   ProfileConstructor(min_size, max_size, N);
   std::cout << "\n\n\n";
 }
+
 
 void ProfileConstructorSmall() {
   std::cout << "=== Profiling Vector Constructor Small size ===" << std::endl;
@@ -56,7 +52,7 @@ void ProfileConstructorSmall() {
 }
 
 int main() {
-  ProfileConstructorLarge();
   ProfileConstructorSmall();
+  ProfileConstructorLarge();
   return 0;
 }
