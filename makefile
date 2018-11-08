@@ -1,6 +1,6 @@
 CXX=g++
 CXXFLAGS=-std=c++11 -Wall -Werror
-OPT=-O2
+OPT=-O3
 DEBUG=-g
 
 vector:
