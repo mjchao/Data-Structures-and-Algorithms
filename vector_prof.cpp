@@ -164,7 +164,7 @@ void ProfilePopFront(int vector_size, int num_runs) {
 
 void ProfilePopFrontVariousSizes() {
   std::cout << "=== Profiling Vector Erase Front Small size ===" << std::endl;
-  ProfilePopFront(10, 10000);
+  ProfilePopFront(17, 10000);
   std::cout << "\n\n\n";
 
   std::cout << "=== Profiling Vector Erase Front Medium size ===" << std::endl;

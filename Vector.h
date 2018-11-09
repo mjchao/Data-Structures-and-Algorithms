@@ -85,7 +85,7 @@ public:
     int bytes_to_shift = elements_to_shift * sizeof(T);
 
     // for fewer bytes, faster to avoid manually move than to use memmove.
-    if (bytes_to_shift < 64) {
+    if (bytes_to_shift <= 64) {
       for (int i = idx; i < size_ - 1; ++i) {
         arr_[i] = std::move(arr_[i + 1]);
       }
