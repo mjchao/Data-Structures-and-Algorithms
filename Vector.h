@@ -2,6 +2,8 @@
 
 #include "Utils.h"
 #include <string.h>
+#include <new>
+#include <iostream>
 
 
 namespace dsalgo {
@@ -29,6 +31,26 @@ public:
   Vector() : Vector(8) {
   }
 
+  Vector(const Vector<T>& other) {
+    size_ = other.size_;
+    underlying_size_ = other.underlying_size_;
+    arr_ = new T[underlying_size_];
+    memcpy(arr_, other.arr_, other.size_ * sizeof(T));
+  }
+
+  Vector<T>& operator=(const Vector<T>& other) {
+    delete[] arr_;
+    size_ = other.size_;
+    underlying_size_ = other.underlying_size_;
+    arr_ = new T[underlying_size_];
+    memcpy(arr_, other.arr_, other.size_ * sizeof(T));
+    return *this;
+  }
+
+  T& operator[](int idx) {
+    return arr_[idx];
+  }
+
   ~Vector() {
     delete[] arr_;
   }
@@ -43,6 +65,25 @@ public:
     ++size_;
   }
 
+  void PopBack(const T& e) {
+    --size_;
+  }
+
+  /**
+   * Removes the element at index idx. Subsequent elements are shifted down.
+   *
+   * @param idx Index of the element to remove.
+   */
+  void Erase(int idx) {
+    int elements_to_shift = (size_ - (idx + 1));
+    memmove(arr_ + idx, arr_ + idx + 1, elements_to_shift * sizeof(T));
+    --size_;
+  }
+
+  int Size() {
+    return size_;
+  }
+
 private:
   
   /**
@@ -50,7 +91,7 @@ private:
    */
   void Resize() {
     T* resized_arr = new T[underlying_size_ * 2];
-    memcpy(resized_arr, arr_, underlying_size_);
+    memcpy(resized_arr, arr_, underlying_size_ * sizeof(T));
     delete[] arr_;
     arr_ = resized_arr;
     underlying_size_ *= 2;

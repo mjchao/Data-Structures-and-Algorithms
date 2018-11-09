@@ -1,137 +1,104 @@
 #include "Vector.h"
-#include "Profiling.h"
-#include <vector>
+#include <assert.h>
 #include <iostream>
 
 
 using namespace dsalgo;
 
 
-void ProfilePushBack(int min_size, int max_size, int num_runs) {
-  std::vector<int> rand_sizes;
-  std::vector<std::vector<int>> rand_vals;
-  int64_t start = 0;
-  int64_t stop = 0;
-
-  // generate data to insert into vector
-  int num_push_backs = 0;
-  rand_sizes = RandN(min_size, max_size, num_runs);
-  for (int i = 0 ; i < static_cast<int>(rand_sizes.size()); ++i) {
-    num_push_backs += rand_sizes[i];
-    rand_vals.push_back(RandN(-100000, 100000, rand_sizes[i]));
-  }
-
-  start = Clock::Now();
-  for (int i = 0; i < static_cast<int>(rand_sizes.size()); ++i) {
-    Vector<int> test;
-    for (int j = 0; j < rand_sizes[i]; ++j) {
-      test.PushBack(rand_vals[i][j]);
+void testInsertion() {
+  Vector<int> test;
+  for (int i = 0; i < 1028; ++i) {
+    test.PushBack(i);
+    for (int j = 0; j <= i; ++j) {
+      assert(test[j] == j);
     }
   }
-  stop = Clock::Now();
-  std::cout << "dsalgo Vector" << std::endl;
-  PrintStats(stop - start, num_push_backs, "\t");
 
-  start = Clock::Now();
-  for (int i = 0; i < static_cast<int>(rand_sizes.size()); ++i) {
-    std::vector<int> test;
-    for (int j = 0; j < rand_sizes[i]; ++j) {
-      test.push_back(rand_vals[i][j]);
-    }
+  // destructor is implicitly tested here.
+}
+
+
+void testAssignment() {
+  int num_inserts = 5014;
+  Vector<int> test;
+  for (int i = 0; i < num_inserts; ++i) {
+    test.PushBack(i);
   }
-  stop = Clock::Now();
-  std::cout << "std::vector" << std::endl;
-  PrintStats(stop - start, num_push_backs, "\t");
-}
 
-void ProfilePushBackSmall() {
- 	std::cout << "=== Profiling Vector Push Back Small ===" << std::endl;
-  const int num_runs = 100000;
-	int min_size = 1;
-	int max_size = 10;
-  ProfilePushBack(min_size, max_size, num_runs);
-  std::cout << "\n\n\n";
-}
-
-void ProfilePushBackMed() {
- 	std::cout << "=== Profiling Vector Push Back Small ===" << std::endl;
-  const int num_runs = 1000;
-	int min_size = 100;
-	int max_size = 150;
-  ProfilePushBack(min_size, max_size, num_runs);
-  std::cout << "\n\n\n";
-}
-
-
-void ProfilePushBackLarge() {
- 	std::cout << "=== Profiling Vector Push Back Large ===" << std::endl;
-  const int num_runs = 10;
-	int min_size = 100000;
-	int max_size = 100005;
-  ProfilePushBack(min_size, max_size, num_runs);
-  std::cout << "\n\n\n";
-}
-
-
-void ProfileConstructor(int min_size, int max_size, int num_runs) {
-  std::vector<int> rand_sizes;
-  int64_t start = 0;
-  int64_t stop = 0;
-  rand_sizes = RandN(min_size, max_size, num_runs);
-
-  start = Clock::Now(); 
-  for (int i = 0; i < static_cast<int>(rand_sizes.size()); ++i) {
-    Vector<int> test(rand_sizes[i]);
+  // reassign all elements
+  for (int i = 0; i < num_inserts; ++i) {
+    test[i] = -1 * i;
   }
-  stop = Clock::Now();
-  std::cout << "dsalgo Vector" << std::endl;
-  PrintStats(stop - start, num_runs, "\t");
-  
-  start = Clock::Now();
-  for (int i = 0; i < static_cast<int>(rand_sizes.size()); ++i) {
-    std::vector<int> test(rand_sizes[i]);
+  for (int i = 0; i < num_inserts; ++i) {
+    assert(test[i] == -1 * i);
   }
-  stop = Clock::Now();
-  std::cout << "std::vector" << std::endl;
-  PrintStats(stop - start, num_runs, "\t");
 }
 
 
-void ProfileConstructorLarge() {
-	std::cout << "=== Profiling Vector Constructor Large Size ===" << std::endl;
-  const int num_runs = 100;
-	int min_size = 100000;
-	int max_size = 100005;
-  ProfileConstructor(min_size, max_size, num_runs);
-  std::cout << "\n\n\n";
+void testCopy() {
+  int num_inserts = 1028;
+
+  Vector<int>* test = new Vector<int>;
+  for (int i = 0; i < num_inserts; ++i) {
+    test->PushBack(i);
+  }
+
+  Vector<int> testCopyConstructor = *test;
+  for (int i = 0; i < num_inserts; ++i) {
+    assert(testCopyConstructor[i] == i);
+  }
+
+  Vector<int> testCopyOperator;
+  testCopyOperator.PushBack(125);
+  testCopyOperator = *test;
+  for (int i = 0; i < num_inserts; ++i) {
+    assert(testCopyOperator[i] == i);
+  }
+
+  for (int i = 0; i < num_inserts; ++i) {
+    (*test)[i] = -1 * i;
+  }
+  delete test;
+  test = nullptr;
+
+  for (int i = 0; i < num_inserts; ++i) {
+    assert(testCopyConstructor[i] == i);
+    assert(testCopyConstructor[i] == testCopyOperator[i]);
+  }
 }
 
-void ProfileConstructorMed() {
-	std::cout << "=== Profiling Vector Constructor Medium Size ===" << std::endl;
-  const int num_runs = 1000;
-	int min_size = 100;
-	int max_size = 150;
-  ProfileConstructor(min_size, max_size, num_runs);
-  std::cout << "\n\n\n";
+
+void testErase() {
+  int num_inserts = 1028;
+
+  Vector<int> test;
+  for (int i = 0; i < num_inserts; ++i) {
+    test.PushBack(i);
+  }
+
+  // erase 0, 2, 4, 6, ...
+  for (int i = 0; i < test.Size(); ++i) {
+    test.Erase(i);
+  }
+
+  for (int i = 0; i < test.Size(); ++i) {
+    assert(test[i] == 2*i + 1);
+  }
+
+  // erase the rest
+  int remaining_size = test.Size();
+  for (int i = 0 ; i < remaining_size; ++i) {
+    assert(test[0] == 2*i + 1);
+    test.Erase(0);
+  }
 }
 
-
-void ProfileConstructorSmall() {
-  std::cout << "=== Profiling Vector Constructor Small size ===" << std::endl;
-  const int num_runs = 100000;
-  int min_size = 1;
-  int max_size = 10;
-  ProfileConstructor(min_size, max_size, num_runs);
-  std::cout << "\n\n\n";
-}
 
 int main() {
-  ProfileConstructorSmall();
-  ProfileConstructorMed();
-  ProfileConstructorLarge();
-
-  ProfilePushBackSmall();
-  ProfilePushBackMed();
-  ProfilePushBackLarge();
+  testInsertion();
+  testCopy();
+  testErase();
   return 0;
 }
+

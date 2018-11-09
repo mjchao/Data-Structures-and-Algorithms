@@ -4,6 +4,6 @@ OPT=-O3
 DEBUG=-g
 
 vector:
-	$(CXX) $(CXXFLAGS) $(OPT) vector_test.cpp -o vector_test-opt
+	$(CXX) $(CXXFLAGS) $(OPT) vector_prof.cpp -o vector_prof-opt
 	$(CXX) $(CXXFLAGS) $(DEBUG) vector_test.cpp -o vector_test-dbg
 
