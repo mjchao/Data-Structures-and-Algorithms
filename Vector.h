@@ -82,7 +82,18 @@ public:
   T Erase(int idx) {
     T rtn = std::move(arr_[idx]);
     int elements_to_shift = (size_ - (idx + 1));
-    memmove(arr_ + idx, arr_ + idx + 1, elements_to_shift * sizeof(T));
+    int bytes_to_shift = elements_to_shift * sizeof(T);
+
+    // for fewer bytes, faster to avoid manually move than to use memmove.
+    if (bytes_to_shift < 64) {
+      for (int i = idx; i < size_ - 1; ++i) {
+        arr_[i] = std::move(arr_[i + 1]);
+      }
+
+    // for larger shifts, we'll just use memmove.
+    } else {
+      memmove(arr_ + idx, arr_ + idx + 1, bytes_to_shift);
+    }
     --size_;
     return std::move(rtn);
   }

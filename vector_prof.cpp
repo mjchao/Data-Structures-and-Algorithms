@@ -125,6 +125,58 @@ void ProfileConstructorSmall() {
   std::cout << "\n\n\n";
 }
 
+
+void ProfilePopFront(int vector_size, int num_runs) {
+  std::vector<int> rand_elems = RandN(-100000, 100000, vector_size);
+  std::vector<std::vector<int>> std_vecs_to_erase(num_runs, rand_elems);
+
+  Vector<int> rand_elems_dsalgo;
+  for (int i = 0; i < vector_size; ++i) {
+    rand_elems_dsalgo.PushBack(rand_elems[i]);
+  }
+  std::vector<Vector<int>> dsalgo_vecs_to_erase(
+      num_runs, rand_elems_dsalgo);
+
+  int64_t start = 0;
+  int64_t stop = 0;
+
+  start = Clock::Now();
+  for (int i = 0; i < num_runs; ++i) {
+    for (int j = 0; j < vector_size; ++j) {
+      dsalgo_vecs_to_erase[i].PopFront();
+    }
+  }
+  stop = Clock::Now();
+  std::cout << "dsalgo Vector" << std::endl;
+  PrintStats(stop - start, num_runs * vector_size, "\t");
+
+  start = Clock::Now();
+  for (int i = 0; i < num_runs; ++i) {
+    for (int j = 0; j < vector_size; ++j) {
+      std_vecs_to_erase[i].erase(std_vecs_to_erase[i].begin());
+    }
+  }
+  stop = Clock::Now();
+  std::cout << "std::vector" << std::endl;
+  PrintStats(stop - start, num_runs * vector_size, "\t");
+}
+
+
+void ProfilePopFrontVariousSizes() {
+  std::cout << "=== Profiling Vector Erase Front Small size ===" << std::endl;
+  ProfilePopFront(10, 10000);
+  std::cout << "\n\n\n";
+
+  std::cout << "=== Profiling Vector Erase Front Medium size ===" << std::endl;
+  ProfilePopFront(150, 1000);
+  std::cout << "\n\n\n";
+
+  std::cout << "=== Profiling Vector Erase Front Large size ===" << std::endl;
+  ProfilePopFront(1234, 100);
+  std::cout << "\n\n\n";
+
+}
+
 int main() {
   ProfileConstructorSmall();
   ProfileConstructorMed();
@@ -133,5 +185,7 @@ int main() {
   ProfilePushBackSmall();
   ProfilePushBackMed();
   ProfilePushBackLarge();
+
+  ProfilePopFrontVariousSizes();
   return 0;
 }
