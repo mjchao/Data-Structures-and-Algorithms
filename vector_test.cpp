@@ -79,7 +79,7 @@ void testErase() {
 
   // erase 0, 2, 4, 6, ...
   for (int i = 0; i < test.Size(); ++i) {
-    test.Erase(i);
+    assert(test.Erase(i) == 2*i);
   }
 
   for (int i = 0; i < test.Size(); ++i) {
@@ -90,8 +90,19 @@ void testErase() {
   int remaining_size = test.Size();
   for (int i = 0 ; i < remaining_size; ++i) {
     assert(test[0] == 2*i + 1);
-    test.Erase(0);
+    assert(test.Erase(0) == 2*i + 1);
   }
+}
+
+
+void testPopFrontBack() {
+  Vector<int> test;
+  test.PushBack(1);
+  test.PushBack(2);
+  test.PushBack(3);
+  assert(test.PopBack() == 3);
+  assert(test.PopFront() == 1);
+  assert(test.PopFront() == 2);
 }
 
 
@@ -99,6 +110,7 @@ int main() {
   testInsertion();
   testCopy();
   testErase();
+  testPopFrontBack();
   return 0;
 }
 

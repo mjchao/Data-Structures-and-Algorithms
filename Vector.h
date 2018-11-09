@@ -65,19 +65,26 @@ public:
     ++size_;
   }
 
-  void PopBack(const T& e) {
-    --size_;
+  T PopBack() {
+    return std::move(Erase(size_ - 1));
+  }
+
+  T PopFront() {
+    return std::move(Erase(0));
   }
 
   /**
    * Removes the element at index idx. Subsequent elements are shifted down.
    *
    * @param idx Index of the element to remove.
+   * @return The element that was removed.
    */
-  void Erase(int idx) {
+  T Erase(int idx) {
+    T rtn = std::move(arr_[idx]);
     int elements_to_shift = (size_ - (idx + 1));
     memmove(arr_ + idx, arr_ + idx + 1, elements_to_shift * sizeof(T));
     --size_;
+    return std::move(rtn);
   }
 
   int Size() {
