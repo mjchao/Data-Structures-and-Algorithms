@@ -95,7 +95,7 @@ public:
 
     // if only shifting a few elements, then we can shift them one-by-one
     // it'll be faster than std::move on a range.
-    if (num_elems_to_shift < 32) {
+    if (num_elems_to_shift <= 32) {
       for (int i = idx; i < size_ - 1; ++i) {
         arr_[i] = std::move(arr_[i + 1]);
       }
@@ -119,18 +119,13 @@ public:
   void Insert(const T& e, int idx) {
     assert(idx <= size_);
 
-    // TODO can optimize when resizing so that you insert while resizing.
-		if (UNLIKELY(size_ >= underlying_size_)) {
-		  Resize();		
+    if (LIKELY(size_ < underlying_size_)) {
+      std::move_backward(arr_ + idx, arr_ + size_, arr_ + size_ + 1);
+      new (arr_ + idx) T(e);
+      ++size_;
+    } else {
+      ResizeAndInsert(e, idx);
 		}
-
-    // TODO can optimize to parallelize by moving multiple at a time.
-    for (int i = size_ - 1; i >= idx; --i) {
-      arr_[i + 1] = std::move(arr_[i]);
-    }
-
-    new (arr_ + idx) T(e);
-    ++size_;
   }
 
   int Size() {
@@ -152,6 +147,17 @@ private:
     delete[] arr_;
     arr_ = resized_arr;
     underlying_size_ *= 2;
+  }
+
+  void ResizeAndInsert(const T& e, int idx) {
+    T* resized_arr = new T[underlying_size_ * 2];
+    std::move(arr_, arr_ + idx, resized_arr);
+    new (resized_arr + idx) T(e);
+    std::move(arr_ + idx, arr_ + size_, resized_arr + idx + 1);
+    delete[] arr_;
+    arr_ = resized_arr;
+    underlying_size_ *= 2;
+    ++size_;
   }
 
 
