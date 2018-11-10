@@ -174,8 +174,53 @@ void ProfilePopFrontVariousSizes() {
   std::cout << "=== Profiling Vector Erase Front Large size ===" << std::endl;
   ProfilePopFront(1234, 100);
   std::cout << "\n\n\n";
-
 }
+
+
+void ProfileInsert(int vector_size, int num_runs) {
+  std::vector<int> rand_elems = RandN(-100000, 100000, vector_size);
+
+  int64_t start = 0;
+  int64_t stop = 0;
+
+  start = Clock::Now();
+  for (int i = 0; i < num_runs; ++i) {
+    Vector<int> test;
+    for (int j = 0; j < vector_size; ++j) {
+      test.Insert(rand_elems[j], 0);
+    }
+  }
+  stop = Clock::Now();
+  std::cout << "dsalgo Vector" << std::endl;
+  PrintStats(stop - start, num_runs * vector_size, "\t");
+
+  start = Clock::Now();
+  for (int i = 0; i < num_runs; ++i) {
+    std::vector<int> test;
+    for (int j = 0; j < vector_size; ++j) {
+      test.insert(test.begin(), rand_elems[j]);
+    }
+  }
+  stop = Clock::Now();
+  std::cout << "std::vector" << std::endl;
+  PrintStats(stop - start, num_runs * vector_size, "\t");
+}
+
+
+void ProfileInsertVariousSizes() {
+  std::cout << "=== Profiling Vector Insert Front Small size ===" << std::endl;
+  ProfileInsert(17, 10000);
+  std::cout << "\n\n\n";
+
+  std::cout << "=== Profiling Vector Insert Front Medium size ===" << std::endl;
+  ProfileInsert(150, 1000);
+  std::cout << "\n\n\n";
+
+  std::cout << "=== Profiling Vector Insert Front Large size ===" << std::endl;
+  ProfileInsert(1234, 100);
+  std::cout << "\n\n\n";
+}
+
 
 int main() {
   ProfileConstructorSmall();
@@ -187,5 +232,6 @@ int main() {
   ProfilePushBackLarge();
 
   ProfilePopFrontVariousSizes();
+  ProfileInsertVariousSizes();
   return 0;
 }

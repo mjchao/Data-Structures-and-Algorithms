@@ -6,7 +6,7 @@
 using namespace dsalgo;
 
 
-void testInsertion() {
+void testPushBack() {
   Vector<int> test;
   for (int i = 0; i < 1028; ++i) {
     test.PushBack(i);
@@ -106,11 +106,36 @@ void testPopFrontBack() {
 }
 
 
+void testInsert() {
+  int num_inserts = 157;
+  Vector<int> test;
+  for (int i = num_inserts - 1; i >= 0; --i) {
+    test.Insert(i, 0);
+  }
+  for (int  i = 0; i < num_inserts; ++i) {
+    assert(test[i] == i);
+  }
+
+  test.Clear();
+  for (int i = 0; i < num_inserts; ++i) {
+    test.PushBack(145);
+  }
+  for (int i = 0; i < num_inserts; ++i) {
+    test.Insert(i, 2*i);
+  }
+  for (int i = 0; i < num_inserts; ++i) {
+    assert(test[2*i] == i);
+    assert(test[2*i+1] == 145);
+  }
+}
+
+
 int main() {
-  testInsertion();
+  testPushBack();
   testCopy();
   testErase();
   testPopFrontBack();
+  testInsert();
   return 0;
 }
 

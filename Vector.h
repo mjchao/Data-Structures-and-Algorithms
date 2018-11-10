@@ -2,9 +2,9 @@
 
 #include "Utils.h"
 #include <string.h>
+#include <assert.h>
 #include <new>
 #include <iostream>
-
 
 namespace dsalgo {
 
@@ -48,6 +48,7 @@ public:
   }
 
   T& operator[](int idx) {
+    assert(idx < size_);
     return arr_[idx];
   }
 
@@ -66,7 +67,10 @@ public:
   }
 
   T PopBack() {
-    return std::move(Erase(size_ - 1));
+    assert(size_ > 0);
+    T rtn = std::move(arr_[size_ - 1]);
+    --size_;
+    return std::move(rtn);
   }
 
   T PopFront() {
@@ -80,6 +84,7 @@ public:
    * @return The element that was removed.
    */
   T Erase(int idx) {
+    assert(idx < size_);
     T rtn = std::move(arr_[idx]);
     int elements_to_shift = (size_ - (idx + 1));
     int bytes_to_shift = elements_to_shift * sizeof(T);
@@ -98,8 +103,33 @@ public:
     return std::move(rtn);
   }
 
+  void Insert(const T& e, int idx) {
+    assert(idx <= size_);
+		if (UNLIKELY(size_ >= underlying_size_)) {
+		  Resize();		
+		}
+
+    int elements_to_shift = (size_ - idx);
+    int bytes_to_shift = elements_to_shift * sizeof(T);
+
+    if (bytes_to_shift <= 64) {
+      for (int i = size_ - 1; i >= idx; --i) {
+        arr_[i + 1] = std::move(arr_[i]);
+      }
+    } else {
+      memmove(arr_ + idx + 1, arr_ + idx, bytes_to_shift);
+    }
+
+    new (arr_ + idx) T(e);
+    ++size_;
+  }
+
   int Size() {
     return size_;
+  }
+
+  void Clear() {
+    size_ = 0;
   }
 
 private:
