@@ -222,6 +222,53 @@ void ProfileInsertVariousSizes() {
 }
 
 
+void ProfilePushBackLargeObj(int min_obj_size, int max_obj_size, int num_objs,
+    int num_runs) {
+  std::vector<std::string> rand_strs = RandStrs(min_obj_size, max_obj_size,
+      num_objs);
+  
+  int64_t start = 0;
+  int64_t stop = 0;
+
+  start = Clock::Now();
+  for (int i = 0; i < num_runs; ++i) {
+    Vector<std::string> test;
+    for (int j = 0 ; j < num_objs; ++j) {
+      test.PushBack(rand_strs[j]);
+    }
+  }
+  stop = Clock::Now();
+  std::cout << "dsalgo Vector" << std::endl;
+  PrintStats(stop - start, num_runs * num_objs, "\t");
+
+  start = Clock::Now();
+  for (int i = 0; i < num_runs; ++i) {
+    std::vector<std::string> test;
+    for (int j = 0; j < num_objs; ++j) {
+      test.push_back(rand_strs[j]);
+    }
+  }
+  stop = Clock::Now();
+  std::cout << "std::vector" << std::endl;
+  PrintStats(stop - start, num_runs * num_objs, "\t");
+}
+
+
+void ProfilePushBackLargeObjVariousSizes() {
+  std::cout << "=== Profiling Vector Push Back Small Strings ===" << std::endl;
+  ProfilePushBackLargeObj(10, 17, 1000, 10);
+  std::cout << "\n\n\n";
+
+  /*std::cout << "=== Profiling Vector Push Back Medium Strings ===" << std::endl;
+  ProfilePushBackLargeObj(100, 150, 1500, 10);
+  std::cout << "\n\n\n";
+
+  std::cout << "=== Profiling Vector Push Back Large Strings ===" << std::endl;
+  ProfilePushBackLargeObj(1000, 1250, 20, 10);
+  std::cout << "\n\n\n";*/
+}
+
+
 int main() {
   ProfileConstructorSmall();
   ProfileConstructorMed();
@@ -232,6 +279,9 @@ int main() {
   ProfilePushBackLarge();
 
   ProfilePopFrontVariousSizes();
+
   ProfileInsertVariousSizes();
+
+  ProfilePushBackLargeObjVariousSizes();
   return 0;
 }

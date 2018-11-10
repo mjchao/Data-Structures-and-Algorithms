@@ -130,12 +130,25 @@ void testInsert() {
 }
 
 
+void testPushBackStr() {
+  int num_inserts = 1035;
+  Vector<std::string> test;
+  for (int i = 0; i < num_inserts; ++i) {
+    test.PushBack("abcdefg");
+  }
+  for (int i = 0; i < num_inserts; ++i) {
+    assert(test[i] == "abcdefg");
+  }
+}
+
+
 int main() {
   testPushBack();
   testCopy();
   testErase();
   testPopFrontBack();
   testInsert();
+  testPushBackStr();
   return 0;
 }
 

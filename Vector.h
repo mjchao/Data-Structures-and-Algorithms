@@ -35,7 +35,9 @@ public:
     size_ = other.size_;
     underlying_size_ = other.underlying_size_;
     arr_ = new T[underlying_size_];
-    memcpy(arr_, other.arr_, other.size_ * sizeof(T));
+    for (int i = 0; i < other.size_; ++i) {
+      new (arr_ + i) T(other.arr_[i]);
+    }
   }
 
   Vector<T>& operator=(const Vector<T>& other) {
@@ -43,7 +45,9 @@ public:
     size_ = other.size_;
     underlying_size_ = other.underlying_size_;
     arr_ = new T[underlying_size_];
-    memcpy(arr_, other.arr_, other.size_ * sizeof(T));
+    for (int i = 0; i < other.size_; ++i) {
+      new (arr_ + i) T(other.arr_[i]);
+    }
     return *this;
   }
 
@@ -86,18 +90,10 @@ public:
   T Erase(int idx) {
     assert(idx < size_);
     T rtn = std::move(arr_[idx]);
-    int elements_to_shift = (size_ - (idx + 1));
-    int bytes_to_shift = elements_to_shift * sizeof(T);
 
-    // for fewer bytes, faster to avoid manually move than to use memmove.
-    if (bytes_to_shift <= 64) {
-      for (int i = idx; i < size_ - 1; ++i) {
-        arr_[i] = std::move(arr_[i + 1]);
-      }
-
-    // for larger shifts, we'll just use memmove.
-    } else {
-      memmove(arr_ + idx, arr_ + idx + 1, bytes_to_shift);
+    // TODO can optimize to parallelize by moving multiple at at time.
+    for (int i = idx; i < size_ - 1; ++i) {
+      arr_[i] = std::move(arr_[i + 1]);
     }
     --size_;
     return std::move(rtn);
@@ -112,19 +108,15 @@ public:
    */
   void Insert(const T& e, int idx) {
     assert(idx <= size_);
+
+    // TODO can optimize when resizing so that you insert while resizing.
 		if (UNLIKELY(size_ >= underlying_size_)) {
 		  Resize();		
 		}
 
-    int elements_to_shift = (size_ - idx);
-    int bytes_to_shift = elements_to_shift * sizeof(T);
-
-    if (bytes_to_shift <= 64) {
-      for (int i = size_ - 1; i >= idx; --i) {
-        arr_[i + 1] = std::move(arr_[i]);
-      }
-    } else {
-      memmove(arr_ + idx + 1, arr_ + idx, bytes_to_shift);
+    // TODO can optimize to parallelize by moving multiple at a time.
+    for (int i = size_ - 1; i >= idx; --i) {
+      arr_[i + 1] = std::move(arr_[i]);
     }
 
     new (arr_ + idx) T(e);
@@ -146,7 +138,7 @@ private:
    */
   void Resize() {
     T* resized_arr = new T[underlying_size_ * 2];
-    memcpy(resized_arr, arr_, underlying_size_ * sizeof(T));
+    std::move(arr_, arr_ + size_, resized_arr);
     delete[] arr_;
     arr_ = resized_arr;
     underlying_size_ *= 2;
