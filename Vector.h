@@ -91,9 +91,19 @@ public:
     assert(idx < size_);
     T rtn = std::move(arr_[idx]);
 
-    // TODO can optimize to parallelize by moving multiple at at time.
-    for (int i = idx; i < size_ - 1; ++i) {
-      arr_[i] = std::move(arr_[i + 1]);
+    int num_elems_to_shift = (size_ - (idx + 1));
+
+    // if only shifting a few elements, then we can shift them one-by-one
+    // it'll be faster than std::move on a range.
+    if (num_elems_to_shift < 32) {
+      for (int i = idx; i < size_ - 1; ++i) {
+        arr_[i] = std::move(arr_[i + 1]);
+      }
+
+    // if shifting a lot of elements, then we can parallelize with std::move
+    // on a range and be faster than shifting one at a time.
+    } else {
+      std::move(arr_ + idx + 1, arr_ + size_, arr_ + idx);
     }
     --size_;
     return std::move(rtn);
