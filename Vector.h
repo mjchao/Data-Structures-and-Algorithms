@@ -103,6 +103,13 @@ public:
     return std::move(rtn);
   }
 
+  /**
+   * Inserts the element at the given index. Subsequent elements are shifted
+   * up.
+   *
+   * @param e Element to insert
+   * @param idx Index at which to insert the element.
+   */
   void Insert(const T& e, int idx) {
     assert(idx <= size_);
 		if (UNLIKELY(size_ >= underlying_size_)) {
