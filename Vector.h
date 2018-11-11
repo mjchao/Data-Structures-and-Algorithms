@@ -149,6 +149,11 @@ private:
     underlying_size_ *= 2;
   }
 
+  /**
+   * Resizes the underlying array while also inserting the given element
+   * at the specified index. This avoids inserting after the resize and having
+   * to do extra work shifting subsequent elements down.
+   */
   void ResizeAndInsert(const T& e, int idx) {
     T* resized_arr = new T[underlying_size_ * 2];
     std::move(arr_, arr_ + idx, resized_arr);

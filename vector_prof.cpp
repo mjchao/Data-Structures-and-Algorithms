@@ -256,16 +256,16 @@ void ProfilePushBackLargeObj(int min_obj_size, int max_obj_size, int num_objs,
 
 void ProfilePushBackLargeObjVariousSizes() {
   std::cout << "=== Profiling Vector Push Back Small Strings ===" << std::endl;
-  ProfilePushBackLargeObj(10, 17, 1000, 10);
+  ProfilePushBackLargeObj(10, 17, 10000, 10);
   std::cout << "\n\n\n";
 
-  /*std::cout << "=== Profiling Vector Push Back Medium Strings ===" << std::endl;
+  std::cout << "=== Profiling Vector Push Back Medium Strings ===" << std::endl;
   ProfilePushBackLargeObj(100, 150, 1500, 10);
   std::cout << "\n\n\n";
 
   std::cout << "=== Profiling Vector Push Back Large Strings ===" << std::endl;
   ProfilePushBackLargeObj(1000, 1250, 20, 10);
-  std::cout << "\n\n\n";*/
+  std::cout << "\n\n\n";
 }
 
 
