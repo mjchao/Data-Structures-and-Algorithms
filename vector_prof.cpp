@@ -268,7 +268,6 @@ void ProfilePushBackLargeObjVariousSizes() {
   std::cout << "\n\n\n";
 }
 
-
 int main() {
   ProfileConstructorSmall();
   ProfileConstructorMed();
@@ -285,3 +284,4 @@ int main() {
   ProfilePushBackLargeObjVariousSizes();
   return 0;
 }
+
