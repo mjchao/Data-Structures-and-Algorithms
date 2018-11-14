@@ -2,8 +2,9 @@
 
 #include "Utils.h"
 #include <assert.h>
-#include <vector>
+#include <new>
 #include <unordered_map>
+#include <vector>
 
 
 namespace dsalgo {
@@ -28,15 +29,21 @@ public:
    * element is assumed to be second leas-recently used, and so on. The last
    * element in the list is assumed to be most-recently used.
    */
-  LruQueue(const std::vector<T>& elements) {
+  LruQueue(const std::vector<T>& elements) : size_(elements.size()) {
     assert(elements.size() >= 1);
-    for (const T& e : elements) {
+
+    // operations will benefit from cache locality if we allocate a block of
+    // memory up front rather than allocating one node of the linked list
+    // at a time.
+    mem_ = new LruEntry[elements.size()];
+
+    for (int i = 0; i < static_cast<int>(elements.size()); ++i) {
       // You cannot have a well-defined LRU if there are duplicate elements.
       // If an element is marked as used and there are two of them, you wouldn't
       // know which one to indicate as most-recently used.
-      assert(elem_to_entry_.find(e) == elem_to_entry_.end());
-      LruEntry* new_entry = CreateNewLruEntry(e);
-      AppendLruEntry(new_entry);
+      assert(elem_to_entry_.find(elements[i]) == elem_to_entry_.end());
+      PlaceNewLruEntry(mem_ + i, elements[i]);
+      AppendLruEntry(mem_ + i);
     }
   }
 
@@ -85,6 +92,7 @@ private:
     LruEntry* next_ = nullptr;
     LruEntry* prev_ = nullptr;
 
+    LruEntry() {}
     LruEntry(const T& e) : e_(e) {}
   };
 
@@ -92,38 +100,43 @@ private:
    * Releases all heap memory allocated by this LruQueue.
    */
   void FreeMemory() {
-    LruEntry* curr_entry = lru_;
-    while (curr_entry != nullptr) {
-      LruEntry* next_entry = curr_entry->next_;
-      delete curr_entry;
-      curr_entry = next_entry;
-    }
+    delete[] mem_;
     lru_ = nullptr;
     mru_ = nullptr;
+    mem_ = nullptr;
   }
 
   /**
-   * Deep Copies all elements from another LruQueue (LRU order is also preserved
+   * Deep copies all elements from another LruQueue (LRU order is also preserved
    * by the copy).
+   *
+   * Note that no memory clean up is performed before copying. Call FreeMemory()
+   * before calling CopyFrom() if you need to clean up the current object.
    */
   void CopyFrom(const LruQueue<T>& other) {
+    size_ = other.size_;
+    mem_ = new LruEntry[size_];
+    std::copy(other.mem_, other.mem_ + other.size_, mem_);
+    for (int i = 0; i < size_; ++i) {
+      elem_to_entry_[mem_[i].e_] = (mem_ + i);
+    }
+
     LruEntry* curr_entry = other.lru_;
     while (curr_entry != nullptr) {
       LruEntry* next_entry = curr_entry->next_;
-      LruEntry* new_entry = CreateNewLruEntry(curr_entry->e_);
-      AppendLruEntry(new_entry);
+      AppendLruEntry(elem_to_entry_[curr_entry->e_]);
       curr_entry = next_entry;
     }
   }
 
   /**
-   * Creates a new entry for the LruQueue's linked list.
+   * Creates a new entry for the LruQueue's linked list via placement_new.
    *
-   * The element is populated, but the next and previous markers are not.
+   * @param alloced_mem Memory that has already been allocated on the heap.
+   * @param e new element to add to the LRU.
    */
-  LruEntry* CreateNewLruEntry(const T& e) {
-    LruEntry* new_entry = new LruEntry(e);
-    return new_entry;
+  void PlaceNewLruEntry(LruEntry* alloced_mem, const T& e) {
+    new (alloced_mem) LruEntry(e); 
   }
 
   /**
@@ -154,21 +167,25 @@ private:
    * @param entry The LruEntry to remove from the linked list
    */
   void RemoveLruEntry(LruEntry* entry) {
-    LruEntry* prev_entry = entry->prev_;
-    LruEntry* next_entry = entry->next_;
-    if (prev_entry != nullptr) {
+
+    // optimize for removing the LRU because that's the point of using an
+    // LRU queue.
+    if (LIKELY(entry == lru_)) {
+      lru_ = entry->next_;
+      lru_->prev_ = nullptr;
+      entry->next_ = nullptr;
+    } else {
+      LruEntry* prev_entry = entry->prev_;
+      LruEntry* next_entry = entry->next_;
       prev_entry->next_ = next_entry;
-    }
-    if (next_entry != nullptr) {
-      next_entry->prev_ = prev_entry;
-    }
-    entry->next_ = nullptr;
-    entry->prev_ = nullptr;
-    if (entry == lru_) {
-      lru_ = next_entry;
-    }
-    if (entry == mru_) {
-      mru_ = prev_entry;
+      if (next_entry != nullptr) {
+        next_entry->prev_ = prev_entry;
+      }
+      entry->next_ = nullptr;
+      entry->prev_ = nullptr;
+      if (entry == mru_) {
+        mru_ = prev_entry;
+      }
     }
   }
 
@@ -185,7 +202,17 @@ private:
   LruEntry* mru_ = nullptr;
 
   /**
+   * Memory allocated for the linked list.
+   */
+  LruEntry* mem_ = nullptr;
+
+  int size_ = 0;
+
+  /**
    * Hashes elements to their LruEntry.
+   *
+   * TODO this is very slow and we should profile with a custom linear-probing
+   * hashmap instead.
    */
   std::unordered_map<T, LruEntry*> elem_to_entry_;
 
