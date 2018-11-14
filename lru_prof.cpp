@@ -107,13 +107,12 @@ void ProfileGetAndUseRandom(int num_elems, int num_runs) {
     test.MarkUsed(elem_to_mark_used[i]);
   }
   int64_t stop = Clock::Now();
-  std::cout << "dsalog lru" << std::endl;
+  std::cout << "dsalgo lru" << std::endl;
   PrintStats(stop - start, num_runs, "\t");
 }
 
 
 void ProfileGetAndUse() {
-
   std::cout << "=== Profile small Lru get + use front ===" << std::endl;
   ProfileGetAndUseFront(10, 100000);
   std::cout << "\n\n\n";
