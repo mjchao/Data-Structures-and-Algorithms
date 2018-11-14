@@ -44,6 +44,7 @@ public:
       assert(elem_to_entry_.find(elements[i]) == elem_to_entry_.end());
       PlaceNewLruEntry(mem_ + i, elements[i]);
       AppendLruEntry(mem_ + i);
+      elem_to_entry_[mem_[i].e_] = (mem_ + i);
     }
   }
 
@@ -158,7 +159,6 @@ private:
       lru_ = entry;
       mru_ = entry;
     }
-    elem_to_entry_[entry->e_] = entry;
   }
 
   /**
@@ -211,7 +211,7 @@ private:
   /**
    * Hashes elements to their LruEntry.
    *
-   * TODO this is very slow and we should profile with a custom linear-probing
+   * TODO this is very slow and we should use a custom linear-probing
    * hashmap instead.
    */
   std::unordered_map<T, LruEntry*> elem_to_entry_;
