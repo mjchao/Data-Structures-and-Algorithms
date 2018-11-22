@@ -12,6 +12,10 @@ lru:
 	$(CXX) $(CXXFLAGS) $(OPT) lru_prof.cpp -o lru_prof-opt
 	$(CXX) $(CXXFLAGS) $(DEBUG) lru_test.cpp -o lru_test-dbg
 
+deque:
+	$(CXX) $(CXXFLAGS) $(OPT) deque_prof.cpp -o deque_prof-opt
+	$(CXX) $(CXXFLAGS) $(DEBUG) deque_test.cpp -o deque_test-dbg
+
 clean:
 	rm *prof-opt *test-dbg
 
