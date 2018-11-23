@@ -61,7 +61,7 @@ public:
     }
 
     // have to add an extra underlying_size_ in case head_idx_ is 0, in which
-    // case the result would be negative.
+    // case subtracting 1 would make the head_idx_ negative.
     int insert_idx = (head_idx_ + underlying_size_ - 1) % underlying_size_;
     new (arr_ + insert_idx) T(e);
     head_idx_ = insert_idx;
