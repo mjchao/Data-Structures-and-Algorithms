@@ -37,20 +37,6 @@ public:
   }
 
   /**
-   * Adds the given element to the end of the deque
-   *
-   * @param e element to add.
-   */
-  void PushBack(const T& e) {
-    if (UNLIKELY(size_ >= underlying_size_)) {
-      Resize();
-    }
-    int insert_idx = GetEndIdx();
-    new (arr_ + insert_idx) T(e);
-    ++size_;
-  }
-
-  /**
    * Adds the given element to the front of the deque
    *
    * @param e element to add.
@@ -69,11 +55,66 @@ public:
   }
 
   /**
+   * Adds the given element to the end of the deque
+   *
+   * @param e element to add.
+   */
+  void PushBack(const T& e) {
+    if (UNLIKELY(size_ >= underlying_size_)) {
+      Resize();
+    }
+    int insert_idx = GetEndIdx();
+    new (arr_ + insert_idx) T(e);
+    ++size_;
+  } 
+
+  /**
    * Removes the element at the front of the deque.
    */
   void PopFront() {
     assert(size_ > 0);
     head_idx_ = (head_idx_ + 1) % underlying_size_;
+    --size_;
+  }
+
+  /**
+   * Removes the element at the back of the deque.
+   */
+  void PopBack() {
+    assert(size_ > 0);
+    --size_;
+  }
+
+  /**
+   * Removes the element at the given index. Subsequent elements are shifted
+   * down.
+   *
+   * @param idx index of element to remove.
+   */
+  void Erase(int idx) {
+    assert(idx < size_);
+
+    int underlying_idx = GetUnderlyingIdx(idx);
+    int end_idx = GetEndIdx();
+
+    // in this case, we only have to shift the wrapped-around part
+    if (underlying_idx < head_idx_) {
+      std::move(arr_ + underlying_idx + 1, arr_ + end_idx,
+          arr_ + underlying_idx);
+
+    // in this case, we have to shift the non-wrapped-around and the
+    // wrapped-around part if it exists
+    } else {
+      if (IsWrappedAround()) {
+        std::move(arr_ + underlying_idx + 1, arr_ + underlying_size_,
+            arr_ + underlying_idx);
+        arr_[underlying_size_ - 1] = std::move(arr_[0]);
+        std::move(arr_ + 1, arr_ + GetEndIdx(), arr_ + 0);
+      } else {
+        std::move(arr_ + underlying_idx + 1, arr_ + underlying_idx + size_,
+            arr_ + underlying_idx); 
+      }
+    }
     --size_;
   }
 
@@ -89,14 +130,6 @@ public:
    */
   T& Back() const {
     return arr_[GetTailIdx()];
-  }
-
-  /**
-   * Removes the element at the back of the deque.
-   */
-  void PopBack() {
-    assert(size_ > 0);
-    --size_;
   }
 
   /**
