@@ -32,10 +32,14 @@ public:
   Deque() : Deque(8) {
   }
 
+  ~Deque() {
+    delete[] arr_;
+  }
+
   /**
    * Adds the given element to the end of the deque
    *
-   * @param e Element to add.
+   * @param e element to add.
    */
   void PushBack(const T& e) {
     if (UNLIKELY(size_ >= underlying_size_)) {
@@ -47,23 +51,76 @@ public:
   }
 
   /**
+   * Adds the given element to the front of the deque
+   *
+   * @param e element to add.
+   */
+  void PushFront(const T& e) {
+    if (UNLIKELY(size_ >= underlying_size_)) {
+      Resize();
+    }
+
+    // have to add an extra underlying_size_ in case head_idx_ is 0, in which
+    // case the result would be negative.
+    int insert_idx = (head_idx_ + underlying_size_ - 1) % underlying_size_;
+    new (arr_ + insert_idx) T(e);
+    head_idx_ = insert_idx;
+    ++size_;
+  }
+
+  /**
    * Removes the element at the front of the deque.
    */
   void PopFront() {
     assert(size_ > 0);
     head_idx_ = (head_idx_ + 1) % underlying_size_;
+    --size_;
   }
 
   /**
-   * Gets the element at the front of the deque.
+   * @return the element at the front of the deque.
    */
   T& Front() const {
     return arr_[head_idx_];
   }
 
+  /**
+   * @return the element at the back of the deque.
+   */
+  T& Back() const {
+    return arr_[GetTailIdx()];
+  }
+
+  /**
+   * Removes the element at the back of the deque.
+   */
+  void PopBack() {
+    assert(size_ > 0);
+    --size_;
+  }
+
+  /**
+   * @param idx an index
+   * @return the element in the deque at index idx
+   */
   T& operator[](int idx) const {
     assert(idx < size_);
     return arr_[GetUnderlyingIdx(idx)];
+  }
+
+  /**
+   * @return the number of elements in the deque.
+   */
+  int Size() const {
+    return size_;
+  }
+
+  /**
+   * Removes all elements from the deque.
+   */
+  void Clear() {
+    size_ = 0;
+    head_idx_ = 0;
   }
 
 private:
@@ -73,6 +130,7 @@ private:
    * deque. Remember that the deque's head may have shifted if there were
    * PopFronts().
    *
+   * @param i an index. Must be non-negative.
    * @return the index of the i-th element in the underlying array.
    */
   int GetUnderlyingIdx(int i) const {
@@ -102,6 +160,10 @@ private:
     return (head_idx_ + size_) > underlying_size_;
   }
 
+  /**
+   * Resizes the underlying array to twice the size and brings the realigns
+   * the head with the beginning of the underlying array.
+   */
   void Resize() {
     T* resized_arr = new T[underlying_size_ * 2];
 
@@ -133,7 +195,6 @@ private:
    * Total size of underlying array
    */
   int underlying_size_ = 0;
-
 
   /**
    * Index of the head of the deque

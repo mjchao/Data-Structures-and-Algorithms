@@ -35,8 +35,35 @@ void testPushBackWithPopFront() {
   }
 }
 
+void testPushFront() {
+  // test pushing front into a deque with the head at index 0. The head needs
+  // to wrap around back to the end of the underlying array.
+  Deque<int> test;
+  test.PushBack(1);
+  test.PushFront(0);
+  assert(test.Front() == 0);
+  assert(test.Back() == 1);
+  test.PushFront(-1);
+  assert(test.Front() == -1);
+  assert(test[1] == 0);
+  assert(test.Back() == 1);
+
+  test.Clear();
+
+  // now test just pushing front a bunch of elements.
+  int num_elems = 1028;
+  for (int i = 0; i < num_elems; ++i) {
+    test.PushFront(i);
+    for (int j = 0; j <= i; ++j) {
+      assert(test[j] == (i - j));
+    }
+  }
+}
+
 
 int main() {
   testPushBack();
+  testPushBackWithPopFront();
+  testPushFront();
 }
 
