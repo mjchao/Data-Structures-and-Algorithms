@@ -177,7 +177,7 @@ void ProfileRandInsertion(int deque_size, int num_inserts, int num_runs) {
   std::vector<int> rand_elems = RandN(-100000, 100000, deque_size);
   std::vector<int> rand_insert_idxs;
   for (int i = 0; i < num_inserts; ++i) {
-    rand_insert_idxs.push_back(RandInt(0, deque_size + i - 1));
+    rand_insert_idxs.push_back(RandInt(0, deque_size + i));
   }
 
   int64_t total_time = 0;
@@ -192,7 +192,6 @@ void ProfileRandInsertion(int deque_size, int num_inserts, int num_runs) {
     start = Clock::Now();
     for (int j = 0; j < num_inserts; ++j) {
       test.Insert(-1, rand_insert_idxs[j]);
-      test.PushFront(rand_elems[j]);
     }
     stop = Clock::Now();
     total_time += (stop - start);
@@ -238,12 +237,78 @@ void ProfileRandInsertsionVariousSizes() {
 }
 
 
+void ProfileRandDeletion(int deque_size, int num_deletions, int num_runs) {
+  assert(num_deletions <= deque_size);
+  std::vector<int> rand_elems = RandN(-100000, 100000, deque_size);
+  std::vector<int> rand_delete_idxs;
+  for (int i = 0; i < num_deletions; ++i) {
+    rand_delete_idxs.push_back(RandInt(0, deque_size - i - 1));
+  }
+
+  int64_t total_time = 0;
+  int64_t start = 0;
+  int64_t stop = 0;
+  
+  Deque<int> test;
+  for (int i = 0; i < num_runs; ++i) {
+    for (int i = 0; i < deque_size; ++i) {
+      test.PushBack(rand_elems[i]);
+    }
+    start = Clock::Now();
+    for (int j = 0; j < num_deletions; ++j) {
+      test.Erase(rand_delete_idxs[j]);
+    }
+    stop = Clock::Now();
+    total_time += (stop - start);
+    test.Clear();
+  }
+
+  std::cout << "dsalgo Deque" << std::endl;
+  PrintStats(stop - start, num_runs * num_deletions, "\t");
+
+  std::deque<int> test_std;
+  total_time = 0;
+  for (int i = 0; i < num_runs; ++i) {
+    for (int i = 0; i < deque_size; ++i) {
+      test_std.push_back(rand_elems[i]);
+    }
+    start = Clock::Now();
+    for (int j = 0; j < num_deletions; ++j) {
+      test_std.erase(test_std.begin() + rand_delete_idxs[j]);
+    }
+    stop = Clock::Now();
+    total_time += (stop - start);
+    test_std.clear();
+  }
+  stop = Clock::Now();
+
+  std::cout << "std::deque" << std::endl;
+  PrintStats(stop - start, num_runs * num_deletions, "\t"); 
+}
+
+
+void ProfileRandDeletionVariousSizes() {
+  std::cout << "=== Profiling Deque Erase Small Size ===" << std::endl;
+  ProfileRandDeletion(10, 10, 10000);
+  std::cout << "\n\n\n";
+
+  std::cout << "=== Profiling Deque Erase Medium Size ===" << std::endl;
+  ProfileRandDeletion(100, 100, 1000);
+  std::cout << "\n\n\n";
+
+  std::cout << "=== Profiling Deque Erase Large Size ===" << std::endl;
+  ProfileRandDeletion(10000, 1000, 1);
+  std::cout << "\n\n\n";
+}
+
+
 int main() {
   ReseedRand();
   ProfilePushPopBackVariousSizes();
   ProfileAccessVariousSizes();
   ProfilePushPopFrontVariousSizes();
   ProfileRandInsertsionVariousSizes();
+  ProfileRandDeletionVariousSizes();
   return 0;
 }
 
