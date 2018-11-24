@@ -87,7 +87,7 @@ namespace dsalgo {
     int low = 0;
 
     // the element at index high must be > val.
-    int high = range_size - 1;
+    int high = range_size;
 
     // when the search ends, we'll have low = mid and high = mid + 1.
 
@@ -97,17 +97,26 @@ namespace dsalgo {
     while (low < mid) {
       const T& test = *(begin + mid);
 
-      if (test <= val) {
+      if (test < val) {
 
-        // mid is <= val, so setting low to mid will maintain the lower bound
-        // restriction
-        low = mid; 
-      } else /* (test > val) */{
+        // mid is < val, so setting low + 1 to mid will maintain the lower
+        // bound restriction
+        low = mid + 1; 
+
+      } else if (val < test) {
 
         // mid is > val, so setting high to mid will maintain the lower bound
         // restriction
         high = mid;
+
+      } else /* (test == val) */ {
+
+        // mid == val, so setting low to mid just bring the lower bound higher
+        low = mid;
       }
+
+      // recompute mid after updating the lower/upper bound of the search range
+      mid = (low + high) / 2;
     }
 
     if (*(begin + mid) >= val) {

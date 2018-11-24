@@ -81,8 +81,7 @@ void testLowerBoundRandomized() {
     std::sort(test.begin(), test.end());
     for (int i = 0; i < num_elems - 1; ++i) {
       if (test[i] != test[i+1]) {
-        assert(LowerBound(test.begin(), test.end(), test[i+1]) ==
-            test.begin() + i + 1);
+        AssertLowerBound(test, test[i+1], i+1);
       }
     }
   }
@@ -92,10 +91,10 @@ void testLowerBoundRandomized() {
 void AssertLowerBoundLast(const std::vector<int>& elems, int val,
     int expected) {
   if (expected != static_cast<int>(elems.size())) {
-    assert(LowerBound(elems.begin(), elems.end(), val) ==
+    assert(LowerBoundLast(elems.begin(), elems.end(), val) ==
         elems.begin() + expected);
   } else {
-    assert(LowerBound(elems.begin(), elems.end(), val) == elems.end());
+    assert(LowerBoundLast(elems.begin(), elems.end(), val) == elems.end());
   }
 }
 
@@ -110,6 +109,16 @@ void testLowerBoundLast() {
     AssertLowerBoundLast(elems, i, i);
   }
 
+  elems = {0, 0, 0, 0, 0};
+  AssertLowerBoundLast(elems, 0, 4);
+
+  elems = {0, 0, 1, 1, 1};
+  AssertLowerBoundLast(elems, 0, 1);
+  AssertLowerBoundLast(elems, 1, 4);
+
+  elems = {1, 1, 3, 3, 3};
+  AssertLowerBoundLast(elems, 2, 2);
+  AssertLowerBoundLast(elems, 4, 5);
 }
 
 
@@ -121,8 +130,7 @@ void testLowerBoundLastRandomized() {
     std::sort(test.begin(), test.end());
     for (int i = 0; i < num_elems - 1; ++i) {
       if (test[i] != test[i+1]) {
-        assert(LowerBound(test.begin(), test.end(), test[i+1]) ==
-            test.begin() + i + 1);
+        AssertLowerBoundLast(test, test[i], i);
       }
     }
   }
@@ -131,9 +139,10 @@ void testLowerBoundLastRandomized() {
 
 int main() {
   ReseedRand();
-  //testLowerBound();
-  //testLowerBoundRandomized();
+  testLowerBound();
+  testLowerBoundRandomized();
   testLowerBoundLast();
+  testLowerBoundLastRandomized();
   return 0;
 }
 
