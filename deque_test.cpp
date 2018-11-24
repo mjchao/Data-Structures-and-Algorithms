@@ -161,7 +161,159 @@ void testErase() {
 }
 
 
+template <typename T>
+void PrintDeque(const Deque<T>& d) {
+  for (int i = 0; i < d.Size(); ++i) {
+    std::cout << d[i] << " ";
+  }
+  std::cout << std::endl;
+}
+
+
+void testInsert() {
+  Deque<int> test;
+
+  // === test inserting at the back === //
+  int num_elems = 109;
+  for (int i = 0; i < num_elems; ++i) {
+    test.Insert(i, i);
+    for (int j = 0; j <= i; ++j) {
+      assert(test[j] == j);
+    }
+  }
+
+  test.Clear();
+
+  // === test inserting at the front === //
+  for (int i = 0; i < num_elems; ++i) {
+    test.Insert(i, 0);
+    for (int j = 0; j <= i; ++j) {
+      assert(test[j] == i - j);
+    }
+  }
+
+  test.Clear();
+
+  // === test inserting at the middle causing resize === //
+  for (int i = 0; i < 8; ++i) {
+    test.PushBack(i);
+  }
+  for (int i = 0; i < 10; ++i) {
+    test.Insert(-1, 5);
+  }
+
+  // array becomes [0, 1, 2, 3, 4, -1, -1, ..., -1, 5, 6, 7]
+
+  // check 0, 1, 2, 3, 4
+  for (int i = 0; i < 5; ++i) {
+    assert(test[i] == i); 
+  }
+
+  // check -1s
+  for (int i = 5; i < 15; ++i) {
+    assert(test[i] == -1);
+  }
+
+  // check 5, 6, 7
+  for (int i = 0; i < 3; ++i) {
+    assert(test[15 + i] == 5 + i);
+  }
+
+  test.Clear();
+
+  // === test only having to shift the non-wrapped-around part, with the head
+  //     being at index 0 === //
+
+  // shift the head index a bit
+  for (int i = 0; i < 5; ++i) {
+    test.PushBack(0);
+    test.PopFront();
+  }
+
+  for (int i = 0; i < 5; ++i) {
+    test.PushBack(i);
+  }
+
+  // underlying array is now [3, 4, -, -, -, 0, 1, 2]
+
+  test.Insert(95, 3);
+
+  // underlying array is now [95, 3, 4, -, -, 0, 1, 2]
+
+  test.Insert(96, 5);
+
+  // underlying array is now [95, 3, 96, 4, -, 0, 1, 2]
+
+  test.Insert(97, 7);
+
+  // underlying array is now [95, 3, 96, 4, 97, 0, 1, 2]
+
+  test.Insert(98, 4);
+
+  // after resize, underlying array is now [0, 1, 2, 95, 98, 3, 96, 4, 97]
+  assert(test[0] == 0);
+  assert(test[1] == 1);
+  assert(test[2] == 2);
+  assert(test[3] == 95);
+  assert(test[4] == 98);
+  assert(test[5] == 3);
+  assert(test[6] == 96);
+  assert(test[7] == 4);
+  assert(test[8] == 97);
+
+  test.Clear();
+
+  // === test shifting both wrapped and non-wrapped parts === //
+
+  // shift the head index a bit
+  for (int i = 0; i < 5; ++i) {
+    test.PushBack(0);
+    test.PopFront();
+  }
+
+  for (int i = 0; i < 4; ++i) {
+    test.PushBack(i);
+  }
+
+  // underlying array is now [3, -, -, -, -, 0, 1, 2]
+
+  test.Insert(95, 1);
+
+  // underlying array is now [2, 3, -, -, -, 0, 95, 1]
+
+  test.Insert(96, 0);
+
+  // underlying array is now [1, 2, 3, -, -, 96, 0, 95]
+
+  test.Insert(97, 2);
+  
+  // underlying array is now [95, 1, 2, 3, -, 96, 0, 97]
+  
+  test.Insert(98, 4);
+
+  // underlying array is now [95, 98, 1, 2, 3, 96, 0, 97]
+
+  test.Insert(99, 8);
+
+  // after resize, underlying array becomes
+  // [96, 0, 97, 95, 98, 1, 2, 3, 99]
+  
+  assert(test[0] == 96);
+  assert(test[1] == 0);
+  assert(test[2] == 97);
+  assert(test[3] == 95);
+  assert(test[4] == 98);
+  assert(test[5] == 1);
+  assert(test[6] == 2);
+  assert(test[7] == 3);
+  assert(test[8] == 99);
+
+  test.Clear();
+}
+
+
 void testRandomized() {
+  ReseedRand();
   std::deque<int> correct_deque;
   Deque<int> test_deque;
 
@@ -181,8 +333,11 @@ void testRandomized() {
       correct_deque.push_front(rand_val);
       test_deque.PushFront(rand_val);
 
-    // TODO insert
     } else if (50 <= operation && operation < 75) {
+      int rand_val = RandInt(-10000, 100000);
+      int rand_idx = RandInt(0, correct_deque.size());
+      correct_deque.insert(correct_deque.begin() + rand_idx, rand_val);
+      test_deque.Insert(rand_val, rand_idx);
 
     // pop back
     } else if (75 <= operation && operation < 80 && correct_deque.size() > 0) {
@@ -203,6 +358,9 @@ void testRandomized() {
 
     assert(static_cast<int>(correct_deque.size()) == test_deque.Size());
     for (int i = 0; i < test_deque.Size(); ++i) {
+      if (correct_deque[i] != test_deque[i]) {
+        PrintDeque(test_deque);
+      }
       assert(correct_deque[i] == test_deque[i]);
     }
   }
@@ -214,6 +372,7 @@ int main() {
   testPushBackWithPopFront();
   testPushFront();
   testErase();
+  testInsert();
   testRandomized();
 }
 

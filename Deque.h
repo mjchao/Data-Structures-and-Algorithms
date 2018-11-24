@@ -87,7 +87,7 @@ public:
 
   /**
    * Removes the element at the given index. Subsequent elements are shifted
-   * down.
+   * towards the front of the deque.
    *
    * @param idx index of element to remove.
    */
@@ -111,11 +111,70 @@ public:
         arr_[underlying_size_ - 1] = std::move(arr_[0]);
         std::move(arr_ + 1, arr_ + GetEndIdx(), arr_ + 0);
       } else {
-        std::move(arr_ + underlying_idx + 1, arr_ + underlying_idx + size_,
+        std::move(arr_ + underlying_idx + 1, arr_ + head_idx_ + size_,
             arr_ + underlying_idx); 
       }
     }
     --size_;
+  }
+
+  /**
+   * Inserts the element at the given index. Subsequent elements are shifted
+   * towards the back of the deque.
+   *
+   * @param e the element to insert
+   * @param idx index at which to insert the element
+   */
+  void Insert(const T& e, int idx) {
+    assert(idx <= size_);
+
+    if (size_ < underlying_size_) {
+      int underlying_idx = GetUnderlyingIdx(idx);
+      int end_idx = GetEndIdx();
+      
+      // in this case, we only have to shift the wrapped-around part
+      if (underlying_idx < head_idx_) {
+        std::move_backward(arr_ + underlying_idx, arr_ + end_idx,
+            arr_ + end_idx + 1);
+
+      // in this case, we have to shift the non-wrapped-around part and the
+      // wrapped-around part if it exists
+      } else {
+
+        // if deque has already wrapped-around or if inserting another element
+        // would cause it to wrap around, then we need to apply the
+        // wrapped-around logic
+        if (IsWrappedAround() || head_idx_ + size_ == underlying_size_) {
+
+          // shift wrapped-around part
+          std::move_backward(arr_, arr_ + end_idx, arr_ + end_idx + 1); 
+
+          // move last element in underlying array into wrapped-around part
+          arr_[0] = std::move(arr_[underlying_size_ - 1]);
+
+          // shift non-wrapped-around part
+          std::move_backward(arr_ + underlying_idx, arr_ + underlying_size_ - 1,
+              arr_ + underlying_size_);
+
+        // otherwise, inserting would not cause any wrap-around, so the
+        // insertion will be just like inserting into a vector
+        } else {
+          std::move_backward(arr_ + underlying_idx, arr_ + head_idx_ + size_,
+              arr_ + head_idx_ + size_ + 1);
+        }
+      }
+
+      // insert element
+      new (arr_ + underlying_idx) T(e);
+      ++size_;
+
+    } else {
+      if (idx < size_) {
+        ResizeAndInsert(e, idx);
+      } else {
+        PushBack(e);
+      }
+    }
   }
 
   /**
@@ -194,7 +253,7 @@ private:
   }
 
   /**
-   * Resizes the underlying array to twice the size and brings the realigns
+   * Resizes the underlying array to twice the size and realigns
    * the head with the beginning of the underlying array.
    */
   void Resize() {
@@ -217,6 +276,91 @@ private:
     delete[] arr_;
     arr_ = resized_arr;
     underlying_size_ *= 2;
+    head_idx_ = 0;
+  }
+
+  /**
+   * Resizes the underlying array to twice the size and inserts the given
+   * element while resizing. The head will be realigned with the beginning of
+   * the underlying array.
+   *
+   * @param e the element to insert
+   * @param idx the index at which to insert the element. idx must be strictly
+   * less than size. If idx == size, the underlying idx becomes 0 and the
+   * operation cannot be distinguished from idx == 0. For idx == size, use
+   * PushBack instead.
+   */
+  void ResizeAndInsert(const T& e, int idx) {
+    assert(idx < size_);
+
+    T* resized_arr = new T[underlying_size_ * 2];
+    int insert_idx = GetUnderlyingIdx(idx);
+    if (IsWrappedAround()) {
+
+      // inserting in the wrapped-around part. That means we can copy the
+      // non-wrapped-around part over and then adjust copying the wrapped-around
+      // part to accommodate the inserted element.
+      if (insert_idx < head_idx_) {
+
+        // move [head, end-of-array]
+        int next_available_resized_arr_idx = 0;
+        std::move(arr_ + head_idx_, arr_ + underlying_size_, resized_arr);
+        next_available_resized_arr_idx += (underlying_size_ - head_idx_);
+
+        // move [begin-of-array, insert_idx)
+        std::move(arr_, arr_ + insert_idx,
+            resized_arr + next_available_resized_arr_idx);
+        next_available_resized_arr_idx += insert_idx;
+
+        // insert the element to be inserted
+        new (resized_arr + next_available_resized_arr_idx) T(e);
+        next_available_resized_arr_idx += 1;
+
+        // move [insert_idx, end-of-array]
+        std::move(arr_ + insert_idx, arr_ + GetEndIdx(),
+            resized_arr + next_available_resized_arr_idx);
+
+      // inserting in the non-wrapped-around part. That means we need to shift
+      // the non-wrapped-around part appropriately to accommodate the inserted
+      // element and then we can just copy the wrapped-around part over.
+      } else {
+        
+        // move [head, insert_idx)
+        int next_available_resized_arr_idx = 0;
+        std::move(arr_ + head_idx_, arr_ + insert_idx, resized_arr);
+        next_available_resized_arr_idx += idx;
+
+        // insert the element to be inserted
+        new (resized_arr + next_available_resized_arr_idx) T(e);
+        next_available_resized_arr_idx += 1;
+
+        // move [insert_idx, end-of-non-wrapped-part)
+        std::move(arr_ + insert_idx, arr_ + underlying_size_,
+            resized_arr + next_available_resized_arr_idx);
+        next_available_resized_arr_idx += (underlying_size_ - insert_idx);
+
+        // move [begin-of-array, end-of-deque]
+        std::move(arr_, arr_ + GetEndIdx(),
+            resized_arr + next_available_resized_arr_idx);
+      }
+    } else {
+      // resize and insert normally, like it's a vector
+
+      // special case where inserting at the end - we need to move the insert
+      // index back to the end
+      if (insert_idx == 0) {
+        insert_idx = underlying_size_;
+      }
+
+      std::move(arr_ + head_idx_, arr_ + insert_idx, resized_arr);
+      std::move(arr_ + insert_idx, arr_ + head_idx_ + size_,
+          resized_arr + insert_idx + 1);
+      new (resized_arr + idx) T(e);
+    }
+    delete[] arr_;
+    arr_ = resized_arr;
+    underlying_size_ *= 2;
+    ++size_;
     head_idx_ = 0;
   }
 

@@ -26,6 +26,14 @@ public:
 };
 
 
+/**
+ * Reseeds random number generator with current system time.
+ */
+void ReseedRand() {
+  srand(time(NULL));
+}
+
+
 int RandInt(int min, int max) {
   int range_size = (max - min) + 1;
   return min + (rand() % range_size);
