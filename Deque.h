@@ -10,7 +10,8 @@
 namespace dsalgo {
 
 /**
- * Double-ended array-based queue.
+ * Double-ended array-based queue. Push back/front and Pop back/front are O(1)
+ * amortized. Random insertion/erasure are O(n).
  */
 template <typename T>
 class Deque {
@@ -35,6 +36,8 @@ public:
   ~Deque() {
     delete[] arr_;
   }
+
+  // TODO copy operator/constructor
 
   /**
    * Adds the given element to the front of the deque
@@ -225,14 +228,14 @@ private:
    * @param i an index. Must be non-negative.
    * @return the index of the i-th element in the underlying array.
    */
-  int GetUnderlyingIdx(int i) const {
+  inline int GetUnderlyingIdx(int i) const {
     return (head_idx_ + i) % underlying_size_;
   }
 
   /**
    * @return index of the last element in the deque.
    */
-  int GetTailIdx() const {
+  inline int GetTailIdx() const {
     return GetUnderlyingIdx(size_ - 1);
   }
 
@@ -240,7 +243,7 @@ private:
    * @return index of the end of the deque (1 spot after the last element in
    * the deque).
    */
-  int GetEndIdx() const {
+  inline int GetEndIdx() const {
     return GetUnderlyingIdx(size_);
   }
 
@@ -248,7 +251,7 @@ private:
    * @return if this deque has wrapped around past the end of the underlying
    * array.
    */
-  bool IsWrappedAround() {
+  inline bool IsWrappedAround() {
     return (head_idx_ + size_) > underlying_size_;
   }
 
