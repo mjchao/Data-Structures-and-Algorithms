@@ -16,7 +16,7 @@ namespace dsalgo {
    * range to search
    * @param val the element to search for.
    * @return iterator/pointer to the first element that is greater than or equal
-   * to val.
+   * to val. end is returned if everything in the range is less than val.
    */
   template<typename Iterator, typename T>
   Iterator LowerBound(Iterator begin, Iterator end, const T& val) {
@@ -61,7 +61,8 @@ namespace dsalgo {
 
 
   /**
-   * Performs a binary search on the last element <= val.
+   * Performs a binary search on the last element == val. If no element equals
+   * val, then the first element greater than val is returned.
    *
    * The pointers must be to a random-access range.
    *
@@ -72,8 +73,9 @@ namespace dsalgo {
    * @param last iterator/pointer to one after the last element in a sorted
    * range to search
    * @param val the element to search for.
-   * @return iterator/pointer to the first element that is greater than or equal
-   * to val.
+   * @return iterator/pointer to the last element greater than val or to the
+   * first element greater than val if val is not in the range. end is returned
+   * if everything in the range is less than val.
    */
   template<typename Iterator, typename T>
   Iterator LowerBoundLast(Iterator begin, Iterator end, const T& val) {
@@ -107,7 +109,7 @@ namespace dsalgo {
 
       } else /* (test == val) */ {
 
-        // mid == val, so setting low to mid just bring the lower bound higher
+        // mid == val, so setting low to mid just brings the lower bound higher
         low = mid;
       }
 
@@ -118,5 +120,11 @@ namespace dsalgo {
     return begin + mid;
   }
 
+
+  template<typename Iterator, typename T>
+  Iterator UpperBound(Iterator begin, Iterator end, const T& val) {
+    //TODO
+    return end;
+  }
 } // namespace dsalgo
 
