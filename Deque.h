@@ -37,8 +37,16 @@ public:
     delete[] arr_;
   }
 
-  // TODO copy operator/constructor
+  Deque(const Deque<T>& other) {
+    CopyFrom(other);
+  }
 
+  Deque<T>& operator=(const Deque<T>& other) {
+    delete[] arr_;
+    CopyFrom(other);
+    return *this;
+  }
+  
   /**
    * Adds the given element to the front of the deque
    *
@@ -223,6 +231,33 @@ public:
 private:
 
   /**
+   * Copies from another deque.
+   *
+   * The current arr is not free'd, so free it before calling this function.
+   *
+   * @param other another deque.
+   */
+  void CopyFrom(const Deque<T>& other) {
+    arr_ = new T[other.underlying_size_];
+    underlying_size_ = other.underlying_size_;
+    head_idx_ = other.head_idx_;
+    size_ = other.size_;    
+
+    if (other.IsWrappedAround()) {
+      // copy [head, end-of-underlying]
+      std::copy(other.arr_ + head_idx_, other.arr_ + underlying_size_,
+          arr_ + head_idx_);
+
+      // copy [begin-of-underlying, tail]
+      std::copy(other.arr_, other.arr_ + GetEndIdx(), arr_);
+    } else {
+
+      // copy [head, tail]
+      std::copy(other.arr_ + head_idx_, other.arr_ + GetEndIdx(), arr_);
+    }
+  }
+
+  /**
    * Computes the index in the underlying array for the i-th element in the
    * deque. Remember that the deque's head may have shifted if there were
    * PopFronts().
@@ -256,7 +291,7 @@ private:
    * @return if this deque has wrapped around past the end of the underlying
    * array.
    */
-  inline bool IsWrappedAround() {
+  inline bool IsWrappedAround() const {
     return (head_idx_ + size_) > underlying_size_;
   }
 

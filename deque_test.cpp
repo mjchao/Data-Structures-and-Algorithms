@@ -367,6 +367,69 @@ void testRandomized() {
 }
 
 
+void testCopy() {
+  Deque<int>* original = new Deque<int>;
+  int num_elems = 456;
+  for (int i = 0; i < num_elems; ++i) {
+    original->PushBack(i);
+  }
+
+  Deque<int> stack_copy_construct = *original;
+  assert(stack_copy_construct.Size() == num_elems);
+  for (int i = 0; i < num_elems; ++i) {
+    assert(stack_copy_construct[i] == i);
+  }
+
+  Deque<int> stack_copy_assign;
+  for (int i = 0; i < 25; ++i) {
+    stack_copy_assign.PushBack(-123);
+  }
+  stack_copy_assign = *original;
+  assert(stack_copy_assign.Size() == num_elems);
+  for (int i = 0; i < num_elems; ++i) {
+    assert(stack_copy_assign[i] == i);
+  }
+
+  Deque<int>* heap_copy_construct = new Deque<int>(*original);
+  assert(heap_copy_construct->Size() == num_elems);
+  for (int i = 0; i < num_elems; ++i) {
+    assert((*heap_copy_construct)[i] == i);
+  }
+
+  Deque<int>* heap_copy_assign = new Deque<int>;
+  for (int i = 0; i < 25; ++i) {
+    heap_copy_assign->PushBack(-123);
+  }
+  *heap_copy_assign = *original;
+  assert(heap_copy_assign->Size() == num_elems);
+  for (int i = 0; i < num_elems; ++i) {
+    assert((*heap_copy_assign)[i] == i);
+  }
+
+  // check that deleting a copy doesn't delete the original
+  delete heap_copy_assign;
+
+  for (int i = 0; i < num_elems; ++i) {
+    assert((*original)[i] == i); 
+  }
+
+  heap_copy_assign = new Deque<int>;
+  *heap_copy_assign = *original;
+
+  // check that deleting the original doesn't delete the copies
+  delete original;
+  for (int i = 0; i < num_elems; ++i) {
+    assert(stack_copy_construct[i] == i);
+    assert(stack_copy_assign[i] == i);
+    assert((*heap_copy_construct)[i] == i);
+    assert((*heap_copy_assign)[i] == i);
+  }
+
+  delete heap_copy_construct;
+  delete heap_copy_assign;
+}
+
+
 int main() {
   testPushBack();
   testPushBackWithPopFront();
@@ -374,5 +437,6 @@ int main() {
   testErase();
   testInsert();
   testRandomized();
+  testCopy();
 }
 
