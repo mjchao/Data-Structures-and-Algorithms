@@ -27,7 +27,7 @@ namespace dsalgo {
     int low = 0;
 
     // the element at index high must be >= val.
-    int high = range_size - 1;
+    int high = range_size;
 
     // when the search ends, we'll have low = mid = high.
 
@@ -56,11 +56,7 @@ namespace dsalgo {
       mid = (low + high) / 2;
     }
 
-    if (*(begin + mid) >= val) {
-      return begin + mid;
-    } else {
-      return end;
-    }
+    return begin + mid;
   }
 
 
@@ -119,11 +115,7 @@ namespace dsalgo {
       mid = (low + high) / 2;
     }
 
-    if (*(begin + mid) >= val) {
-      return begin + mid;
-    } else {
-      return end;
-    }
+    return begin + mid;
   }
 
 } // namespace dsalgo
