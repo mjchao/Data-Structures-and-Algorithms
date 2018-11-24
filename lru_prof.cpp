@@ -152,6 +152,7 @@ void ProfileGetAndUse() {
 
 
 int main() {
+  ReseedRand();
   ProfileConstruction();
   ProfileGetAndUse();
   return 0;

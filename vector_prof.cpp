@@ -269,6 +269,8 @@ void ProfilePushBackLargeObjVariousSizes() {
 }
 
 int main() {
+  ReseedRand();
+
   ProfileConstructorSmall();
   ProfileConstructorMed();
   ProfileConstructorLarge();
