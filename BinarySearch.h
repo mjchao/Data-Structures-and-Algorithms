@@ -23,7 +23,7 @@ namespace dsalgo {
     int range_size = end - begin;
 
     // the element at index low must always be less than val, or it must be
-    // the first element equal to val.
+    // the first element >= to val.
     int low = 0;
 
     // the element at index high must be >= val.
@@ -81,7 +81,9 @@ namespace dsalgo {
   Iterator LowerBoundLast(Iterator begin, Iterator end, const T& val) {
     int range_size = end - begin;
 
-    // the element at index low must be <= val.
+    // the element at index low must be <= val, with the exception of index 0.
+    // If index 0 is the first element greater than val, the algorithm will
+    // correctly choose index 0 as the answer.
     int low = 0;
 
     // the element at index high must be > val.
@@ -121,10 +123,56 @@ namespace dsalgo {
   }
 
 
+  /**
+   * Performs a binary search on the first element greater than val.
+   *
+   * The pointers must be to a random-access range.
+   *
+   * Elements in the range should be < comparable.
+   *
+   * @param begin iterator to the beginning of the sorted range to search
+   * @param end iterator to the end of the sorted range to search
+   * @param val the value to search for
+   * @return iterator to the first element greater than val. end is returned
+   * if all elements are less than val.
+   */
   template<typename Iterator, typename T>
   Iterator UpperBound(Iterator begin, Iterator end, const T& val) {
-    //TODO
-    return end;
+    int range_size = end - begin;
+
+    // low must be the index on or before the first element greater than val.
+    // so either the element at index low is <= val, or the element at index
+    // low is > val and it is the first element greater than val.
+    int low = 0;
+
+    // element at index high must be > val.
+    int high = range_size;
+
+    // mid is the element to test.
+    int mid = (low + high) / 2;
+
+    // when the binary search ends, we'll have low = mid = high
+
+    while (low < high) {
+      const T& test = *(begin + mid);
+
+      if (test <= val) {
+
+        // if element at mid is <= val, then the element at mid + 1 must also
+        // be <= val or it must be the 
+        low = mid + 1;
+      } else /* (test > val) */ {
+
+        // if test > val, then setting high = mid still guarantees that
+        // the element at high is greater than val.
+        high = mid;
+      }
+
+      // recompute mid after updating the lower/upper bound of the search range
+      mid = (low + high) / 2;
+    }
+
+    return begin + mid;
   }
 } // namespace dsalgo
 

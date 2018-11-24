@@ -117,6 +117,7 @@ void testLowerBoundLast() {
   AssertLowerBoundLast(elems, 1, 4);
 
   elems = {1, 1, 3, 3, 3};
+  AssertLowerBoundLast(elems, 0, 0);
   AssertLowerBoundLast(elems, 2, 2);
   AssertLowerBoundLast(elems, 4, 5);
 }
@@ -137,12 +138,79 @@ void testLowerBoundLastRandomized() {
 }
 
 
+void AssertUpperBound(const std::vector<int>& elems, int val, int expected) {
+  if (expected != static_cast<int>(elems.size())) {
+    assert(UpperBound(elems.begin(), elems.end(), val) ==
+        elems.begin() + expected);
+  } else {
+    assert(UpperBound(elems.begin(), elems.end(), val) == elems.end());
+  }
+}
+
+
+void testUpperBound() {
+  // test single elem
+  std::vector<int> elems = {1};
+  AssertUpperBound(elems, 0, 0);
+
+  // test two elems
+  elems = {1, 2};
+  AssertUpperBound(elems, 0, 0);
+  AssertUpperBound(elems, 1, 1);
+
+  // test three elems
+  elems = {1, 2, 3};
+  AssertUpperBound(elems, 0, 0);
+  AssertUpperBound(elems, 1, 1);
+  AssertUpperBound(elems, 2, 2);
+
+  // test upper bound exists, but search value not in the array
+  elems = {1};
+  AssertUpperBound(elems, 0, 0);
+
+  elems = {1, 3};
+  AssertUpperBound(elems, 2, 1);
+
+  elems = {1, 3, 5};
+  AssertUpperBound(elems, 4, 2);
+
+  // test upper not found
+  elems = {};
+  AssertUpperBound(elems, 0, 0);
+
+  elems = {1, 2, 3};
+  AssertUpperBound(elems, 3, 3);
+
+  elems = {1, 2, 3, 4, 5};
+  for (int i = 0; i < 5; ++i) {
+    AssertUpperBound(elems, i, i);
+  }
+}
+
+
+void testUpperBoundRandomized() {
+  int num_elems = 10000;
+  int num_runs = 100;
+  for (int i = 0; i < num_runs; ++i) {
+    std::vector<int> test = RandN(-100, 100, num_elems);
+    std::sort(test.begin(), test.end());
+    for (int i = 0; i < num_elems - 1; ++i) {
+      if (test[i] != test[i+1]) {
+        AssertUpperBound(test, test[i], i+1);
+      }
+    }
+  }
+}
+
+
 int main() {
   ReseedRand();
   testLowerBound();
   testLowerBoundRandomized();
   testLowerBoundLast();
   testLowerBoundLastRandomized();
+  testUpperBound();
+  testUpperBoundRandomized();
   return 0;
 }
 
