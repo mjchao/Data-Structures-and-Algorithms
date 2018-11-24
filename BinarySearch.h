@@ -61,8 +61,8 @@ namespace dsalgo {
 
 
   /**
-   * Performs a binary search on the last element == val. If no element equals
-   * val, then the first element greater than val is returned.
+   * Performs a binary serach to find the last occurrence of val. If no element
+   * equals val, then end is returned.
    *
    * The pointers must be to a random-access range.
    *
@@ -73,12 +73,11 @@ namespace dsalgo {
    * @param last iterator/pointer to one after the last element in a sorted
    * range to search
    * @param val the element to search for.
-   * @return iterator/pointer to the last element greater than val or to the
-   * first element greater than val if val is not in the range. end is returned
-   * if everything in the range is less than val.
+   * @return iterator/pointer to the last element greater than val. end is
+   * returned if everything in the range is less than val.
    */
   template<typename Iterator, typename T>
-  Iterator LowerBoundLast(Iterator begin, Iterator end, const T& val) {
+  Iterator LastOccurrence(Iterator begin, Iterator end, const T& val) {
     int range_size = end - begin;
 
     // the element at index low must be <= val, with the exception of index 0.
@@ -119,7 +118,11 @@ namespace dsalgo {
       mid = (low + high) / 2;
     }
 
-    return begin + mid;
+    if (*(begin + mid) == val) {
+      return begin + mid;
+    } else {
+      return end;
+    }
   }
 
 

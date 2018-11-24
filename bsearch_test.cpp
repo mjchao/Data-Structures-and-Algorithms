@@ -88,42 +88,42 @@ void testLowerBoundRandomized() {
 }
 
 
-void AssertLowerBoundLast(const std::vector<int>& elems, int val,
+void AssertLastOccurrence(const std::vector<int>& elems, int val,
     int expected) {
   if (expected != static_cast<int>(elems.size())) {
-    assert(LowerBoundLast(elems.begin(), elems.end(), val) ==
+    assert(LastOccurrence(elems.begin(), elems.end(), val) ==
         elems.begin() + expected);
   } else {
-    assert(LowerBoundLast(elems.begin(), elems.end(), val) == elems.end());
+    assert(LastOccurrence(elems.begin(), elems.end(), val) == elems.end());
   }
 }
 
 
-void testLowerBoundLast() {
+void testLastOccurrence() {
   // test single elem
   std::vector<int> elems = {0};
-  AssertLowerBoundLast(elems, 0, 0);
+  AssertLastOccurrence(elems, 0, 0);
 
   elems = {0, 1, 2, 3, 4, 5};
   for (int i = 0; i < static_cast<int>(elems.size()); ++i) {
-    AssertLowerBoundLast(elems, i, i);
+    AssertLastOccurrence(elems, i, i);
   }
 
   elems = {0, 0, 0, 0, 0};
-  AssertLowerBoundLast(elems, 0, 4);
+  AssertLastOccurrence(elems, 0, 4);
 
   elems = {0, 0, 1, 1, 1};
-  AssertLowerBoundLast(elems, 0, 1);
-  AssertLowerBoundLast(elems, 1, 4);
+  AssertLastOccurrence(elems, 0, 1);
+  AssertLastOccurrence(elems, 1, 4);
 
   elems = {1, 1, 3, 3, 3};
-  AssertLowerBoundLast(elems, 0, 0);
-  AssertLowerBoundLast(elems, 2, 2);
-  AssertLowerBoundLast(elems, 4, 5);
+  AssertLastOccurrence(elems, 0, 5);
+  AssertLastOccurrence(elems, 2, 5);
+  AssertLastOccurrence(elems, 4, 5);
 }
 
 
-void testLowerBoundLastRandomized() {
+void testLastOccurrenceRandomized() {
   int num_elems = 10000;
   int num_runs = 100;
   for (int i = 0; i < num_runs; ++i) {
@@ -131,7 +131,7 @@ void testLowerBoundLastRandomized() {
     std::sort(test.begin(), test.end());
     for (int i = 0; i < num_elems - 1; ++i) {
       if (test[i] != test[i+1]) {
-        AssertLowerBoundLast(test, test[i], i);
+        AssertLastOccurrence(test, test[i], i);
       }
     }
   }
@@ -207,8 +207,8 @@ int main() {
   ReseedRand();
   testLowerBound();
   testLowerBoundRandomized();
-  testLowerBoundLast();
-  testLowerBoundLastRandomized();
+  testLastOccurrence();
+  testLastOccurrenceRandomized();
   testUpperBound();
   testUpperBoundRandomized();
   return 0;
