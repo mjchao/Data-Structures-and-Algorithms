@@ -49,9 +49,10 @@ public:
       Resize();
     }
 
-    // have to add an extra underlying_size_ in case head_idx_ is 0, in which
-    // case subtracting 1 would make the head_idx_ negative.
-    int insert_idx = (head_idx_ + underlying_size_ - 1) % underlying_size_;
+    // if head_idx_ is 0, subtracting 1 would make the insert_idx negative,
+    // so we have to add another underlying size
+    int insert_idx = (head_idx_ != 0) ?
+        head_idx_ - 1 : underlying_size_ - 1;
     new (arr_ + insert_idx) T(e);
     head_idx_ = insert_idx;
     ++size_;
@@ -76,7 +77,8 @@ public:
    */
   void PopFront() {
     assert(size_ > 0);
-    head_idx_ = (head_idx_ + 1) % underlying_size_;
+    head_idx_ = (head_idx_ < underlying_size_ - 1) ?
+      head_idx_ + 1 : 0;
     --size_;
   }
 
@@ -225,11 +227,13 @@ private:
    * deque. Remember that the deque's head may have shifted if there were
    * PopFronts().
    *
-   * @param i an index. Must be non-negative.
+   * @param i an index. Must be between [0, 2*underlying_size_)
    * @return the index of the i-th element in the underlying array.
    */
   inline int GetUnderlyingIdx(int i) const {
-    return (head_idx_ + i) % underlying_size_;
+    int summed_idx = head_idx_ + i;
+    return summed_idx >= underlying_size_ ?
+        summed_idx - underlying_size_ : summed_idx;
   }
 
   /**
