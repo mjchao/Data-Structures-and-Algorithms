@@ -97,7 +97,7 @@ public:
    * @param idx index of element to remove.
    */
   void Erase(int idx) {
-    assert(idx < size_);
+    assert(0 <= idx && idx < size_);
 
     int underlying_idx = GetUnderlyingIdx(idx);
     int end_idx = GetEndIdx();
@@ -131,7 +131,7 @@ public:
    * @param idx index at which to insert the element
    */
   void Insert(const T& e, int idx) {
-    assert(idx <= size_);
+    assert(0 <= idx && idx <= size_);
 
     if (size_ < underlying_size_) {
       int underlying_idx = GetUnderlyingIdx(idx);
@@ -231,6 +231,7 @@ private:
    * @return the index of the i-th element in the underlying array.
    */
   inline int GetUnderlyingIdx(int i) const {
+    assert(0 <= i && i <= 2 * underlying_size_);
     int summed_idx = head_idx_ + i;
     return summed_idx >= underlying_size_ ?
         summed_idx - underlying_size_ : summed_idx;
