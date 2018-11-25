@@ -127,6 +127,62 @@ void ProfileConstructorSmall() {
 }
 
 
+void ProfileMove(int vector_size, int num_runs) {
+  std::vector<int> rand_elems = RandN(-100000, 10000, vector_size);
+  int64_t start = 0;
+  int64_t stop = 0;
+
+  Vector<int> move1;
+  for (int i = 0; i < vector_size; ++i) {
+    move1.PushBack(rand_elems[i]);
+  }
+  Vector<int> move2;
+  start = Clock::Now();
+  for (int i = 0; i < num_runs; ++i) {
+    if (i % 2 == 0) {
+      move2 = std::move(move1);
+    } else {
+      move1 = std::move(move2);
+    }
+  }
+  stop = Clock::Now();
+  std::cout << "dsalgo Vector" << std::endl;
+  PrintStats(stop - start, num_runs, "\t");
+
+  std::vector<int> std_move1;
+  for (int i = 0; i < vector_size; ++i) {
+    std_move1.push_back(rand_elems[i]);
+  }
+  std::vector<int> std_move2;
+  start = Clock::Now();
+  for (int i = 0; i < num_runs; ++i) {
+    if (i % 2 == 0) {
+      std_move2 = std::move(std_move1);
+    } else {
+      std_move1 = std::move(std_move2);
+    }
+  }
+  stop = Clock::Now();
+  std::cout << "std::vector" << std::endl;
+  PrintStats(stop - start, num_runs, "\t");
+}
+
+
+void ProfileMoveVariousSizes() {
+  std::cout << "=== Profiling Vector Move Small Size ===" << std::endl; 
+  ProfileMove(10, 10000);
+  std::cout << "\n\n\n";
+
+  std::cout << "=== Profiling Vector Move Medium Size ===" << std::endl; 
+  ProfileMove(1000, 10000);
+  std::cout << "\n\n\n";
+
+  std::cout << "=== Profiling Vector Move Large Size ===" << std::endl; 
+  ProfileMove(1000000, 10000);
+  std::cout << "\n\n\n";
+}
+
+
 void ProfilePopFront(int vector_size, int num_runs) {
   std::vector<int> rand_elems = RandN(-100000, 100000, vector_size);
   std::vector<std::vector<int>> std_vecs_to_erase(num_runs, rand_elems);
@@ -275,6 +331,8 @@ int main() {
   ProfileConstructorSmall();
   ProfileConstructorMed();
   ProfileConstructorLarge();
+
+  ProfileMoveVariousSizes();
 
   ProfilePushBackSmall();
   ProfilePushBackMed();

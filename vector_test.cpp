@@ -68,6 +68,26 @@ void testCopy() {
   }
 }
 
+void testMove() {
+  int num_inserts = 1028;
+  Vector<int> test;
+  for (int i = 0; i < num_inserts; ++i) {
+    test.PushBack(i);
+  }
+
+  Vector<int> testMoveConstructor = std::move(test);
+  for (int i = 0; i < num_inserts; ++i) {
+    assert(testMoveConstructor[i] == i);
+  }
+
+  Vector<int> testMoveOperator;
+  testMoveOperator.PushBack(-999);
+  testMoveOperator = std::move(testMoveConstructor);
+  for (int i = 0; i < num_inserts; ++i) {
+    assert(testMoveOperator[i] == i); 
+  }
+}
+
 
 void testErase() {
   int num_inserts = 1028;
@@ -145,6 +165,7 @@ void testPushBackStr() {
 int main() {
   testPushBack();
   testCopy();
+  testMove();
   testErase();
   testPopFrontBack();
   testInsert();

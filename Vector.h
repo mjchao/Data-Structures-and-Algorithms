@@ -40,6 +40,10 @@ public:
     }
   }
 
+  Vector(Vector<T>&& other) noexcept {
+    MoveFrom(other);
+  }
+
   Vector<T>& operator=(const Vector<T>& other) {
     delete[] arr_;
     size_ = other.size_;
@@ -51,13 +55,22 @@ public:
     return *this;
   }
 
+  Vector<T>& operator=(Vector<T>&& other) {
+    delete[] arr_; 
+    MoveFrom(other);
+    return *this;
+  }
+
+
   T& operator[](int idx) {
     assert(idx < size_);
     return arr_[idx];
   }
 
   ~Vector() {
-    delete[] arr_;
+    if (underlying_size_ > 0) {
+      delete[] arr_;
+    }
   }
 
   void PushBack(const T& e) {
@@ -137,6 +150,20 @@ public:
   }
 
 private:
+
+  /**
+   * Moves another vector into this vector. The other vector is emptied out.
+   *
+   * @param other vector to move from
+   */
+  void MoveFrom(Vector<T>& other) {
+    arr_ = other.arr_;
+    underlying_size_ = other.underlying_size_;
+    size_ = other.size_;
+    other.arr_ = nullptr;
+    other.underlying_size_ = 0;
+    other.size_ = 0;
+  }
   
   /**
    * Resizes the underlying array by doubling its size.
