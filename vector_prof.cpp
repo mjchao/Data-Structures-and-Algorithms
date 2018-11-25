@@ -1,5 +1,6 @@
 #include "Vector.h"
 #include "Profiling.h"
+#include "Random.h"
 #include <vector>
 #include <iostream>
 

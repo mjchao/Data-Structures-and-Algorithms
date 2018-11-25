@@ -1,5 +1,6 @@
 #include "BinarySearch.h"
 #include "Profiling.h"
+#include "Random.h"
 #include <algorithm>
 #include <vector>
 
@@ -76,14 +77,14 @@ int main() {
   ProfileBinarySearch(10, 10000);
   std::cout << "\n\n\n";
 
-  /*std::cout << "=== Profiling Binary Search Medium Range ===" << std::endl;
+  std::cout << "=== Profiling Binary Search Medium Range ===" << std::endl;
   ProfileBinarySearch(100, 1000);
   std::cout << "\n\n\n";
 
 
   std::cout << "=== Profiling Binary Search Large Range ===" << std::endl;
   ProfileBinarySearch(10000, 10);
-  std::cout << "\n\n\n";*/
+  std::cout << "\n\n\n";
   return 0;
 }
 

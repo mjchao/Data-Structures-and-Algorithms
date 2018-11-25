@@ -1,5 +1,6 @@
 #include "Deque.h"
 #include "Profiling.h"
+#include "Random.h"
 #include <deque>
 #include <iostream>
 

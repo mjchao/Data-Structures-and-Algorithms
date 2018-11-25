@@ -1,5 +1,6 @@
 #include "LruQueue.h"
 #include "Profiling.h"
+#include "Random.h"
 #include <iostream>
 #include <vector>
 
