@@ -18,7 +18,7 @@ void ProfileBinarySearch(int range_size, int num_runs) {
   start = Clock::Now();
   for (int i = 0 ; i < num_runs; ++i) {
     for (int j = 0; j < range_size; ++j) {
-      LowerBound(rand_elems.begin(), rand_elems.end(), i);
+      LowerBound(rand_elems.begin(), rand_elems.end(), rand_elems[j]);
     }
   }
   stop = Clock::Now();
@@ -29,7 +29,7 @@ void ProfileBinarySearch(int range_size, int num_runs) {
   start = Clock::Now();
   for (int i = 0 ; i < num_runs; ++i) {
     for (int j = 0; j < range_size; ++j) {
-      LastOccurrence(rand_elems.begin(), rand_elems.end(), i);
+      LastOccurrence(rand_elems.begin(), rand_elems.end(), rand_elems[j]);
     }
   }
   stop = Clock::Now();
@@ -40,7 +40,7 @@ void ProfileBinarySearch(int range_size, int num_runs) {
   start = Clock::Now();
   for (int i = 0 ; i < num_runs; ++i) {
     for (int j = 0; j < range_size; ++j) {
-      UpperBound(rand_elems.begin(), rand_elems.end(), i);
+      UpperBound(rand_elems.begin(), rand_elems.end(), rand_elems[j]);
     }
   }
   stop = Clock::Now();
@@ -51,7 +51,7 @@ void ProfileBinarySearch(int range_size, int num_runs) {
   start = Clock::Now();
   for (int i = 0 ; i < num_runs; ++i) {
     for (int j = 0; j < range_size; ++j) {
-      std::lower_bound(rand_elems.begin(), rand_elems.end(), i);
+      std::lower_bound(rand_elems.begin(), rand_elems.end(), rand_elems[j]);
     }
   }
   stop = Clock::Now();
@@ -62,7 +62,7 @@ void ProfileBinarySearch(int range_size, int num_runs) {
   start = Clock::Now();
   for (int i = 0 ; i < num_runs; ++i) {
     for (int j = 0; j < range_size; ++j) {
-      std::upper_bound(rand_elems.begin(), rand_elems.end(), i);
+      std::upper_bound(rand_elems.begin(), rand_elems.end(), rand_elems[j]);
     }
   }
   stop = Clock::Now();
@@ -76,14 +76,14 @@ int main() {
   ProfileBinarySearch(10, 10000);
   std::cout << "\n\n\n";
 
-  std::cout << "=== Profiling Binary Search Medium Range ===" << std::endl;
+  /*std::cout << "=== Profiling Binary Search Medium Range ===" << std::endl;
   ProfileBinarySearch(100, 1000);
   std::cout << "\n\n\n";
 
 
   std::cout << "=== Profiling Binary Search Large Range ===" << std::endl;
   ProfileBinarySearch(10000, 10);
-  std::cout << "\n\n\n";
+  std::cout << "\n\n\n";*/
   return 0;
 }
 
