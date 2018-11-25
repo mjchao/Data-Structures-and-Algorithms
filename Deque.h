@@ -34,7 +34,13 @@ public:
   }
 
   ~Deque() {
-    delete[] arr_;
+    if (arr_ != nullptr) {
+      delete[] arr_;
+    }
+  }
+
+  Deque(Deque<T>&& other) noexcept {
+    MoveFrom(other);
   }
 
   Deque(const Deque<T>& other) {
@@ -46,7 +52,13 @@ public:
     CopyFrom(other);
     return *this;
   }
-  
+
+  Deque<T>& operator=(Deque<T>&& other) {
+    delete[] arr_;
+    MoveFrom(other);
+    return *this;
+  }
+
   /**
    * Adds the given element to the front of the deque
    *
@@ -229,6 +241,20 @@ public:
   }
 
 private:
+
+  /**
+   * Moves another deque into this deque. The other deque is emptied out.
+   */
+  void MoveFrom(Deque<T>& other) {
+    arr_ = other.arr_;
+    underlying_size_ = other.underlying_size_;
+    head_idx_ = other.head_idx_;
+    size_ = other.size_;
+    other.arr_ = nullptr;
+    other.underlying_size_ = 0;
+    other.head_idx_ = 0;
+    other.size_ = 0;
+  }
 
   /**
    * Copies from another deque.

@@ -430,6 +430,27 @@ void testCopy() {
 }
 
 
+void testMove() {
+  Deque<int> test;
+  int num_elems = 1028;
+  for (int i = 0; i < num_elems; ++i) {
+    test.PushBack(i);
+  }
+
+  Deque<int> testMoveConstructor = std::move(test);
+  for (int i = 0; i < num_elems; ++i) {
+    assert(testMoveConstructor[i] == i);
+  }
+
+  Deque<int> testMoveOperator;
+  testMoveOperator.PushBack(-999);
+  testMoveOperator = std::move(testMoveConstructor);
+  for (int i = 0; i < num_elems; ++i) {
+    assert(testMoveOperator[i] == i);
+  }
+}
+
+
 int main() {
   testPushBack();
   testPushBackWithPopFront();
@@ -438,5 +459,6 @@ int main() {
   testInsert();
   testRandomized();
   testCopy();
+  testMove();
 }
 
