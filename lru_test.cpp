@@ -65,6 +65,25 @@ void testCopy() {
 }
 
 
+void testMove() {
+  std::vector<int> elems = {0, 1, 2, 3, 4, 5};
+  LruQueue<int> test(elems);
+
+  LruQueue<int> testMoveConstructor = std::move(test);
+  for (int i = 0; i < static_cast<int>(elems.size()); ++i) {
+    assert(testMoveConstructor.GetLru() == elems[i]);
+    testMoveConstructor.MarkUsed(testMoveConstructor.GetLru());
+  }
+
+  LruQueue<int> testMoveOperator({-1, -2, -3});
+  testMoveOperator = std::move(testMoveConstructor);
+  for (int i = 0; i < static_cast<int>(elems.size()); ++i) {
+    assert(testMoveOperator.GetLru() == elems[i]);  
+    testMoveOperator.MarkUsed(testMoveOperator.GetLru());
+  }
+}
+
+
 void testMarkUsed() {
   std::vector<int> elems = {0, 1, 2, 9, 3, 4, 5, 6, 7, 8};
   LruQueue<int> test(elems);
@@ -100,6 +119,7 @@ void testMarkUsedAlternating() {
 int main() {
   testConstructor();
   testCopy();
+  testMove();
   testMarkUsed();
   testMarkUsedAlternating();
   return 0;

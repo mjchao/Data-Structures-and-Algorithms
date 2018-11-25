@@ -56,9 +56,19 @@ public:
     CopyFrom(other);
   }
 
+  LruQueue(LruQueue<T>&& other) noexcept {
+    MoveFrom(other);
+  }
+
   LruQueue& operator=(const LruQueue& other) {
     FreeMemory();
     CopyFrom(other);
+    return *this;
+  }
+  
+  LruQueue& operator=(LruQueue&& other) {
+    FreeMemory();
+    MoveFrom(other);
     return *this;
   }
 
@@ -101,10 +111,28 @@ private:
    * Releases all heap memory allocated by this LruQueue.
    */
   void FreeMemory() {
-    delete[] mem_;
+    if (mem_ != nullptr) {
+      delete[] mem_;
+    }
     lru_ = nullptr;
     mru_ = nullptr;
     mem_ = nullptr;
+  }
+
+  /**
+   * Moves another LruQueue's contents into this queue. The other queue is
+   * emptied out.
+   */
+  void MoveFrom(LruQueue<T>& other) {
+    lru_ = other.lru_;
+    mru_ = other.mru_;
+    mem_ = other.mem_;
+    size_ = other.size_;
+    elem_to_entry_ = std::move(other.elem_to_entry_);
+    other.lru_ = nullptr;
+    other.mru_ = nullptr;
+    other.mem_ = nullptr;
+    other.size_ = 0;
   }
 
   /**
