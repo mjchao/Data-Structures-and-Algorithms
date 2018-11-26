@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <iostream>
+#include <vector>
 
 namespace dsalgo {
 namespace {
@@ -53,10 +54,13 @@ Iterator QuicksortPartition(Iterator begin, Iterator end) {
 
 } // namespace
 
+
 /**
  * Performs a quicksort.
  *
  * Iterator must be random access.
+ *
+ * Elements must be < comparable.
  *
  * @param begin begin of range
  * @param end end of range
@@ -64,8 +68,8 @@ Iterator QuicksortPartition(Iterator begin, Iterator end) {
 template<typename Iterator>
 void Quicksort(Iterator begin, Iterator end) {
 
-  // done if range is size zero
-  if ((begin + 1) >= end) {
+  // done if range is size zero or one
+  if (begin >= end || (begin + 1) >= end) {
     return;
   }
 
@@ -75,12 +79,79 @@ void Quicksort(Iterator begin, Iterator end) {
 }
 
 
+namespace {
+
+/**
+ * Merges two sorted ranges
+ *
+ * [begin, mid) and [mid, end) should be sorted
+ *
+ * @param begin begin of the range
+ * @param mid middle of the range
+ * @param end of the range.
+ */
+template <typename Iterator>
+void Merge(Iterator begin, Iterator mid, Iterator end) {
+  using T = typename Iterator::value_type;
+
+  // points to minimum value in the left sorted range
+  Iterator left_min = begin;
+
+  // points to minimum value in the right sorted range
+  Iterator right_min = mid;
+
+  // we have to merge a total of size elements
+  int size = (end - begin);
+  std::vector<T> merged(size);
+
+  for (int i = 0; i < size; ++i) {
+
+    // we have elements in both ranges
+    if (left_min < mid && right_min < end) {
+      
+      // add in the smaller of the two minimums
+      merged[i] = (*left_min < *right_min) ?
+          *left_min++ : *right_min++;
+
+    // right range is empty, so we add in the left minimum
+    } else if (left_min < mid) {
+      merged[i] = *left_min++;
+
+    // left range is empty, so we add in the right minimum
+    } else {
+      merged[i] = *right_min++;
+    }
+  }
+
+  // after merge is done, copy the merged range back into the original range
+  std::copy(merged.begin(), merged.end(), begin);
+}
+
+} // namespace
+
+
 /**
  * Performs a mergesort.
+ *
+ * Iterator must be random access.
+ *
+ * Elements must be < comparable.
+ *
+ * @param begin begin of range
+ * @param end end of range.
  */
 template<typename Iterator>
 void Mergesort(Iterator begin, Iterator end) {
 
+  // done if range is size 0 or 1
+  if (begin >= end || (begin + 1) >= end) {
+    return;
+  }
+  int mid_offset = (end - begin) / 2;
+  Iterator mid = begin + mid_offset;
+  Mergesort(begin, mid);
+  Mergesort(mid, end);
+  Merge(begin, mid, end);
 }
 
 } // namespace dsalgo
