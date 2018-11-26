@@ -19,7 +19,10 @@ deque:
 
 bsearch:
 	$(CXX) $(CXXFLAGS) $(OPT) bsearch_prof.cpp -o bsearch_prof-opt
-	$(CXX) $(CXXFLAGS) $(OPRT) bsearch_test.cpp -o bsearch_test-dbg
+	$(CXX) $(CXXFLAGS) $(DEBUG) bsearch_test.cpp -o bsearch_test-dbg
+
+sort:
+	$(CXX) $(CXXFLAGS) $(DEBUG) sort_test.cpp -o sort_test-dbg
 
 clean:
 	rm *prof-opt *test-dbg
