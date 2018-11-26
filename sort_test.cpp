@@ -49,6 +49,7 @@ void testQuicksort() {
       {1, 2, 3, 4, 5, 5, 6, 7, 8, 9});
 }
 
+
 void testQuicksortRandomized() {
   int num_elems = 1000;
   int num_runs = 100;
@@ -63,6 +64,7 @@ void testQuicksortRandomized() {
 
 
 int main() {
+  ReseedRand();
   testQuicksort();
   testQuicksortRandomized();
   return 0;

@@ -15,14 +15,12 @@ namespace {
  */
 template<typename Iterator>
 Iterator QuicksortPartition(Iterator begin, Iterator end) {
-  // move end to last element in the range to partition
-  --end;
-
   // by default, pick last element as pivot
-  Iterator pivot = end;
+  Iterator pivot = end - 1;
 
-  // don't consider the pivot in the partioning
-  --end;
+  // set end to the element just before the pivot, since we don't consider
+  // the pivot in the partitioning
+  end -= 2;
 
   while (true) {
     // find the first element greater than the pivot, starting from beginning
@@ -58,7 +56,7 @@ Iterator QuicksortPartition(Iterator begin, Iterator end) {
 /**
  * Performs a quicksort.
  *
- * Iterator must be bidirectional.
+ * Iterator must be random access.
  *
  * @param begin begin of range
  * @param end end of range
@@ -67,20 +65,22 @@ template<typename Iterator>
 void Quicksort(Iterator begin, Iterator end) {
 
   // done if range is size zero
-  if (begin >= end) {
-    return;
-  }
-
-  // done if range is size one
-  Iterator second_elem = begin;
-  ++second_elem;
-  if (second_elem == end) {
+  if ((begin + 1) >= end) {
     return;
   }
 
   Iterator pivot = QuicksortPartition(begin, end);
   Quicksort(begin, pivot);
   Quicksort(++pivot, end);
+}
+
+
+/**
+ * Performs a mergesort.
+ */
+template<typename Iterator>
+void Mergesort(Iterator begin, Iterator end) {
+
 }
 
 } // namespace dsalgo
