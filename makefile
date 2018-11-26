@@ -21,6 +21,7 @@ bsearch:
 	$(CXX) $(CXXFLAGS) $(OPT) bsearch_prof.cpp -o bsearch_prof-opt
 	$(CXX) $(CXXFLAGS) $(DEBUG) bsearch_test.cpp -o bsearch_test-dbg
 
+# TODO profile optimized sort
 sort:
 	$(CXX) $(CXXFLAGS) $(DEBUG) sort_test.cpp -o sort_test-dbg
 
