@@ -7,6 +7,9 @@
 #include <time.h>
 #include <vector>
 
+
+namespace dsalgo {
+
 /**
  * Reseeds random number generator with current system time.
  */
@@ -73,3 +76,6 @@ std::vector<std::string> RandStrs(int min_len, int max_len, int n) {
   }
   return rand_strs;
 }
+
+} // namespace dsalgo
+
