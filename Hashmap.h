@@ -100,6 +100,7 @@ public:
     }
 
     int insert_idx = LocateEntryIdx(k);
+    assert(insert_idx != -1);
     Entry& insert_entry = table_[insert_idx];
 
     // updating entry - only have to update the value
@@ -120,8 +121,11 @@ public:
    * Gets the value to which the given key is mapped.
    *
    * If the provided key is not already in the hashmap, then it will be inserted
-   * into the hashmap and mapped to the default value (result of calling the
-   * value's default constructor).
+   * into the hashmap and mapped to the default value (calls the default
+   * constructor).
+   *
+   * This is slower than using Put/Get() if you already know whether or not
+   * the element is in the hashmap.
    *
    * Use Get() if you just want to check if a key is in the hashmap but
    * not create a new entry if the key doesn't exist.
@@ -129,13 +133,13 @@ public:
    * @param key to look up
    * @return the value to which the given key is mapped.
    */
-  Val& operator[](const Key& k) const {
-    int entry_idx = LocateEntryIdx(k);
-    Entry& entry = table_[entry_idx];
-    if (!entry.is_valid) {
-      entry.is_valid = true;
+  Val& operator[](const Key& k) {
+    Val* v = Get(k);
+    if (v != nullptr) {
+      return *v;
     }
-    return entry.v;
+    Put(k, Val());
+    return *Get(k);
   }
 
   /**
@@ -144,6 +148,10 @@ public:
    */
   Val* Get(const Key& k) const {
     int entry_idx = LocateEntryIdx(k);
+    if (entry_idx == -1) {
+      return nullptr;
+    }
+
     Entry& entry = table_[entry_idx];
     if (entry.is_valid) {
       return &entry.v;
@@ -160,6 +168,10 @@ public:
    */
   bool Remove(const Key& k) {
     int entry_idx = LocateEntryIdx(k);
+    if (entry_idx == -1) {
+      return false;
+    }
+
     Entry& entry = table_[entry_idx];
     if (entry.is_valid) {
       entry.is_valid = false;
@@ -258,7 +270,8 @@ private:
   /**
    * @return index in the underlying table at which the key is located if the
    * key is in the hashmap. Otherwise, returns the index at which the key should
-   * be inserted.
+   * be inserted. Returns -1 if the table is completely full and the element
+   * is not there.
    */
   int LocateEntryIdx(const Key& k) const {
     int expected_idx = IndexFor(k); 
@@ -293,9 +306,8 @@ private:
       idx_to_check = (idx_to_check + 1) & (table_size_ - 1);
     }
 
-    // should never reach here
-    assert(false);
-    return 0;
+    // table is completely full and the element was not found
+    return -1;
   }
 
   void Resize() {
@@ -318,6 +330,7 @@ private:
     for (int i = 0; i < old_table_size; ++i) {
       if (old_table[i].is_valid) {
         int insert_idx = LocateEntryIdx(old_table[i].k);
+        assert(insert_idx != -1);
         table_[insert_idx] = std::move(old_table[i]);
       }
     }

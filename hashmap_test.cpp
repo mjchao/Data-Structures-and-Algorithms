@@ -1,8 +1,10 @@
 #include "Hashmap.h"
+#include "Random.h"
 #include <assert.h>
 #include <iostream>
 #include <string>
-
+#include <unordered_map>
+#include <unordered_set>
 
 using namespace dsalgo;
 
@@ -18,6 +20,7 @@ void testPutAndGet() {
     assert(test.Size() == i + 1);
     for (int j = 0; j < i; ++j) {
       assert(*test.Get(std::to_string(j)) == j);
+      assert(test[std::to_string(j)] == j);
     }
   }
 
@@ -28,6 +31,7 @@ void testPutAndGet() {
     assert(test_rec_lf.Size() == i + 1);
     for (int j = 0; j < i; ++j) {
       assert(*test_rec_lf.Get(std::to_string(j)) == j);
+      assert(test_rec_lf[std::to_string(j)] == j);
     }
   }
 
@@ -38,12 +42,31 @@ void testPutAndGet() {
     assert(test_small_lf.Size() == i + 1);
     for (int j = 0; j < i; ++j) {
       assert(*test_small_lf.Get(std::to_string(j)) == j);
+      assert(test_small_lf[std::to_string(j)] == j);
     }
   }
 }
 
 
-void testRemove() {
+void testInsertViaOperator() {
+  Hashmap<std::string, int> test_default_insertion;
+  int num_elems = 234;
+  for (int i = 0; i < num_elems; ++i) {
+    test_default_insertion[std::to_string(i)];
+  }
+  assert(test_default_insertion.Size() == num_elems);
+
+  Hashmap<std::string, int> test;
+  for (int i = 0; i < num_elems; ++i) {
+    test[std::to_string(i)] = i;
+    for (int j = 0; j <= i; ++j) {
+      assert(test[std::to_string(j)] == j);
+    }
+  }
+}
+
+
+void testRemoveAndGet() {
   Hashmap<std::string, int> test;
 
   int num_elems = 128;
@@ -60,7 +83,11 @@ void testRemove() {
     assert(test.Size() == i + 1);
   }
   for (int i = 0; i < num_elems; ++i) {
+    assert(*test.Get(std::to_string(i)) == i);
     assert(test[std::to_string(i)] == i);
+  }
+  for (int i = -1000; i < -500; ++i) {
+    assert(test.Get(std::to_string(i)) == nullptr);
   }
 }
 
@@ -160,21 +187,69 @@ void testMove() {
 }
 
 
-/* TODO
-void testRandomized(Hashmap<std::string, int>& test) {
+void testRandomized(Hashmap<std::string, int>& test_map, int num_ops) {
+  std::unordered_map<std::string, int> correct_map;
 
+  for (int i = 0; i < num_ops; ++i) {
+    int operation = RandInt(0, 75);
+
+    // insert via Put
+    if (0 <= operation && operation < 25) {
+      std::string rand_key = RandStr(5, 10);
+      int rand_val = RandInt(-100000, 100000);
+      correct_map[rand_key] = rand_val;
+      test_map.Put(rand_key, rand_val);
+
+    // insert via operator[]
+    } else if (25 <= operation && operation < 50) {
+      std::string rand_key = RandStr(5, 10);
+      int rand_val = RandInt(-100000, 100000);
+      correct_map[rand_key] = rand_val;
+      test_map[rand_key] = rand_val;
+
+    // remove a key
+    } else if (50 <= operation && operation < 75) {
+      if (!correct_map.empty()) {
+        std::string key_to_remove = correct_map.begin()->first;
+        correct_map.erase(key_to_remove);
+        assert(test_map.Remove(key_to_remove) == true);
+      }
+    }
+
+    for (const auto& entry : correct_map) {
+      assert(test_map[entry.first] == entry.second);
+    }
+    assert(test_map.Size() == static_cast<int>(correct_map.size()));
+    for (const auto& entry : correct_map) {
+      assert(*test_map.Get(entry.first) == entry.second);
+    }
+  }
 }
 
 void testRandomized() {
+  ReseedRand();
 
-}*/
+  // use recommended load factor
+  Hashmap<std::string, int> test;
+  testRandomized(test, 5000);
+
+  // use high load factor
+  test = Hashmap<std::string, int>(8, 1);
+  testRandomized(test, 1000);
+
+  // use small load factor
+  test = Hashmap<std::string, int>(8, 0.01);
+  testRandomized(test, 5000);
+}
 
 
 int main() {
   testPutAndGet();
-  testRemove();
+  testInsertViaOperator();
+  testRemoveAndGet();
   testCopy();
   testMove();
+  testRandomized();
   return 0;
 }
 
