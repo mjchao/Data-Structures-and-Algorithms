@@ -75,7 +75,7 @@ public:
    * @param v value to which to map the key
    */
   void Put(const Key& k, const Val& v) {
-    if (size_ >= load_factor_ * table_size_) {
+    if (num_entries_ >= load_factor_ * table_size_) {
       Resize();
     }
 
@@ -218,7 +218,8 @@ private:
           Equals(k, entry_to_check.k));
 
       // is the current spot occupied? (i.e. could we insert the element here?)
-      bool is_unallocated_entry = (!entry_to_check.is_valid);
+      bool is_unallocated_entry = (!entry_to_check.is_valid &&
+          !entry_to_check.is_deleted);
 
       // if we found the correct entry, then we're done.
       // if we reached an unoccupied spot, that means the key isn't in the
@@ -227,7 +228,10 @@ private:
         return idx_to_check; 
       }
 
-      // otherwise, apply linear probing and advance forward to the next index,
+      // if we reach here, then the entry we're checking is either deleted or
+      // valid but not the one we're looking for
+
+      // apply linear probing and advance forward to the next index,
       // rolling over to index 0 if we reach the end of the hashtable 
       idx_to_check = (idx_to_check + 1) & (table_size_ - 1);
     }
@@ -255,8 +259,10 @@ private:
 
     // re-insert all the valid elements in the old table
     for (int i = 0; i < old_table_size; ++i) {
-      int insert_idx = LocateEntryIdx(old_table[i].k);
-      table_[insert_idx] = std::move(old_table[i]);
+      if (old_table[i].is_valid) {
+        int insert_idx = LocateEntryIdx(old_table[i].k);
+        table_[insert_idx] = std::move(old_table[i]);
+      }
     }
 
     // all ghost-entries have been discarded during the resize, so num_entries_

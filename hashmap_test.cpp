@@ -1,5 +1,6 @@
 #include "Hashmap.h"
 #include <assert.h>
+#include <iostream>
 #include <string>
 
 
@@ -42,8 +43,30 @@ void testPutAndGet() {
 }
 
 
+void testRemove() {
+  Hashmap<std::string, int> test;
+
+  int num_elems = 128;
+  for (int i = 0; i < num_elems; ++i) {
+    test.Put(std::to_string(i), i);
+    if (i % 16 == 0) {
+      for (int j = 0; j < i; ++j) {
+        assert(test.Remove(std::to_string(j)) == true);
+      }
+      for (int j = 0; j < i; ++j) {
+        test.Put(std::to_string(j), j);
+      }
+    }
+  }
+  for (int i = 0; i < num_elems; ++i) {
+    assert(test[std::to_string(i)] == i);
+  }
+}
+
+
 int main() {
   testPutAndGet();
+  testRemove();
   return 0;
 }
 
