@@ -57,9 +57,29 @@ public:
   Hashmap() : Hashmap(8) {}
 
   ~Hashmap() {
-    if (table_ != nullptr) {
-      delete[] table_;
-    }
+    FreeMem();
+  }
+
+  Hashmap(const Hashmap<Key, Val, Hash, Eq>& other) {
+    CopyFrom(other);
+  }
+
+  Hashmap(Hashmap<Key, Val, Hash, Eq>&& other) noexcept {
+    MoveFrom(other);
+  }
+
+  Hashmap<Key, Val, Hash, Eq>& operator=(
+      const Hashmap<Key, Val, Hash, Eq>& other) {
+    FreeMem();
+    CopyFrom(other);
+    return *this;
+  }
+
+  Hashmap<Key, Val, Hash, Eq>& operator=(
+      Hashmap<Key, Val, Hash, Eq> && other) noexcept {
+    FreeMem();
+    MoveFrom(other);
+    return *this;
   }
 
   /**
@@ -175,6 +195,43 @@ private:
     // can have (is_valid == false) and (is_deleted == true/false)
     bool is_deleted = false;
   };
+
+  /**
+   * Frees any memory that has been allocated for this hashtable.
+   */
+  void FreeMem() {
+    if (table_ != nullptr) {
+      delete[] table_;
+    }
+  }
+
+  /**
+   * Copies another hashtable into this hashable. Does not free any currently
+   * allocated memory though.
+   */
+  void CopyFrom(const Hashmap<Key, Val, Hash, Eq>& other) {
+    table_ = new Entry[other.table_size_];  
+    std::copy(other.table_, other.table_ + other.table_size_, table_);
+    table_size_ = other.table_size_;
+    num_entries_ = other.num_entries_;
+    size_ = other.size_;
+    load_factor_ = other.load_factor_;
+    hash_fn_ = other.hash_fn_;
+    eq_fn_ = other.eq_fn_;
+  }
+
+  void MoveFrom(Hashmap<Key, Val, Hash, Eq>& other) {
+    table_ = other.table_;
+    table_size_ = other.table_size_;
+    num_entries_ = other.num_entries_;
+    size_ = other.size_;
+    load_factor_ = other.load_factor_;
+    hash_fn_ = std::move(other.hash_fn_);
+    eq_fn_ = std::move(other.eq_fn_);
+
+    other.table_ = nullptr;
+    // don't have to reset any of the other fields in other
+  }
 
   /**
    * @return hash code for the given key
