@@ -139,7 +139,24 @@ void testCopy() {
 }
 
 void testMove() {
+  Hashmap<std::string, int> test;
+  int num_elems = 337;
+  for (int i = 0; i < num_elems; ++i) {
+    test.Put(std::to_string(i), i);
+  }
 
+  Hashmap<std::string, int> test_move_construct = std::move(test);
+  for (int i = 0; i < num_elems; ++i) {
+    assert(test_move_construct[std::to_string(i)] == i);
+  }
+
+  Hashmap<std::string, int> test_move_op;
+  test_move_op["-123"] = -123;
+  test_move_op = std::move(test_move_construct);
+  for (int i = 0; i < num_elems; ++i) {
+    assert(test_move_op[std::to_string(i)] == i);
+  }
+  assert(test_move_op.Get("-123") == nullptr);
 }
 
 
