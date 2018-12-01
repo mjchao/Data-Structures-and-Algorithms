@@ -25,6 +25,10 @@ bsearch:
 sort:
 	$(CXX) $(CXXFLAGS) $(DEBUG) sort_test.cpp -o sort_test-dbg
 
+hashmap:
+	$(CXX) $(CXXFLAGS) $(OPT) hashmap_prof.cpp -o hashmap_prof-opt
+	$(CXX) $(CXXFLAGS) $(DEBUG) hashmap_test.cpp -o hashmap_test-dbg
+
 clean:
 	rm *prof-opt *test-dbg
 
