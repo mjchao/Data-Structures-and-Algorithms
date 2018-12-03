@@ -19,8 +19,7 @@ void ReseedRand() {
 
 
 int RandInt(int min, int max) {
-  // +2 because the random value can be max.
-  int range_size = (max - min) + 2;
+  int range_size = (max - min) + 1;
   return min + (rand() % range_size);
 }
 

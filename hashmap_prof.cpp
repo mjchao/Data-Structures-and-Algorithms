@@ -152,6 +152,114 @@ void ProfileRemove(int num_removals, int num_runs) {
 }
 
 
+void ProfileRandomized(int num_operations) {
+  // random operations:
+  //  0 or 1 = insert random string (50%)
+  //  2 = get random string (25%)
+  //  3 = remove random string (25%)
+  std::vector<int> rand_ops = RandN(0, 3, num_operations);
+  std::vector<std::string> target_elem; 
+  for (int i = 0; i < num_operations; ++i) {
+    switch (rand_ops[i]) {
+    case 0:
+    case 1:
+      target_elem.push_back(RandStr(8, 16));
+      break;
+    case 2:
+      if (!target_elem.empty()) {
+        // pick a random element to get
+        int rand_elem_idx = RandInt(0, target_elem.size() - 1);
+        target_elem.push_back(target_elem[rand_elem_idx]);
+      } else {
+        target_elem.push_back(RandStr(8, 16));
+      }
+      break;
+    case 3:
+      if (!target_elem.empty()) {
+        // pick a random element to delete - note that get/delete might be
+        // operating on an element that was already deleted. That's okay.
+        int rand_elem_idx = RandInt(0, target_elem.size() - 1);
+        target_elem.push_back(target_elem[rand_elem_idx]);
+      } else {
+        target_elem.push_back(RandStr(8, 16));
+      }
+      break;
+    default:
+      // should not get here
+      throw std::logic_error("Invalid op code " + std::to_string(rand_ops[i]));
+      break;
+    }
+  }
+
+  int64_t start = 0;
+  int64_t stop = 0;
+
+  Hashmap<std::string, std::string> test;
+  start = Clock::Now(); 
+  for (int i = 0; i < num_operations; ++i) {
+    switch (rand_ops[i]) {
+      // insert
+      case 0:
+      case 1:
+        test.Put(target_elem[i], target_elem[i]);
+        break;
+
+      // get
+      case 2:
+        test.Get(target_elem[i]);
+        break;
+
+      // remove
+      case 3:
+        test.Remove(target_elem[i]);
+        break;
+      default:
+        // should not get here
+        throw std::logic_error("Invalid op code " +
+            std::to_string(rand_ops[i]));
+        break;
+    }
+  }
+  stop = Clock::Now();
+  std::cout << "dsalgo Hashmap" << std::endl;
+  PrintStats(stop - start, num_operations, "\t");
+
+  std::unordered_map<std::string, std::string> test_std;
+  start = Clock::Now();
+  for (int i = 0; i < num_operations; ++i) {
+    switch (rand_ops[i]) {
+      // insert
+      case 0:
+      case 1:
+        test_std.insert({target_elem[i], target_elem[i]});
+        break;
+
+      // get
+      case 2:
+        test_std.find(target_elem[i]);
+        break;
+
+      // remove
+      case 3:
+        {
+        auto elem_it = test_std.find(target_elem[i]);
+        if (elem_it != test_std.end()) {
+          test_std.erase(elem_it);
+        }
+        break;
+        }
+      default:
+        // should not get here
+        throw std::logic_error("Invalid op code " +
+            std::to_string(rand_ops[i]));
+        break;
+    }
+  }
+  stop = Clock::Now();
+  std::cout << "std::unordered_map" << std::endl;
+  PrintStats(stop - start, num_operations, "\t");
+}
+
 void ProfileRemoveVariousSizes() {
   std::cout << "=== Profiling Hashmap Remove Small Size ===" << std::endl;
   ProfileRemove(10, 100000);
@@ -168,9 +276,13 @@ void ProfileRemoveVariousSizes() {
 
 
 int main() {
+  ReseedRand();
   ProfilePutVariousSizes();
   ProfileGetVariousSizes();
   ProfileRemoveVariousSizes();
+
+  std::cout << "=== Profiling Hashmap Randomized Operations ===" << std::endl;
+  ProfileRandomized(100000);
   return 0;
 }
 
