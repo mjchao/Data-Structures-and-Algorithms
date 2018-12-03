@@ -189,6 +189,20 @@ public:
     return size_;
   }
 
+  /**
+   * Removes all elements from this hashmap.
+   */
+  void Clear() {
+    for (int i = 0; i < table_size_; ++i) {
+      Entry& to_clear = table_[i];
+      if (to_clear.is_valid) {
+        to_clear.is_valid = false;
+      }
+    }
+    num_entries_ = 0;
+    size_ = 0;
+  }
+
 private:
 
   /**

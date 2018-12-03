@@ -91,6 +91,25 @@ void testRemoveAndGet() {
   }
 }
 
+void testClear() {
+  Hashmap<std::string, int> test;
+  for (int i = 0; i < 110; ++i) {
+    test[std::to_string(i)] = i; 
+    if (i % 16 == 0) {
+      test.Clear();
+    }
+  }
+
+  // only 97-109 should be in the map
+  assert(test.Size() == 13);
+  for (int i = 97; i < 110; ++i) {
+    assert(test[std::to_string(i)] == i);
+  }
+  for (int i = 0; i < 97; ++i) {
+    assert(test.Get(std::to_string(i)) == nullptr);
+  }
+}
+
 void testCopy() {
   Hashmap<std::string, int>* original = new Hashmap<std::string, int>;
 
@@ -247,6 +266,7 @@ int main() {
   testPutAndGet();
   testInsertViaOperator();
   testRemoveAndGet();
+  testClear();
   testCopy();
   testMove();
   testRandomized();
