@@ -148,7 +148,7 @@ void ProfileRemove(int num_removals, int num_runs) {
     accumulated_time += (stop - start);
   }
   std::cout << "std::unordered_map" << std::endl;
-  PrintStats(stop - start, num_runs * num_removals, "\t");
+  PrintStats(accumulated_time, num_runs * num_removals, "\t");
 }
 
 
