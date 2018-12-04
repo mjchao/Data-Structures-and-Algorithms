@@ -9,10 +9,6 @@ namespace dsalgo {
 /**
  * Hashmap with linear probing.
  *
- * When entries are deleted, they leave behind a "ghost" element that still
- * counts towards the load factor. Once the hashmap resizes, "ghost" entries
- * will be removed.
- *
  * Key = type used for lookup
  * Val = type that gets mapped to in the hashmap
  * Hash = hash function for the key
@@ -37,7 +33,7 @@ public:
    * next power of 2. Using a table size that is a power of 2 allows optimizing
    * the modulo operation used to compute a key's index in the hash table.
    * @param load_factor how soon to resize the hashmap. When the hashmap
-   * contains capacity * load_factor entries or ghost entries, it will double
+   * contains capacity * load_factor entries, it will double
    * in size.
    */
   Hashmap(int init_capacity, float load_factor=0.7)
@@ -410,8 +406,8 @@ private:
         return idx_to_check; 
       }
 
-      // if we reach here, then the entry we're checking is either deleted or
-      // valid but not the one we're looking for
+      // if we reach here, then the entry we're checking is valid but not the
+      // one we're looking for
 
       // apply linear probing and advance forward to the next index,
       // rolling over to index 0 if we reach the end of the hashtable 
@@ -455,11 +451,10 @@ private:
   // size of the underlying table, must be a power of 2.
   int table_size_ = 0;
 
-  // number of entries in the hashmap excluding ghost entries. This is
-  // the number of entries the user of the hashmap should be aware of.
+  // number of entries in the hashmap.
   int size_ = 0;
 
-  // hashmap will resize when number of entires or ghost entries exceeds
+  // hashmap will resize when number of entires exceeds
   // table_size_ * load_factor_
   float load_factor_ = 0;
 
