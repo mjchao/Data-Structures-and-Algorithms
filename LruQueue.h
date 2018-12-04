@@ -1,9 +1,9 @@
 #pragma once
 
+#include "Hashmap.h"
 #include "Utils.h"
 #include <assert.h>
 #include <new>
-#include <unordered_map>
 #include <vector>
 
 
@@ -41,10 +41,10 @@ public:
       // You cannot have a well-defined LRU if there are duplicate elements.
       // If an element is marked as used and there are two of them, you wouldn't
       // know which one to indicate as most-recently used.
-      assert(elem_to_entry_.find(elements[i]) == elem_to_entry_.end());
+      assert(elem_to_entry_.Get(elements[i]) == nullptr);
       PlaceNewLruEntry(mem_ + i, elements[i]);
       AppendLruEntry(mem_ + i);
-      elem_to_entry_[mem_[i].e_] = (mem_ + i);
+      elem_to_entry_.Put(mem_[i].e_, (mem_ + i));
     }
   }
 
@@ -85,8 +85,8 @@ public:
    * @param elem The element to mark as used.
    */
   void MarkUsed(const T& elem) {
-    assert(elem_to_entry_.find(elem) != elem_to_entry_.end());
-    LruEntry* entry_to_mark_used = elem_to_entry_.at(elem);
+    assert(elem_to_entry_.Get(elem) != nullptr);
+    LruEntry* entry_to_mark_used = *elem_to_entry_.Get(elem);
     if (entry_to_mark_used != mru_) {
       RemoveLruEntry(entry_to_mark_used);
       AppendLruEntry(entry_to_mark_used);
@@ -147,13 +147,13 @@ private:
     mem_ = new LruEntry[size_];
     std::copy(other.mem_, other.mem_ + other.size_, mem_);
     for (int i = 0; i < size_; ++i) {
-      elem_to_entry_[mem_[i].e_] = (mem_ + i);
+      elem_to_entry_.Put(mem_[i].e_, (mem_ + i));
     }
 
     LruEntry* curr_entry = other.lru_;
     while (curr_entry != nullptr) {
       LruEntry* next_entry = curr_entry->next_;
-      AppendLruEntry(elem_to_entry_[curr_entry->e_]);
+      AppendLruEntry(*elem_to_entry_.Get(curr_entry->e_));
       curr_entry = next_entry;
     }
   }
@@ -242,7 +242,7 @@ private:
    * TODO this is very slow and we should use a custom linear-probing
    * hashmap instead.
    */
-  std::unordered_map<T, LruEntry*> elem_to_entry_;
+  Hashmap<T, LruEntry*> elem_to_entry_;
 
 };
 
