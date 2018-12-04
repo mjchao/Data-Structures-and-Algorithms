@@ -239,10 +239,9 @@ private:
   /**
    * Hashes elements to their LruEntry.
    *
-   * TODO this is very slow and we should use a custom linear-probing
-   * hashmap instead.
+   * Use custom linear-probing hashmap instead because it's faster.
    */
-  Hashmap<T, LruEntry*> elem_to_entry_;
+  dsalgo::Hashmap<T, LruEntry*> elem_to_entry_;
 
 };
 
