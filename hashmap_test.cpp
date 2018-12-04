@@ -269,6 +269,7 @@ int main() {
   testClear();
   testCopy();
   testMove();
+  testRemoveAndGet();
   testRandomized();
   return 0;
 }

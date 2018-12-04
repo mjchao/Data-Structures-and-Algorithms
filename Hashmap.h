@@ -1,6 +1,7 @@
 #include "Utils.h"
 #include <assert.h>
 #include <functional>
+#include <iostream>
 
 
 namespace dsalgo {
@@ -95,24 +96,24 @@ public:
    * @param v value to which to map the key
    */
   void Put(const Key& k, const Val& v) {
-    if (num_entries_ >= load_factor_ * table_size_) {
+    if (size_ >= load_factor_ * table_size_) {
       Resize();
     }
 
+    int hashcode = HashCode(k);
     int insert_idx = LocateEntryIdx(k);
     assert(insert_idx != -1);
     Entry& insert_entry = table_[insert_idx];
 
     // updating entry - only have to update the value
-    if (insert_entry.is_valid) {
+    if (insert_entry.IsValid()) {
       insert_entry.v = v;
 
     // inserting new entry - have to update both key and value
     } else {
       insert_entry.k = k;
       insert_entry.v = v;
-      insert_entry.is_valid = true;
-      ++num_entries_;
+      insert_entry.hashcode = hashcode;
       ++size_;
     }
   }
@@ -153,7 +154,7 @@ public:
     }
 
     Entry& entry = table_[entry_idx];
-    if (entry.is_valid) {
+    if (entry.IsValid()) {
       return &entry.v;
     } else {
       return nullptr;
@@ -167,15 +168,101 @@ public:
    * @return if the key was removed
    */
   bool Remove(const Key& k) {
-    int entry_idx = LocateEntryIdx(k);
-    if (entry_idx == -1) {
+    int remove_idx = LocateEntryIdx(k);
+    if (remove_idx == -1) {
       return false;
     }
 
-    Entry& entry = table_[entry_idx];
-    if (entry.is_valid) {
-      entry.is_valid = false;
-      entry.is_deleted = true;
+    Entry& entry_to_remove = table_[remove_idx];
+    if (entry_to_remove.IsValid()) {
+      int unoccupied_idx = remove_idx;
+      int idx_to_check = unoccupied_idx;
+      while (true) {
+        idx_to_check = (idx_to_check + 1) & (table_size_ - 1);
+
+        // if we reach an unoccupied spot, we're done
+        if (!table_[idx_to_check].IsValid()) {
+          break;
+        }
+
+        // if table is completely full and we've gone one full cycle around
+        // then we're done
+        if (idx_to_check == remove_idx) {
+          break;
+        }
+
+        // this is where the entry we're checking should belong if there
+        // were no collisions, a.k.a the canonical index
+        int idx_for_entry_to_check = IndexFor(table_[idx_to_check].hashcode);
+
+        // But if there were collisions and the entry was shifted via linear
+        // probing, we *may* be able to move it into the unoccupied spot
+        // under two conditions.
+        //
+        // At this point, every element from [remove_idx, idx_to_check] is
+        // occupied except for the element at unoccupied_idx.
+
+        // If there is no wraparound yet, then we can move the entry into the
+        // unoccupied spot if...
+        //    1. the candidate entry's canonical index in the table is earlier
+        //       than the unoccupied spot. This means we're just shifting the
+        //       candidate entry earlier in the chain of collisions, which will
+        //       speed up finding it in future searches.
+        //                              OR
+        //    2. the candidate entry's canonical index in the table is after the
+        //       current index that we're checking. If the candidate was
+        //       properly placed at the current index we're checking, then
+        //       everything from [0, idx_to_check] and from
+        //       [idx_for_entry_to_check, table_end] must be occupied. This
+        //       means that the candidate entry belongs at
+        //       idx_for_entry_to_check and wrapped all the way around due
+        //       to collisions with the linear probing. So by moving the
+        //       candidate entry to an earlier spot, we're just shifting the
+        //       candidate entry to earlier in the chain of collisions.
+        //
+        // In either case, we're just shifting the candidate entry to earlier
+        // in the chain of collisions.
+        bool not_wrapped_around_and_can_move =
+          (idx_to_check > unoccupied_idx) &&
+          (idx_for_entry_to_check <= unoccupied_idx ||
+           idx_for_entry_to_check > idx_to_check);
+
+        // If there is wrapround, then we can move the entry into the unoccupied
+        // spot if...
+        //    1. the candidate entry's canonical index in the table is earlier
+        //       than the unoccupied spot.
+        //                          AND
+        //    2. the candidate entry's canonical index in the table is greater
+        //       than the current index we're checking.
+        //
+        // The first condition guarantees that we're shifting the element
+        // earlier in the chain of collisions. The second condition guarantees
+        // we're not moving an element farther away from where it should be and
+        // thus introducing a "gap" in it's linear probing chain.
+        //
+        // As an example of why not remove when
+        // idx_for_entry_to_check <= idx_to_check, consider this table:
+        //                         [a, b, c, d]
+        // where b, c and d hash to index 3 and a hashes to index 0. (So 
+        // we inserted d, then a, then b, and then c).
+        //
+        // If we delete d, then we get an unoccupied space at index 3.
+        //                        [a, b, c, -]
+        // The remove algorithm then considers moving a down to replace d.
+        // But we shouldn't move a because it's already in the correct spot!
+        // It's only when idx_for_entry_to_check > idx_to_check (indicating
+        // that the candidate entry wrapped around due to collisions) that we're
+        // actually moving the element closer to it's canonical index.
+        bool wrapped_around_and_can_move = (idx_to_check < unoccupied_idx) &&
+          (idx_for_entry_to_check <= unoccupied_idx &&
+           idx_for_entry_to_check > idx_to_check);
+
+        if (not_wrapped_around_and_can_move || wrapped_around_and_can_move) {
+          table_[unoccupied_idx] = std::move(table_[idx_to_check]); 
+          unoccupied_idx = idx_to_check;
+        }
+      }
+      table_[unoccupied_idx].Invalidate();
       --size_;
       return true;
     }
@@ -195,11 +282,8 @@ public:
   void Clear() {
     for (int i = 0; i < table_size_; ++i) {
       Entry& to_clear = table_[i];
-      if (to_clear.is_valid) {
-        to_clear.is_valid = false;
-      }
+      to_clear.Invalidate();
     }
-    num_entries_ = 0;
     size_ = 0;
   }
 
@@ -211,15 +295,23 @@ private:
   struct Entry {
     Key k;
     Val v;
+    // if hashcode is -1, that means the element is not valid.
+    int hashcode = -1;
 
-    // if this entry represents something that has been inserted into the
-    // hashmap, as opposed to being unitialized space in the underlying table.
-    bool is_valid = false;
+    /**
+     * @return if this is a valid hashmap entry (as opposed to just unused
+     * memory in the table)
+     */
+    inline bool IsValid() const {
+      return hashcode != -1;
+    }
 
-    // if the entry is deleted, then it is a "ghost" element. An entry should
-    // never have (is_valid == true) and (is_deleted == true). But an entry
-    // can have (is_valid == false) and (is_deleted == true/false)
-    bool is_deleted = false;
+    /**
+     * Marks this entry as unallocated
+     */
+    inline void Invalidate() {
+      hashcode = -1;
+    }
   };
 
   /**
@@ -239,7 +331,6 @@ private:
     table_ = new Entry[other.table_size_];  
     std::copy(other.table_, other.table_ + other.table_size_, table_);
     table_size_ = other.table_size_;
-    num_entries_ = other.num_entries_;
     size_ = other.size_;
     load_factor_ = other.load_factor_;
     hash_fn_ = other.hash_fn_;
@@ -249,7 +340,6 @@ private:
   void MoveFrom(Hashmap<Key, Val, Hash, Eq>& other) {
     table_ = other.table_;
     table_size_ = other.table_size_;
-    num_entries_ = other.num_entries_;
     size_ = other.size_;
     load_factor_ = other.load_factor_;
     hash_fn_ = std::move(other.hash_fn_);
@@ -263,15 +353,18 @@ private:
    * @return hash code for the given key
    */
   inline int HashCode(const Key& k) const {
-    return hash_fn_(k);
+    // std::hash returns a size_t, which is an unsigned int. Only keep bottom 31
+    // bytes to prevent the hash from going negative when we coerce size_t into
+    // a signed int.
+    return hash_fn_(k) & ((2 << 31) - 1);
   }
 
   /**
-   * @return the index in the underlying table at which the key belongs. Does
-   * not account for collisions in which lineary probing is required.
+   * @return the index in the underlying table at which the hashcode belongs.
+   * Does not account for collisions in which lineary probing is required.
    */
-  inline int IndexFor(const Key& k) const {
-    return HashCode(k) & (table_size_ - 1);
+  inline int IndexFor(int hashcode) const {
+    return hashcode & (table_size_ - 1);
   }
 
   /**
@@ -282,28 +375,29 @@ private:
   }
 
   /**
+   * @param k key for which to locate the index at which it should be inserted
+   * @param hashcode hashcode for the key, or -1, if you want this function to
+   * compute it.
    * @return index in the underlying table at which the key is located if the
    * key is in the hashmap. Otherwise, returns the index at which the key should
    * be inserted. Returns -1 if the table is completely full and the element
    * is not there.
    */
-  int LocateEntryIdx(const Key& k) const {
-    int expected_idx = IndexFor(k); 
+  int LocateEntryIdx(const Key& k, int hashcode=-1) const {
+    if (hashcode == -1) {
+      hashcode = HashCode(k);
+    }
+    int expected_idx = IndexFor(hashcode); 
     int idx_to_check = expected_idx;
 
     for (int i = 0; i < table_size_; ++i) {
       const Entry& entry_to_check = table_[idx_to_check];
 
-      // we've made an internal error if the entry is both valid and deleted
-      assert(!(entry_to_check.is_valid && entry_to_check.is_deleted));
-
       // is the entry the one we're looking for?
-      bool is_correct_entry = (entry_to_check.is_valid &&
+      bool is_correct_entry = (entry_to_check.IsValid() &&
           Equals(k, entry_to_check.k));
 
-      // is the current spot occupied? (i.e. could we insert the element here?)
-      bool is_unallocated_entry = (!entry_to_check.is_valid &&
-          !entry_to_check.is_deleted);
+      bool is_unallocated_entry = (!entry_to_check.IsValid());
 
       // if we found the correct entry, then we're done.
       // if we reached an unoccupied spot, that means the key isn't in the
@@ -330,28 +424,20 @@ private:
     Entry* old_table = table_;
     int old_table_size = table_size_;
 
-    // compute new size required to maintain load factor
-    int new_table_size = table_size_;
-    while (size_ >= new_table_size * load_factor_) {
-      new_table_size *= 2;
-    }
-
     // create new table
-    table_size_ = new_table_size;
+    while (size_ >= table_size_ * load_factor_) {
+      table_size_ *= 2;
+    }
     table_ = new Entry[table_size_];
 
     // re-insert all the valid elements in the old table
     for (int i = 0; i < old_table_size; ++i) {
-      if (old_table[i].is_valid) {
+      if (old_table[i].IsValid()) {
         int insert_idx = LocateEntryIdx(old_table[i].k);
         assert(insert_idx != -1);
         table_[insert_idx] = std::move(old_table[i]);
       }
     }
-
-    // all ghost-entries have been discarded during the resize, so num_entries_
-    // is now the same as size_
-    num_entries_ = size_;
 
     // free old table memory
     delete[] old_table;
@@ -364,9 +450,6 @@ private:
   
   // size of the underlying table, must be a power of 2.
   int table_size_ = 0;
-
-  // number of entries in the hashmap, including ghost entries.
-  int num_entries_ = 0;
 
   // number of entries in the hashmap excluding ghost entries. This is
   // the number of entries the user of the hashmap should be aware of.
