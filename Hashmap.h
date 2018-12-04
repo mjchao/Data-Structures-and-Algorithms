@@ -324,7 +324,7 @@ private:
   }
 
   /**
-   * Copies another hashtable into this hashable. Does not free any currently
+   * Copies another hashtable into this hashtable. Does not free any currently
    * allocated memory though.
    */
   void CopyFrom(const Hashmap<Key, Val, Hash, Eq>& other) {
@@ -337,6 +337,10 @@ private:
     eq_fn_ = other.eq_fn_;
   }
 
+  /**
+   * Moves another hastable into this hashtable. The other hashtable is
+   * emptied and invalidated.
+   */
   void MoveFrom(Hashmap<Key, Val, Hash, Eq>& other) {
     table_ = other.table_;
     table_size_ = other.table_size_;
@@ -354,7 +358,7 @@ private:
    */
   inline int HashCode(const Key& k) const {
     // std::hash returns a size_t, which is an unsigned int. Only keep bottom 31
-    // bytes to prevent the hash from going negative when we coerce size_t into
+    // bits to prevent the hash from going negative when we coerce size_t into
     // a signed int.
     return hash_fn_(k) & ((2 << 31) - 1);
   }
