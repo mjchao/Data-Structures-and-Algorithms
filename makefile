@@ -29,6 +29,10 @@ hashmap:
 	$(CXX) $(CXXFLAGS) $(OPT) hashmap_prof.cpp -o hashmap_prof-opt
 	$(CXX) $(CXXFLAGS) $(DEBUG) hashmap_test.cpp -o hashmap_test-dbg
 
+triemap:
+	$(CXX) $(CXXFLAGS) $(OPT) triemap_prof.cpp -o triemap_prof-opt
+	$(CXX) $(CXXFLAGS) $(DEBUG) triemap_test.cpp -o triemap_test-dbg
+
 clean:
 	rm *prof-opt *test-dbg
 
