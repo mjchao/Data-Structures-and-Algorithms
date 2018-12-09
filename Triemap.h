@@ -123,14 +123,23 @@ public:
         return false;
       }
       curr_node = next_child;
+
+      // push onto traceback here because we don't want the root to be
+      // processed. The root should never be deleted.
       potentially_empty_nodes.push(next_child);
     }
 
+    if (curr_node->v == nullptr) {
+      return false;
+    }
+
     // remove the entry by clearing the value
+    delete curr_node->v;
     curr_node->v = nullptr;
 
-    // check if parent/ancestors can be deleted as well
-    if (curr_node->children.empty()) {
+    // check if parent/ancestors should be deleted as well, after removing
+    // this value
+    if (curr_node->children.empty() && !potentially_empty_nodes.empty()) {
       Node* empty_node = potentially_empty_nodes.top();
       potentially_empty_nodes.pop();
       Node* parent_node = nullptr;
@@ -138,10 +147,12 @@ public:
       
         // delete the empty node from the parent
         parent_node = potentially_empty_nodes.top();
+        potentially_empty_nodes.pop();
         for (auto it = parent_node->children.begin();
               it != parent_node->children.end(); ++it) {
           if (&(*it) == empty_node) {
             parent_node->children.erase(it);
+            break;
           }
         }
 

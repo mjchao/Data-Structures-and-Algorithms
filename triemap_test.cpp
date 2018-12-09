@@ -39,16 +39,29 @@ void testPutAndGetRandomized() {
 void testRemove() {
   Triemap<std::string, int> test;
   test.Put("", 1);
-  test.Remove("");
+  assert(test.Remove("") == true);
   assert(test.Get("") == nullptr);
+
+  test.Put("abcdefg", 2);
+  assert(test.Remove("a") == false);
+  assert(test.Remove("abc") == false);
+  assert(test.Remove("abcdef") == false);
+  assert(test.Remove("abcdefg") == true);
+  assert(test.Get("abcdefg") == nullptr);
+
+  test.Put("abcdefg", 3);
+  test.Put("abc", 4);
+  assert(test.Remove("abc") == true);
+  assert(test.Get("abc") == nullptr);
+  assert(*test.Get("abcdefg") == 3);
 }
 
 
 int main() {
-  ReseedRand();
+  /*ReseedRand();
   testPutAndGet();
-  testPutAndGetRandomized();
-  //testRemove();
+  testPutAndGetRandomized();*/
+  testRemove();
   return 0;
 }
 
