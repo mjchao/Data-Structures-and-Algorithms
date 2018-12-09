@@ -160,7 +160,7 @@ public:
 private:
 
   static bool Equal(const KeyElem_t& e1, const KeyElem_t& e2) {
-    Eq eq_fn_;
+    static Eq eq_fn_;
     return eq_fn_(e1, e2); 
   }
 
