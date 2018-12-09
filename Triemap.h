@@ -243,12 +243,8 @@ private:
      * if no child holds that key element
      */
     Node* FindChildWithKeyElem(const KeyElem_t& key_elem) {
-      for (Node& n : children) {
-        if (Equal(n.e, key_elem)) {
-          return &n;
-        }
-      }
-      return nullptr;
+      auto it = FindChildItWithKeyElem(key_elem);
+      return (it != children.end()) ? &(*it) : nullptr;
     }
     
     /**
