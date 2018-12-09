@@ -1,5 +1,7 @@
 #include <algorithm>
+#include <functional>
 #include <list>
+#include <stack>
 #include <type_traits>
 
 
@@ -18,8 +20,13 @@ namespace dsalgo {
  *
  * Key = key used to look up values in the triemap
  * Val = type that gets mapped to in the triemap
+ * Eq = comparator for determining if two 
  */
-template<class Key, class Val>
+template<
+  class Key,
+  class Val,
+  class Eq=std::equal_to<decltype(+*std::declval<const Key&>().begin())>
+  >
 class Triemap {
 
 public:
@@ -65,8 +72,11 @@ public:
       curr_node = next_child;
     }
 
-    // after we've traversed to the end node for the key, we can insert the
-    // value
+    // after we've traversed to the end node for the key, we can insert or
+    // overwrite the value
+    if (curr_node->v != nullptr) {
+      delete curr_node->v;
+    }
     curr_node->v = new Val(v);
   }
 
@@ -90,7 +100,69 @@ public:
     return curr_node->v;
   }
 
+  /**
+   * Removes the given key from the map.
+   *
+   * @param k the key to remove.
+   * @param return if the key was found and removed.
+   */
+  bool Remove(const Key& k) {
+    Node* curr_node = &root_;
+
+    // if the node we end up removing is the last child of its parent, we'll
+    // want to delete the parent as well. And if the parent is the last child of
+    // it's parent, then we'll want to delete the parent as well, and so on...
+    // So we keep a traceback of nodes that may be potentially empty. The memory
+    // is allocated on the heap as a std::stack so that long keys don't cause
+    // stackoverflow.
+    std::stack<Node*> potentially_empty_nodes;
+
+    for (KeyIt_t it = k.begin(); it != k.end(); ++it) {
+      Node* next_child = curr_node->FindChildWithKeyElem(*it);
+      if (next_child == nullptr) {
+        return false;
+      }
+      curr_node = next_child;
+      potentially_empty_nodes.push(next_child);
+    }
+
+    // remove the entry by clearing the value
+    curr_node->v = nullptr;
+
+    // check if parent/ancestors can be deleted as well
+    if (curr_node->children.empty()) {
+      Node* empty_node = potentially_empty_nodes.top();
+      potentially_empty_nodes.pop();
+      Node* parent_node = nullptr;
+      while (!potentially_empty_nodes.empty()) {
+      
+        // delete the empty node from the parent
+        parent_node = potentially_empty_nodes.top();
+        for (auto it = parent_node->children.begin();
+              it != parent_node->children.end(); ++it) {
+          if (&(*it) == empty_node) {
+            parent_node->children.erase(it);
+          }
+        }
+
+        // repeat the process if the parent becomes empty
+        if (parent_node->children.empty()) {
+          empty_node = parent_node;
+          parent_node = nullptr;
+        } else {
+          break;
+        }
+      }
+    }
+    return true;
+  }
+
 private:
+
+  static bool Equal(const KeyElem_t& e1, const KeyElem_t& e2) {
+    Eq eq_fn_;
+    return eq_fn_(e1, e2); 
+  }
 
   /**
    * Represents a node in the trie
@@ -154,7 +226,7 @@ private:
      */
     Node* FindChildWithKeyElem(const KeyElem_t& key_elem) {
       for (Node& n : children) {
-        if (n.e == key_elem) {
+        if (Equal(n.e, key_elem)) {
           return &n;
         }
       }
@@ -166,7 +238,7 @@ private:
    * Root of the trie, corresponding to a Key with no elements.
    */
   Node root_;
-  
+ 
 };
 
 } // namespace dsalgo
