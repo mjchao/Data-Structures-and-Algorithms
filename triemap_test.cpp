@@ -29,6 +29,7 @@ void testPutAndGetRandomized() {
   std::unordered_map<std::string, int> correct;
   for (int i = 0; i < num_inserts; ++i) {
     test.Put(rand_strs[i], i);
+    correct[rand_strs[i]] = i;
   }
   for (auto kv : correct) {
     assert(*test.Get(kv.first) == kv.second);
@@ -54,13 +55,41 @@ void testRemove() {
   assert(test.Remove("abc") == true);
   assert(test.Get("abc") == nullptr);
   assert(*test.Get("abcdefg") == 3);
+  assert(test.Remove("abcdefg") == true);
+  assert(test.Get("abcdefg") == nullptr);
+}
+
+
+void testRemoveRandomized() {
+  int num_inserts = 1000;
+  std::vector<std::string> rand_strs = RandStrs(1, 100, num_inserts);
+  Triemap<std::string, int> test;
+  std::unordered_map<std::string, int> correct;
+  for (int i = 0; i < num_inserts; ++i) {
+    test.Put(rand_strs[i], i);
+    correct[rand_strs[i]] = i;
+  }
+  for (const std::string& s : rand_strs) {
+    bool should_remove = (RandInt(0, 1) == 0);
+    if (should_remove) {
+      test.Remove(s);
+      correct.erase(correct.find(s));
+    }
+  }
+  for (const std::string& s : rand_strs) {
+    if (correct.find(s) != correct.end()) {
+      assert(*test.Get(s) == correct[s]);    
+    } else {
+      assert(test.Get(s) == nullptr);
+    }
+  }
 }
 
 
 int main() {
-  /*ReseedRand();
+  ReseedRand();
   testPutAndGet();
-  testPutAndGetRandomized();*/
+  testPutAndGetRandomized();
   testRemove();
   return 0;
 }

@@ -107,7 +107,6 @@ public:
    * @param return if the key was found and removed.
    */
   bool Remove(const Key& k) {
-    Node* curr_node = &root_;
 
     // if the node we end up removing is the last child of its parent, we'll
     // want to delete the parent as well. And if the parent is the last child of
@@ -115,18 +114,20 @@ public:
     // So we keep a traceback of nodes that may be potentially empty. The memory
     // is allocated on the heap as a std::stack so that long keys don't cause
     // stackoverflow.
-    std::stack<Node*> potentially_empty_nodes;
+    using NodeIt = typename std::list<Node>::iterator;
+    std::stack<NodeIt> potentially_empty_node_its;
 
+    Node* curr_node = &root_;
     for (KeyIt_t it = k.begin(); it != k.end(); ++it) {
-      Node* next_child = curr_node->FindChildWithKeyElem(*it);
-      if (next_child == nullptr) {
+      NodeIt next_child_it = curr_node->FindChildItWithKeyElem(*it);
+      if (next_child_it == curr_node->children.end()) {
         return false;
       }
-      curr_node = next_child;
+      curr_node = &(*next_child_it);
 
       // push onto traceback here because we don't want the root to be
       // processed. The root should never be deleted.
-      potentially_empty_nodes.push(next_child);
+      potentially_empty_node_its.push(next_child_it);
     }
 
     if (curr_node->v == nullptr) {
@@ -139,27 +140,19 @@ public:
 
     // check if parent/ancestors should be deleted as well, after removing
     // this value
-    if (curr_node->children.empty() && !potentially_empty_nodes.empty()) {
-      Node* empty_node = potentially_empty_nodes.top();
-      potentially_empty_nodes.pop();
-      Node* parent_node = nullptr;
-      while (!potentially_empty_nodes.empty()) {
+    if (curr_node->children.empty() && !potentially_empty_node_its.empty()) {
+      NodeIt empty_child_it = potentially_empty_node_its.top();
+      potentially_empty_node_its.pop();
+      while (!potentially_empty_node_its.empty()) {
       
         // delete the empty node from the parent
-        parent_node = potentially_empty_nodes.top();
-        potentially_empty_nodes.pop();
-        for (auto it = parent_node->children.begin();
-              it != parent_node->children.end(); ++it) {
-          if (&(*it) == empty_node) {
-            parent_node->children.erase(it);
-            break;
-          }
-        }
+        NodeIt parent_node = potentially_empty_node_its.top();
+        potentially_empty_node_its.pop();
+        parent_node->children.erase(empty_child_it);
 
         // repeat the process if the parent becomes empty
         if (parent_node->children.empty()) {
-          empty_node = parent_node;
-          parent_node = nullptr;
+          empty_child_it = parent_node;
         } else {
           break;
         }
@@ -242,6 +235,20 @@ private:
         }
       }
       return nullptr;
+    }
+    
+    /**
+     * @return iterator to the child node that holds the given key element,
+     * or end() if no child holds that key element.
+     */
+    typename std::list<Node>::iterator FindChildItWithKeyElem(
+        const KeyElem_t& key_elem) {
+      for (auto it = children.begin(); it != children.end(); ++it) {
+        if (Equal(it->e, key_elem)) {
+          return it;
+        }
+      }
+      return children.end();
     }
   };
 
