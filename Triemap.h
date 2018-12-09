@@ -74,7 +74,11 @@ public:
 
     // after we've traversed to the end node for the key, we can insert or
     // overwrite the value
-    if (curr_node->v != nullptr) {
+    if (curr_node->v == nullptr) {
+      // if inserting, update size
+      ++size_;
+    } else {
+      // if overwritign, delete the previous value
       delete curr_node->v;
     }
     curr_node->v = new Val(v);
@@ -88,7 +92,7 @@ public:
    * @return the value to which the given key is mapped, or nullptr if the key
    * was never mapped to anything
    */
-  Val* Get(const Key& k) {
+  Val* Get(const Key& k) { 
     Node* curr_node = &root_;
     for (KeyIt_t it = k.begin(); it != k.end(); ++it) {
       Node* next_child = curr_node->FindChildWithKeyElem(*it);
@@ -137,6 +141,7 @@ public:
     // remove the entry by clearing the value
     delete curr_node->v;
     curr_node->v = nullptr;
+    --size_;
 
     // check if parent/ancestors should be deleted as well, after removing
     // this value
@@ -159,6 +164,15 @@ public:
       }
     }
     return true;
+  }
+
+  int Size() const {
+    return size_;
+  }
+
+  void Clear() {
+    root_ = Node();
+    size_ = 0;
   }
 
 private:
@@ -188,7 +202,7 @@ private:
       CopyFrom(other);
     }
 
-    Node(const Node&& other) noexcept {
+    Node(Node&& other) noexcept {
       MoveFrom(other);
     }
 
@@ -198,7 +212,7 @@ private:
       return *this;
     }
 
-    Node& operator=(const Node&& other) noexcept {
+    Node& operator=(Node&& other) noexcept {
       FreeMem();
       MoveFrom(other);
       return *this;
@@ -256,6 +270,11 @@ private:
    * Root of the trie, corresponding to a Key with no elements.
    */
   Node root_;
+
+  /**
+   * Number of elements in the trie
+   */
+  int size_ = 0;
  
 };
 
