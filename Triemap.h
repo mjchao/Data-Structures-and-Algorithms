@@ -5,6 +5,8 @@
 #include <type_traits>
 
 
+//TODO can optimize if we allow the user to specify a function mapping KeyElem_t
+//to unique integers and move to an array-based nodes.
 namespace dsalgo {
 
 /**
