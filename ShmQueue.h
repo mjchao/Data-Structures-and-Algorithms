@@ -1,4 +1,5 @@
 #include <atomic>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -14,7 +15,7 @@ namespace dsalgo {
 /**
  * Handle that is required for accessing the shared memory queue.
  */
-class ShmQueueHandle {
+struct ShmQueueHandle {
   int idx = 0;
   int epoch = 0;
 };
@@ -71,15 +72,10 @@ public:
     queue_hdr_->capacity_ = capacity;
     queue_hdr_->tail_idx_ = 0;
     queue_hdr_->epoch_ = 0;
-    queue_hdr_->in_write_.clear();
 
     // set the buffer, don't have to waste time initializing everything to 0
     // though
     buf_ = shared_mem_ + sizeof(ShmHeader);
-
-    // indicate that this queue created the shared memory region so that it
-    // unmaps it later.
-    is_creator_ = true;
   }
 
   /**
@@ -109,22 +105,39 @@ public:
     char* queue_hdr_mem = reinterpret_cast<char*>(mmap(NULL, sizeof(ShmHeader),
           PROT_READ | PROT_WRITE, MAP_SHARED, shm_file_fd_, 0));
     queue_hdr_ = reinterpret_cast<ShmHeader*>(queue_hdr_mem);
+    int queue_size = sizeof(ShmHeader) + (sizeof(char) * queue_hdr_->capacity_);
+    munmap(queue_hdr_mem, sizeof(ShmHeader));
 
     // once we've read in the header, we know how big the queue is and can
     // mmap the circular buffer that is part of the shared memory queue
-    int queue_size = sizeof(ShmHeader) + (sizeof(char) * queue_hdr_->capacity_);
     shared_mem_ = reinterpret_cast<char*>(mmap(NULL, queue_size,
           PROT_READ | PROT_WRITE, MAP_SHARED, shm_file_fd_, 0));
 
+    queue_hdr_ = reinterpret_cast<ShmHeader*>(shared_mem_);
     buf_ = shared_mem_ + sizeof(ShmHeader);
-    is_creator_ = false;
   }
 
   ~ShmQueue() {
-    if (is_creator_ && queue_hdr_ != nullptr) {
+    if (queue_hdr_ != nullptr) {
       munmap(shared_mem_, sizeof(ShmHeader) +
           (sizeof(char) * queue_hdr_->capacity_));
     }
+  }
+
+  /**
+   * Creates a new handle that can be provided for reading the shared memory
+   * queue.
+   *
+   * The new handle provides access to anything that is enqueued after its
+   * creation.
+   *
+   * @return a new handle for reading in the shared memory queue.
+   */
+  ShmQueueHandle NewHandle() {
+    ShmQueueHandle rtn;
+    rtn.idx = queue_hdr_->tail_idx_;
+    rtn.epoch = queue_hdr_->epoch_;
+    return rtn;
   }
 
 private:
@@ -140,7 +153,9 @@ private:
     int capacity_;
 
     /**
-     * Index of the tail of the queue
+     * Index of the tail of the queue. mmap will page-align the memory region
+     * it gives us, so tail_idx_ will bye 4-byte aligned and can be
+     * updated atomically by an x86 processor.
      */
     int tail_idx_;
 
@@ -150,11 +165,6 @@ private:
      */
     int epoch_;
     
-    /**
-     * If true, then a process is currently writing to the shared memory queue
-     * and no other process is allowed to write to it
-     */
-    std::atomic_flag in_write_;
   };
 
 private:
@@ -184,11 +194,6 @@ private:
    */
   char* buf_ = nullptr;
 
-  /**
-   * Specifies if this queue created the shared memory region. The creator
-   * of the shared memory region is responsible for deleting it.
-   */
-  bool is_creator_ = false;
 };
 
 } // namespace dsalgo
