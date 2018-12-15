@@ -268,7 +268,7 @@ public:
    * @throw logic_error if the number of bytes to enqueue is greater than the
    * capacity of the queue
    */
-  void Enqueue(char* bytes, int size) {
+  void Enqueue(const char* bytes, int size) {
     if (size > hdr_->capacity_) {
       throw std::logic_error(
           "Cannot enqueue more bytes than the capacity of the queue.");
