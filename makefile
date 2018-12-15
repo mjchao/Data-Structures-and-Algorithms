@@ -34,8 +34,9 @@ triemap:
 	$(CXX) $(CXXFLAGS) $(DEBUG) triemap_test.cpp -o triemap_test-dbg
 
 shmqueue:
-	$(CXX) $(CXXFLAGS) $(DEBUG) shmread_test.cpp -o shmread_test-dbg
-	$(CXX) $(CXXFLAGS) $(DEBUG) shmwrite_test.cpp -o shmwrite_test-dbg
+	$(CXX) $(CXXFLAGS) $(DEBUG) shmqueue_test.cpp -o shmqueue_test-dbg
+	#$(CXX) $(CXXFLAGS) $(DEBUG) shmread_test.cpp -o shmread_test-dbg
+	#$(CXX) $(CXXFLAGS) $(DEBUG) shmwrite_test.cpp -o shmwrite_test-dbg
 
 clean:
 	rm *prof-opt *test-dbg
