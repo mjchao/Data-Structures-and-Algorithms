@@ -30,7 +30,7 @@ void testEnqueueDequeSingleProcess() {
   for (int i = 0; i < 3; ++i) {
     assert(test.Dequeue(&handle, buf, 3, status) == 3);
     assert(status == ShmQueueStatus::OK);
-    assert(std::string(buf) == "abc");
+    assert(std::string(buf, buf + 3) == "abc");
   }
 
   // put 2 bytes into queue and try to dequeue 3 bytes
@@ -38,14 +38,14 @@ void testEnqueueDequeSingleProcess() {
   assert(test.Dequeue(&handle, buf, 3, status) == 2);
   assert(status == ShmQueueStatus::TRUNCATED);
   // only first two bytes of buf should have changed
-  assert(std::string(buf) == "yzc");
+  assert(std::string(buf, buf + 3) == "yzc");
 
   // queue is now empty, so should get 0 bytes from dequeuing and buf should be
   // unchanged
   for (int i = 0; i < 3; ++i) {
     assert(test.Dequeue(&handle, buf, 12, status) == 0);
     assert(status == ShmQueueStatus::TRUNCATED);
-    assert(std::string(buf) == "yzc");
+    assert(std::string(buf, buf + 3) == "yzc");
   }
 
   // create second handle to test that both handles are independent of each
@@ -58,10 +58,10 @@ void testEnqueueDequeSingleProcess() {
   for (int i = 0; i < 4; ++i) {
     assert(test.Dequeue(&handle, buf, 3, status) == 3);
     assert(status == ShmQueueStatus::OK);
-    assert(std::string(buf) == "def");
+    assert(std::string(buf, buf + 3) == "def");
     assert(test.Dequeue(&handle2, buf, 3, status) == 3);
     assert(status == ShmQueueStatus::OK);
-    assert(std::string(buf) == "def");
+    assert(std::string(buf, buf + 3) == "def");
   }
 
   // get both handles evicted
@@ -72,10 +72,10 @@ void testEnqueueDequeSingleProcess() {
   for (int i = 0; i < 3; ++i) {
     assert(test.Dequeue(&handle, buf, 3, status) == 0);
     assert(status == ShmQueueStatus::EVICTED);
-    assert(std::string(buf) == "def");
+    assert(std::string(buf, buf + 3) == "def");
     assert(test.Dequeue(&handle2, buf, 3, status) == 0);
     assert(status == ShmQueueStatus::EVICTED);
-    assert(std::string(buf) == "def");
+    assert(std::string(buf, buf + 3) == "def");
   }
 }
 
@@ -110,9 +110,10 @@ void testSingleProducerMultiConsumer() {
       // this child's process index is now 1 greater than it's parent's index
       proc_idx += 1;
 
-      // child should continue to spawn additional processes
+      // child should continue to spawn additional processes and not break
+
     } else {
-      // if the parent has spawned a child, it's job is done and can stop
+      // if the parent has spawned a child, its job is done and can stop
       break;
     }
   }

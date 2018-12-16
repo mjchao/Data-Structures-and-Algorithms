@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 
+#include <assert.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -75,7 +76,11 @@ public:
     int queue_size = sizeof(ShmHeader) + (sizeof(char) * capacity);
 
     // allocate enough disk space for swapping out the entire mmap'ed region
-    ftruncate(shm_file_fd_, queue_size);
+    int truncate_rtn_code = ftruncate(shm_file_fd_, queue_size);
+    if (truncate_rtn_code != 0) {
+      throw std::runtime_error("Could not truncate file " + shm_file_ +
+          " to length " + std::to_string(queue_size));
+    }
     shared_mem_ = reinterpret_cast<char*>(mmap(NULL, queue_size,
           PROT_READ | PROT_WRITE, MAP_SHARED, shm_file_fd_, 0));
 
@@ -214,6 +219,8 @@ public:
    * @return Number of bytes dequeued.
    */
   int Dequeue(ShmQueueHandle* handle, char* buf, int size, int& status) {
+    assert(size >= 0);
+
     // check if evicted at the beginning so that if we are evicted, we can
     // stop without doing extra work.
     if (IsHandleEvicted(handle)) {
