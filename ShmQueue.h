@@ -170,7 +170,7 @@ public:
    */
   inline bool IsHandleEvicted(ShmQueueHandle* handle) {
     // Note that this check is not as straightforward because the header's
-    // epoch and tail_extension_idx cannot both be updated atomically.
+    // epoch and tail_extension_idx cannot be updated together atomically.
     // In the dequeue function, we always update tail_extension_idx before we
     // update epoch. Therefore, it is possible that
     // hdr->tail_extension_idx < handle->idx && hdr->epoch_ == handle->epoch,

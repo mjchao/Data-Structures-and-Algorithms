@@ -81,7 +81,7 @@ void testEnqueueDequeSingleProcess() {
 // one process enqueues N characters, the remaining processes read the N
 // characters.
 void testSingleProducerMultiConsumer() {
-  constexpr int N = 10000;
+  constexpr int N = 20000;
   int N_CONSUMERS = 8;
 
   // all processes will be limited to 10 seconds of execution time.
@@ -93,7 +93,7 @@ void testSingleProducerMultiConsumer() {
   std::vector<int> rand_sleep_intervals = RandN(1, 20, N); 
   // prefer to have "bursty" periods during which we don't sleep.
   for (int i = 0; i < N; ++i) {
-    if (rand_sleep_intervals[i] <= 15) {
+    if (rand_sleep_intervals[i] >= 5) {
       rand_sleep_intervals[i] = 0;
     }
   }
