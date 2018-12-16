@@ -81,7 +81,7 @@ void testEnqueueDequeSingleProcess() {
 // one process enqueues N characters, the remaining processes read the N
 // characters.
 void testSingleProducerMultiConsumer() {
-  constexpr int N = 4096;
+  constexpr int N = 10000;
   int N_CONSUMERS = 8;
 
   // all processes will be limited to 10 seconds of execution time.

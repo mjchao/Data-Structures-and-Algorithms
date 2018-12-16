@@ -169,6 +169,16 @@ public:
    * head.
    */
   inline bool IsHandleEvicted(ShmQueueHandle* handle) {
+    // Note that this check is not as straightforward because the header's
+    // epoch and tail_extension_idx cannot both be updated atomically.
+    // In the dequeue function, we always update tail_extension_idx before we
+    // update epoch. Therefore, it is possible that
+    // hdr->tail_extension_idx < handle->idx && hdr->epoch_ == handle->epoch,
+    // incorrectly implying that the handle is ahead of the queue. This is
+    // because the enqueue function hasn't had time to update the epoch yet.
+    // It's not possible for the handle to ever get ahead of the queue, so we
+    // allow that "invalid" state to pass by.
+
     // if the tail is greater on or after the handle index, then the epoch must
     // be the same for no-eviction.
     //
