@@ -170,17 +170,23 @@ public:
    */
   inline bool IsHandleEvicted(ShmQueueHandle* handle) {
     // if the tail is greater on or after the handle index, then the epoch must
-    // be the same. If the epoch of the queue is greater than the epoch of the
-    // handle, then the queue has already wrapped-around and passed the
-    // handle.
+    // be the same for no-eviction.
+    //
+    // If the epoch of the queue is greater than the epoch of the  handle, then
+    // the queue has already wrapped-around and passed the handle and the
+    // handle should be evicted.
     if (hdr_->tail_extension_idx_ >= handle->idx) {
-      return hdr_->epoch_ != handle->epoch; 
-    }
+      return hdr_->epoch_ > handle->epoch; 
 
-    // if the tail if before the handle's index, then the epoch must be one
-    // greater than the handle.
-    else {
-      return hdr_->epoch_ != (handle->epoch + 1);
+    // if the tail is before the handle's index, then the epoch must no more
+    // than one greater than the handle.
+    //
+    // If the epoch of the queue is more than one greater than the handle,
+    // then the queue has already wrapped-around and passed the handle once
+    // and then wrapped around again. In that case, the handle should be
+    // evicted.
+    } else {
+      return hdr_->epoch_ > (handle->epoch + 1);
     }
   }
 
