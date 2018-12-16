@@ -35,6 +35,20 @@ struct ShmQueueHandle {
 
 /**
  * A circular-buffer queue stored in shared memory.
+ *
+ * Any process can enqueue by calling Enqueue(char*, size) and passing in
+ * a buffer of bytes and the number of bytes to enqueue. However, only the last
+ * capacity bytes that were enqueued can be maintained by ShmQueue.
+ *
+ * Any process can dequeue by obtaining a handle via NewHandle() and then
+ * calling Dequeue(ShmQueueHandle*, char*, int, int&). If your handle falls
+ * behind too far though, it will get evicted and you'll have to obtain a new
+ * handle.
+ *
+ * To ensure that your handles aren't constantly evicted, ensure that your
+ * shared memory queue capacity is significantly greater than the typical size
+ * of data that is being enqueued. A handle will be evicted if the number of
+ * bytes it has yet to dequeue exceeds the queue's capacity.
  */
 class ShmQueue {
 
