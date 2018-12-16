@@ -219,7 +219,7 @@ public:
     // the requested number of  bytes from the head won't require wrapping
     // around.
     bool no_deque_wraparound = (no_wraparound ||
-        bytes_to_deque < (hdr_->capacity_ - tail_idx));
+        bytes_to_deque < (hdr_->capacity_ - handle->idx));
 
     // no wraparound needed for this deque size
     // no-wraparound is more common than wraparound, so the no-wraparound case
@@ -229,11 +229,11 @@ public:
 
     // wraparound needed for this deque size
     } else {
-      int bytes_to_end = (hdr_->capacity_ - tail_idx);
+      int bytes_to_end = (hdr_->capacity_ - handle->idx);
       std::memcpy(buf, buf_ + handle->idx, bytes_to_end);
 
       int bytes_from_beginning = bytes_to_deque - bytes_to_end;
-      std::memcpy(buf, buf_, bytes_from_beginning);
+      std::memcpy(buf + bytes_to_end, buf_, bytes_from_beginning);
     }
     
     // have to also check that we weren't evicted while reading.
@@ -249,8 +249,9 @@ public:
       handle->idx += bytes_to_deque - hdr_->capacity_;
       ++handle->epoch;
     }
-    return (bytes_to_deque == size) ?
+    status = (bytes_to_deque == size) ?
         ShmQueueStatus::OK : ShmQueueStatus::TRUNCATED;
+    return bytes_to_deque;
   }
 
   /**
