@@ -2,6 +2,7 @@
 #include "Profiling.h"
 #include "Random.h"
 #include <assert.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 
@@ -82,7 +83,9 @@ void testEnqueueDequeSingleProcess() {
 // characters.
 void testSingleProducerMultiConsumer() {
   constexpr int N = 20000;
-  int N_CONSUMERS = 8;
+  // ideally, set this to number of cores you have minus 1 (minus 1 because the
+  // producer also needs a core).
+  int N_CONSUMERS = 7;
 
   // all processes will be limited to 10 seconds of execution time.
   int64_t TIME_LIMIT_NS = 10000000000;
@@ -93,7 +96,7 @@ void testSingleProducerMultiConsumer() {
   std::vector<int> rand_sleep_intervals = RandN(1, 20, N); 
   // prefer to have "bursty" periods during which we don't sleep.
   for (int i = 0; i < N; ++i) {
-    if (rand_sleep_intervals[i] >= 5) {
+    if (rand_sleep_intervals[i] >= 10) {
       rand_sleep_intervals[i] = 0;
     }
   }
@@ -114,8 +117,6 @@ void testSingleProducerMultiConsumer() {
     }
   }
 
-  std::cout << proc_idx << std::endl;
-
   // process index 0 is the producer, process index 1..N_CONSUMERS are the
   // consumers.
   if (proc_idx == 0) {
@@ -129,7 +130,6 @@ void testSingleProducerMultiConsumer() {
       test.Enqueue(rand_cstr + i, 1);
       usleep(rand_sleep_intervals[i]);
     }
-    std::cout << "Done Writing" << std::endl;
   } else {
 
     // sleep to give the producer some time to set up the shared memory
@@ -141,13 +141,24 @@ void testSingleProducerMultiConsumer() {
     char buf[N];
     int buf_idx = 0;
     int status;
-    std::cout << "Start reading" << std::endl;
-    while (Clock::Now() - start <= TIME_LIMIT_NS) {
-      int bytes_read = test.Dequeue(&handle, buf + buf_idx, 1, status); 
+    uint64_t iter = 0;
+    while (true) {
+      ++iter;
+      if (iter % 10000 == 0) {
+        if (Clock::Now() - start > TIME_LIMIT_NS) {
+          break;
+        }
+      }
+      int bytes_read = test.Dequeue(&handle, buf + buf_idx, 4096, status); 
 
       // in practice, the child processes should not get evicted since the
       // buffer is large.
-      assert(status != ShmQueueStatus::EVICTED);
+      if (status == ShmQueueStatus::EVICTED) {
+        std::cerr << "Consumer " << proc_idx << " was evicted. "
+          << "Stopping comparison early." << std::endl;
+        assert(rand_str.substr(0, buf_idx) == std::string(buf, buf + buf_idx));
+        exit(0);
+      }
       buf_idx += bytes_read;
       
       // stop after we've read in everything
@@ -155,14 +166,16 @@ void testSingleProducerMultiConsumer() {
         break;
       }
     }
-    assert(rand_str == buf);
+    assert(rand_str == std::string(buf, buf + N));
+    exit(0);
   }
 }
 
 
 int main() {
-  //testInitialize();
-  //testEnqueueDequeSingleProcess();
+  ReseedRand();
+  testInitialize();
+  testEnqueueDequeSingleProcess();
   testSingleProducerMultiConsumer();
   return 0;
 }
