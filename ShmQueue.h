@@ -34,7 +34,8 @@ struct ShmQueueHandle {
 };
 
 /**
- * A circular-buffer queue stored in shared memory.
+ * A circular-buffer queue stored in shared memory that allows unlimited readers
+ * and a single writer to be reading/writing concurrently.
  *
  * Any process can enqueue by calling Enqueue(char*, size) and passing in
  * a buffer of bytes and the number of bytes to enqueue. However, only the last
@@ -49,6 +50,10 @@ struct ShmQueueHandle {
  * shared memory queue capacity is significantly greater than the typical size
  * of data that is being enqueued. A handle will be evicted if the number of
  * bytes it has yet to dequeue exceeds the queue's capacity.
+ *
+ * Dequeue operations can be performed concurrently and are never blocked.
+ * Enqueue operations are limited to one Enqueue at any moment (i.e. concurrent
+ * Enqueues are not allowed).
  */
 class ShmQueue {
 
