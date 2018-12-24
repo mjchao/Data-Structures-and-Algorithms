@@ -1,40 +1,42 @@
-OBJS = main.cpp UnitTest.o ArrayListTests.o LinkedListTests.o LinkedStackTests.o LinkedQueueTests.o ArrayQueueTests.o HashMapTests.o PriorityQueueTests.o BPTreeTests.o
-CC = g++
-CFLAGS = -c -std=c++0x
-LFLAGS = -g 
+CXX=g++
+CXXFLAGS=-std=c++11 -Wall -Werror
+OPT=-O3 -DNDEBUG
+DEBUG=-g
 
-datastructs : $(OBJS)
-	$(CC) $(LFLAGS) $(OBJS) -o datastructs
+all: vector lru deque bsearch sort hashmap
 
-UnitTest.o : UnitTest.h UnitTest.cpp
-	$(CC) $(CFLAGS) UnitTest.cpp
+vector:
+	$(CXX) $(CXXFLAGS) $(OPT) vector_prof.cpp -o vector_prof-opt
+	$(CXX) $(CXXFLAGS) $(DEBUG) vector_test.cpp -o vector_test-dbg
 
-ArrayListTests.o : ArrayListTests.h ArrayListTests.cpp ArrayList.h
-	$(CC) $(CFLAGS) ArrayListTests.cpp
+lru:
+	$(CXX) $(CXXFLAGS) $(OPT) lru_prof.cpp -o lru_prof-opt
+	$(CXX) $(CXXFLAGS) $(DEBUG) lru_test.cpp -o lru_test-dbg
 
-LinkedListTests.o : LinkedListTests.h LinkedListTests.cpp LinkedList.h
-	$(CC) $(CFLAGS) LinkedListTests.cpp
+deque:
+	$(CXX) $(CXXFLAGS) $(OPT) deque_prof.cpp -o deque_prof-opt
+	$(CXX) $(CXXFLAGS) $(DEBUG) deque_test.cpp -o deque_test-dbg
 
-LinkedStackTests.o : LinkedStackTests.h LinkedStackTests.cpp LinkedStack.h
-	$(CC) $(CFLAGS) LinkedStackTests.cpp
+bsearch:
+	$(CXX) $(CXXFLAGS) $(OPT) bsearch_prof.cpp -o bsearch_prof-opt
+	$(CXX) $(CXXFLAGS) $(DEBUG) bsearch_test.cpp -o bsearch_test-dbg
 
-LinkedQueueTests.o : LinkedQueueTests.h LinkedQueueTests.cpp LinkedQueue.h
-	$(CC) $(CFLAGS) LinkedQueueTests.cpp
+# TODO profile optimized sort
+sort:
+	$(CXX) $(CXXFLAGS) $(DEBUG) sort_test.cpp -o sort_test-dbg
 
-ArrayQueueTests.o : ArrayQueueTests.h ArrayQueueTests.cpp ArrayQueue.h
-	$(CC) $(CFLAGS) ArrayQueueTests.cpp
+hashmap:
+	$(CXX) $(CXXFLAGS) $(OPT) hashmap_prof.cpp -o hashmap_prof-opt
+	$(CXX) $(CXXFLAGS) $(DEBUG) hashmap_test.cpp -o hashmap_test-dbg
 
-HashMapTests.o : HashMapTests.h HashMapTests.cpp HashMap.h
-	$(CC) $(CFLAGS) HashMapTests.cpp
+triemap:
+	$(CXX) $(CXXFLAGS) $(OPT) triemap_prof.cpp -o triemap_prof-opt
+	$(CXX) $(CXXFLAGS) $(DEBUG) triemap_test.cpp -o triemap_test-dbg
 
-PriorityQueueTests.o : PriorityQueueTests.h PriorityQueueTests.cpp PriorityQueue.h
-	$(CC) $(CFLAGS) PriorityQueueTests.cpp
-
-BPTreeTests.o : BPTreeTests.h BPTreeTests.cpp BPTree.h
-	$(CC) $(CFLAGS) BPTreeTests.cpp
+shmqueue:
+	$(CXX) $(CXXFLAGS) $(OPT) shmqueue_prof.cpp -o shmqueue_prof-opt
+	$(CXX) $(CXXFLAGS) $(DEBUG) shmqueue_test.cpp -o shmqueue_test-dbg
 
 clean:
-	rm -r *.o *~ datastructs datastructs.dSYM
+	rm *prof-opt *test-dbg
 
-tar: 
-	tar cfv datastruct.tar UnitTest.h UnitTest.cpp ArrayListTests.h ArrayListTests.cpp ArrayList.h LinkedListTest.h LinkedListTests.cpp LinkedList.h LinkedStackTests.h LinkedStackTests.cpp LinkedStack.h LinkedQueueTests.h LinkedQueueTests.cpp LinkedQueue.h ArrayQueueTests.h ArrayQueueTests.cpp ArrayQueue.h HashMapTests.h HashMapTests.cpp HashMap.h PriorityQueueTests.h PriorityQueueTests.cpp PriorityQueue.h BPTreeTests.h BPTreeTests.cpp BPTree.h
